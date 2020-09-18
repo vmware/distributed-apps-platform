@@ -49,14 +49,17 @@ class TrafficManger(Manager):
     def start_servers(self, namespace=None):
         return self._client.traffic.start_servers(namespace)
 
-    def stop_server(self, protocol, port, namespace=None):
-        self._client.traffic.stop_server(protocol, port, namespace)
+    def stop_server(self, protocol, port, namespace=None, endpoint=None):
+        self._client.traffic.stop_server(protocol, port, namespace, endpoint)
 
-    def stop_client(self, src):
-        self._client.traffic.stop_client(src)
+    def stop_client(self, namespace=None, endpoint=None):
+        self._client.traffic.stop_client(namespace, endpoint)
 
     def stop_clients(self, namespace=None):
         self._client.traffic.stop_clients(namespace)
+
+    def rediscover_namespaces(self):
+        self._client.traffic.rediscover_namespaces()
 
 
 class StatsManager(Manager):
