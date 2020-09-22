@@ -5,7 +5,10 @@
 # in the root directory of this project.
 
 import logging
+import queue
+import threading
 
+from jasper.traffic.core import TrafficRecord
 from jasper.traffic.client import TCPClient, UDPClient
 from jasper.traffic.server import TCPServer, UDPServer
 
@@ -22,6 +25,7 @@ class TrafficTask(object):
         self._task = None
         self._type = None
         self._trule = trule   # Traffic Rule
+        self._task_thread = None
         self._create_task()
 
     def is_client(self):
@@ -54,14 +58,25 @@ class TrafficTask(object):
     def _create_container_task(self):
         raise NotImplementedError("_create_container_task")
 
-    def start(self):
-        self._task.start()
+    def start(self, blocking=False):
+        if blocking:
+            self._task.start()
+        else:
+            self._task_thread = threading.Thread(target=self._task.start)
+            self._task_thread.start()
+
+    def _join_thread(self):
+        if self._task_thread:
+            self._task_thread.join()
+            self._task_thread = None
 
     def stop(self):
         self._task.stop()
+        self._join_thread()
 
     def close(self):
         self._task.close()
+        self._join_thread()
 
     def is_running(self):
         return not self._task.stopped()
@@ -69,7 +84,8 @@ class TrafficTask(object):
 
 class TrafficClientTask(TrafficTask):
 
-    def __init__(self, trule):
+    def __init__(self, record_queue, trule):
+        self._record_queue = record_queue
         self._type = self.CLIENT
         super(TrafficClientTask, self).__init__(trule)
 
@@ -77,12 +93,17 @@ class TrafficClientTask(TrafficTask):
     def target(self):
         return self._trule.src_target
 
+    @property
+    def record_queue(self):
+        return self._record_queue
+
     def _get_client(self):
         server = self._trule.dst
         port = self._trule.port
 
         if self._trule.is_TCP():
-            return TCPClient(server=server, port=port)
+            return TCPClient(server=server, port=port,
+                             handler=self.ping_handler)
         elif self._trule.is_UDP():
             return UDPClient(server=server, port=port)
         else:
@@ -91,6 +112,23 @@ class TrafficClientTask(TrafficTask):
 
     def _create_vmhost_task(self):
         self._task = self._get_client()
+
+    def ping_handler(self, payload, data):
+        try:
+            rec = TrafficRecord()
+            rec.source = self._trule.src
+            rec.destination = self._trule.dst
+            rec.protocol = self._trule.protocol
+            rec.port = self._trule.port
+            rec.expected = self._trule.connected
+            rec.result = not rec.expected ^ (data == payload)
+            rec.reqid = self._trule.reqid
+            rec.ruleid = self._trule.ruleid
+            # log.info("Traffic: %r", rec)
+            self.record_queue.put(rec, block=False, timeout=2)
+        except queue.Full:
+            log.error("Cann't put Traffic Record %r into the queue.",
+                      rec)
 
 
 class TrafficServerTask(TrafficTask):

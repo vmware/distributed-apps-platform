@@ -35,7 +35,10 @@ class TrafficManager(object):
                       self.TASK_TYPE, trule.ruleid)
             return
 
-        self._traffic_tasks[key] = self._create_task(trule)
+        task = self._create_task(trule)
+        if trule.enabled:
+            task.start()    # Start the task if enabled.
+        self._traffic_tasks[key] = task
 
     def start(self, trule):
         """ Start a Traffic task (again). """
@@ -64,6 +67,10 @@ class ClientManager(TrafficManager):
     """
     TASK_TYPE = task.TrafficTask.CLIENT
 
+    def __init__(self, record_queue):
+        self._record_queue = record_queue
+        super(ClientManager, self).__init__()
+
     def key(self, trule):
         # A client can be uniquely identified with the rule it is
         # attached to. Two clients can be alike except for the
@@ -71,7 +78,7 @@ class ClientManager(TrafficManager):
         return trule.ruleid
 
     def _create_task(self, trule):
-        return task.TrafficClientTask(trule)
+        return task.TrafficClientTask(self._record_queue, trule)
 
 
 class ServerManager(TrafficManager):

@@ -9,6 +9,7 @@ import time
 
 from jasper.traffic.connection import Connection
 
+
 class Server(Connection):
 
     def __init__(self, port=None, max_conns=None,
@@ -27,7 +28,6 @@ class Server(Connection):
         # Don't create a socket until we are ready to bind.
         self.socket = None
         self._ipv6 = ipv6
-
 
     def echo_handler(self, payload):
         raise NotImplementedError("Handler not implemented in %s" % self.__class__.__name__)

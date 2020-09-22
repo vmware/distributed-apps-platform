@@ -49,3 +49,5 @@ class Connection(object):
         if self.socket:
             self.socket.close()
             self.socket = None
+
+    stopped = is_event_set

@@ -42,70 +42,38 @@ class RulesApp(db.Model, BaseApp):
     INACTIVE = 'INACTIVE'
     ACTIVE = 'ACTIVE'
 
-    def __init__(self, traffic_manager, db_file=None):
+    def __init__(self, db_file=None):
 
         db_name = db_file or self.DB_NAME
 
         super(RulesApp, self).__init__(db_name=db_name)
         self._rules = {}    # represents local cache.
-        self._traffic_manager = traffic_manager
         self.table = self.TABLE
+        self.load_from_db()
 
-    def disable(self, ruleid):
-        """ Disables a rule. """
-        if ruleid not in self._rules:
-            log.error("Invalid rule to disable : %s", ruleid)
-            return
-        self._traffic_manager.stop(ruleid)
+    def get(self, ruleid):
+        return self._rules.get(ruleid)
 
-        self._rules[ruleid].state = self.INACTIVE
-
-        where = {'ruleid': ruleid}
-        self.update(condition=where, state=self.INACTIVE)
-        self.commit()
-
-    def enable(self, ruleid):
-        """ Enables a rule """
-        if ruleid not in self._rules:
-            log.error("Invalid rule to enable : %s", ruleid)
-            return
-        self._traffic_manager.start(ruleid)
-
-        self._rules[ruleid].state = self.ACTIVE
-
-        where = {'ruleid': ruleid}
-        self.update(condition=where, state=self.ACTIVE)
-        self.commit()
-
-    def add(self, rule, save_to_db=True):
-        """ Adds a rule in local cache and database. """
-        ruleid = rule['ruleid']
-        if ruleid in self._rules:
-            log.error("Rule wih id %s already exists", ruleid)
-            return
-        trule = TrafficRule()
-
-        for key, val in rule.items():
-            setattr(trule, key, val)
-
-        if 'state' not in rule:
-            trule.state = rule.get('state', self.ACTIVE)
-            # create a local copy instead of modifying
-            # the input parameter.
-            _rule = {k: v for k, v in rule.items()}
-            _rule['state'] = self.ACTIVE
-        else:
-            _rule = rule
-
-        self._rules[ruleid] = trule
-        self.create(**_rule)
+    def add(self, trule, save_to_db=True):
+        """
+        Adds a rule in local cache and database and returns
+        corresponding object.
+        """
         if save_to_db:
+            if trule.ruleid in self._rules:
+                # Local Cache is always in sync with Database.
+                self.update(condition={'ruleid': trule.ruleid},
+                            **trule.as_dict())
+            else:
+                self.create(**trule.as_dict())
+            # Commit the records.
             self.commit()
+        self._rules[trule.ruleid] = trule
 
-    def add_rules(self, rules):
+    def add_rules(self, trules):
         """ Adds multiple rules. """
-        for rule in rules:
-            self.add(rule, save_to_db=False)
+        for trule in trules:
+            self.add(trule, save_to_db=False)
         self.commit()
 
     def load_from_db(self):
@@ -133,19 +101,44 @@ class RulesApp(db.Model, BaseApp):
         curr_rule_ids = [x[0] for x in self.read()]  # first value is ruleid
         for ruleid, trule in self._rules.items():
             if ruleid in curr_rule_ids:
-                self.update(condition={'ruleid': ruleid}, **trule.__dict__)
+                self.update(condition={'ruleid': ruleid}, **trule.as_dict())
             else:
-                self.create(**trule.__dict__)
+                self.create(**trule.as_dict())
 
         self.commit()
 
-    def get(self, ruleid):
-        return self._rules.get(ruleid, None)
+    def disable(self, ruleid):
+        """ Disables a rule. """
+        if ruleid not in self._rules:
+            log.error("Invalid rule to disable : %s", ruleid)
+            return
+
+        self._rules[ruleid].state = self.INACTIVE
+
+        where = {'ruleid': ruleid}
+        self.update(condition=where, state=self.INACTIVE)
+        self.commit()
+
+    def enable(self, ruleid):
+        """ Enables a rule """
+        if ruleid not in self._rules:
+            log.error("Invalid rule to enable : %s", ruleid)
+            return
+
+        self._rules[ruleid].state = self.ACTIVE
+
+        where = {'ruleid': ruleid}
+        self.update(condition=where, state=self.ACTIVE)
+        self.commit()
 
     def is_enabled(self, ruleid):
-        rule = self._rules.get(ruleid, None)
+        rule = self._rules.get(ruleid)
 
         if not rule:
             log.error("Invalid rule id : %s", ruleid)
 
         return rule.state == self.ACTIVE
+
+    def close(self):
+        self.save_to_db()
+        super(RulesApp, self).commit()
