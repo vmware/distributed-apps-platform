@@ -176,10 +176,10 @@ class InterfaceManager(object):
     Class that controls all Interface information on host
     """
     def __init__(self):
-        self._interface_map = defaultdict(list)
         self._discover_interfaces()
 
     def _discover_interfaces(self):
+        self._interface_map = defaultdict(list)
         addrs = psutil.net_if_addrs()
         for name, snics in list(addrs.items()):
             for nic in [snic for snic in snics if snic.family in INTERFACE_FAMILY]:
