@@ -18,12 +18,9 @@ from sql30 import db
 
 
 from axon.apps.base import BaseApp
+from jasper.traffic.core import TrafficRule
 
 log = logging.getLogger(__name__)
-
-
-class TrafficRule(object):
-    pass
 
 
 class RulesApp(db.Model, BaseApp):
@@ -35,28 +32,7 @@ class RulesApp(db.Model, BaseApp):
         'tables': [
             {
                 'name': TABLE,
-                'fields': {
-                    'ruleid': 'text',       # Unique id of rule.
-
-                    'src': 'text',          # source endpoint
-                    'dst': 'text',          # destination endpoint
-                    'protocol': 'text',     # Protocol : TCP/UDP/HTTP
-                    'port': 'text',         # port
-                    'connected': 'text',    # Ping to PASS or FAIL
-
-                    'payload': 'text',      # Payload for rule.
-                    'packet': 'text',       # Packet size for traffic.
-                    'tries': 'text',        # Number of tries.
-
-                    'src_host': 'text',     # Source host Management IP
-                    'dst_host': 'text',     # Destination host Management IP
-
-                    'purpose':  'text',     # context : CLIENT/SERVER/PERSIST
-                    'username': 'text',     # run traffic as. 'root' by default
-                    'target': 'text',       # Host / Namespace / Container
-
-                    'state': 'text',        # ENABLED/DISABLED
-                    },
+                'fields': TrafficRule.SCHEMA,
                 'primary_key': 'ruleid'  # avoid duplicate entries.
             }]
         }
