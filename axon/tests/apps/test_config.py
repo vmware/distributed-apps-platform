@@ -22,7 +22,14 @@ class ConfigAppTest(unittest.TestCase):
     DUMMY_DATA = {
         'param1': 'val1',
         'param2': 'val2',
-        'param3': 'val3'
+        'param3': 'val3',
+        'param4': 1,  # integer test
+        'param5': 1.03,  # float test
+        'param6': ['val1', 'val2', 'val3'],  # list test
+        'param7': ("val1", "val2", "val3"),  # tuple test
+        'param8': {"key1": 1, "key2": "value2"},  # dict test
+        'param9': False,
+        'param10': True,
         }
 
     def setUp(self):
@@ -54,6 +61,7 @@ class ConfigAppTest(unittest.TestCase):
         # TEST : All the params must be present.
         for param, val in self.DUMMY_DATA.items():
             self.assertEqual(val, self.app.get_param(param))
+            self.assertEqual(type(val), type(self.app.get_param(param)))
 
     def tearDown(self):
         os.remove(DB_NAME)
