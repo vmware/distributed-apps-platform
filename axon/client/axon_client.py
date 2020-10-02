@@ -187,6 +187,15 @@ class ScapyManager(Manager):
         self._client.scapy.close_session()
 
 
+class ConfigManager(Manager):
+
+    def get_param(self, param):
+        return self._client.configs.get_param(param)
+
+    def set_param(self, param, val):
+        return self._client.configs.set_param(param, val)
+
+
 class AxonClient(object):
     """
     Top level object to access Axon API
@@ -222,6 +231,7 @@ class AxonClient(object):
         self.pcap = TCPDumpManager(self.rpc_client.root)
         self.iperf = IperfManager(self.rpc_client.root)
         self.scapy = ScapyManager(self.rpc_client.root)
+        self.configs = ConfigManager(self.rpc_client.root)
 
     def _connect(self, retry_count, sleep_interval, request_timeout):
 

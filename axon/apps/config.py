@@ -230,8 +230,11 @@ class Config(db.Model, BaseApp):
             self.write(param=param, value=str(val), typename=type_name)
 >>>>>>> 4782a81... [Axon]: Extend support for config app
 
+    exposed_get_param = get_param
+    exposed_set_param = set_param
 
-def _get_configs():
+
+def get_configs():
     global configs
     if not configs:
         configs = Config()
@@ -240,8 +243,8 @@ def _get_configs():
 
 
 def get_param(param):
-    return _get_configs().get_param(param)
+    return get_configs().get_param(param)
 
 
 def set_param(param, val):
-    return _get_configs().set_param(param, val)
+    return get_configs().set_param(param, val)
