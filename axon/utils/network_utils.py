@@ -222,3 +222,18 @@ class InterfaceManager(object):
             for sub_interface in interface:
                 if sub_interface.address == ip:
                     return name
+
+    def get_ips_by_interface(self, interface):
+        ips = []
+        if interface not in self._interface_map:
+            return ips
+        for sub_interface in self._interface_map.get(interface):
+            ips.append(sub_interface.address)
+        return ips
+
+    def get_all_ips(self):
+        all_ips = []
+        all_interfaces = self.get_all_interfaces()
+        for interface in all_interfaces:
+            all_ips.extend(self.get_ips_by_interface(interface))
+        return all_ips

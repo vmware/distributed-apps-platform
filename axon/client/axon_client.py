@@ -120,6 +120,12 @@ class InterfaceManager(Manager):
     def get_interface(self, name, ip=None):
         return self._client.interface.get_interface(name, ip)
 
+    def get_all_ips(self):
+        return self._client.interface.get_all_ips()
+
+    def get_ips_by_interface(self, interface):
+        return self._client.interface.get_ips_by_interface(interface)
+
 
 class ResourceMonitorManager(Manager):
 

@@ -16,3 +16,10 @@ class InterfaceApp(object):
 
     def get_interface(self, name, ip=None):
         return self._if_mngr.get_interface(name, ip)
+
+    def get_all_ips(self):
+        return self._if_mngr.get_all_ips()
+
+    def get_ips_by_interface(self, interface):
+        return self._if_mngr.get_ips_by_interface(interface)
+
