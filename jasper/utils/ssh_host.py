@@ -271,7 +271,8 @@ class Host(object):
                                    (chan.recv_stderr, stderr)]:
                 while True:
                     chunk = callback(self.REPLY_BUFFER)
-                    if chunk == '':
+                    _chunk = chunk.decode('utf-8') if is_py3() else chunk
+                    if _chunk == '':
                         break
                     else:
                         fobj.write(chunk)
