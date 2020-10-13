@@ -48,6 +48,17 @@ class LydianServiceBase(rpyc.Service):
 class LydianService(LydianServiceBase):
     RECORD_QUEUE_SIZE = 50000
 
+    EXPOSED = [
+        'monitor',
+        'namespace',
+        'rules',
+        'interface',
+        'traffic',
+        'iperf',
+        'tcpdump',
+        'results'
+    ]
+
     def __init__(self):
         super(LydianService, self).__init__()
 
@@ -57,16 +68,21 @@ class LydianService(LydianServiceBase):
         self.recorder = RecordManager(self._traffic_records,
                                       self._resource_records)
 
-        self.exposed_namespace = NamespaceApp()
-        self.exposed_interface = InterfaceApp()
-        self.exposed_rules = RulesApp()
-        self.exposed_traffic = TrafficControllerApp(self._traffic_records,
-                                                    self.exposed_rules)
-        self.exposed_monitor = ResourceMonitor(self._resource_records)
-        self.exposed_tcpdump = TCPDump()
-        self.exposed_iperf = Iperf()
-        self.exposed_results = Results()
+        self.namespace = NamespaceApp()
+        self.interface = InterfaceApp()
+        self.rules = RulesApp()
+        self.traffic = TrafficControllerApp(self._traffic_records,
+                                                    self.rules)
+        self.monitor = ResourceMonitor(self._resource_records)
+        self.tcpdump = TCPDump()
+        self.iperf = Iperf()
+        self.results = Results()
 
+        self.expose()
+
+    def expose(self):
+        for key in self.EXPOSED:
+            setattr(self, 'exposed_'+ key, key)
 
 
 class LydianController(object):
