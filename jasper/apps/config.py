@@ -13,12 +13,44 @@ import sys
 
 from sql30 import db
 
+<<<<<<< HEAD
 from axon.apps.base import BaseApp
 from axon.common import consts, utils
+=======
+from jasper.apps.base import BaseApp
+import jasper.utils.logger as logger
+>>>>>>> f88c338... lydian: RPyC srvice
 
 log = logging.getLogger(__name__)
 configs = None
 
+<<<<<<< HEAD
+=======
+#### CONSTANTS ####
+SYSTEM = platform.system()
+LINUX_OS = True if SYSTEM == 'Linux' else False
+MAC_OS = True if SYSTEM == 'Darwin' else False
+WIN_OS = True if SYSTEM == 'Windows' else False
+
+# Logging Constants
+LINUX_LOG_DIR = os.environ.get('LINUX_LOG_DIR', "/var/log/lydian")
+WIN_LOG_DIR = os.environ.get('WIN_LOG_DIR', "C:\\lydian\\log")
+if LINUX_OS or MAC_OS:
+    LOG_DIR = LINUX_LOG_DIR
+elif WIN_OS:
+    LOG_DIR = WIN_LOG_DIR
+LOG_FILE = "lydian.log"
+
+# Axon Service Constants
+AXON_PORT = 5678
+LYDIAN_PORT = 5649
+
+# Recorder Constants
+WAVEFRONT = 'wavefront'
+SQL = 'sql'
+ELASTIC_SEARCH = 'elasticsearch'
+ELASTIC_SEARCH_PORT = 9200
+>>>>>>> f88c338... lydian: RPyC srvice
 
 # # # # # All Configurable Variables set below # # # # #
 
@@ -61,7 +93,7 @@ RECORD_UPDATER_THREAD_POOL_SIZE = 50
 
 ELASTIC_SEARCH_SERVER_ADDRESS = os.environ.get('ELASTIC_SEARCH_SERVER_ADDRESS', None)
 ELASTIC_SEARCH_SERVER_PORT = os.environ.get(
-    'ELASTIC_SEARCH_SERVER_PORT', consts.ELASTIC_SEARCH_PORT)
+    'ELASTIC_SEARCH_SERVER_PORT', ELASTIC_SEARCH_PORT)
 
 # # # # # End of Configurable Variables  # # # # #
 

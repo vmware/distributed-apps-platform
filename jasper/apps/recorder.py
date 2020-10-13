@@ -8,7 +8,7 @@ import logging
 import queue
 import threading
 
-from jasper.apps.base import BaseApp
+from jasper.apps.base import BaseApp, exposify
 from jasper.recorder.wf_client import WavefrontTrafficRecorder, WavefrontResourceRecorder
 from jasper.traffic.core import TrafficRecord
 from sql30 import db
@@ -43,7 +43,8 @@ class TrafficRecordDB(db.Model):
     VALIDATE_BEFORE_WRITE = True
 
 
-class TrafficRecorder(TrafficRecordDB, BaseApp):
+
+class TrafficRecorder(TrafficRecordDB):
     NAME = "TRAFFIC_RECORDER"
 
     MAXSIZE = 3000
@@ -64,7 +65,8 @@ class TrafficRecorder(TrafficRecordDB, BaseApp):
                 db.write(tbl=self.TABLE, **values)
 
 
-class RecordManager(object):
+@exposify
+class RecordManager(BaseApp):
     """
     This class act as a deamon to read traffic record queue and to
     write record to the db recorder provided

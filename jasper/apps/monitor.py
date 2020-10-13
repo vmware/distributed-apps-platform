@@ -15,12 +15,13 @@ import time
 
 import psutil
 
-from jasper.apps.base import BaseApp
+from jasper.apps.base import BaseApp, exposify
 from jasper.recorder.record import ResourceRecord
 
 log = logging.getLogger(__name__)
 
 
+@exposify
 class ResourceMonitor(BaseApp):
     def __init__(self, rqueue, interval=3, proc_name='runner'):
         """
