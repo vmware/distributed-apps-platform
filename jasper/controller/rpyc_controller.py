@@ -51,21 +51,25 @@ class LydianService(LydianServiceBase):
         self._traffic_records = Queue(self.RECORD_QUEUE_SIZE)
         self._resource_records = Queue(self.RECORD_QUEUE_SIZE)
 
-        self.namespace = NamespaceApp()
-        self.interface = InterfaceApp()
-        self.rules = RulesApp()
-        self.traffic = TrafficControllerApp(self._traffic_records, self.rules)
-        self.monitor = ResourceMonitor(self._resource_records)
-        self.tcpdump = TCPDump()
-        self.iperf = Iperf()
-        self.results = Results()
-        self.recorder = RecordManager(self._traffic_records, self._resource_records)
+        self.recorder = RecordManager(self._traffic_records,
+                                      self._resource_records)
+
+        self.exposed_namespace = NamespaceApp()
+        self.exposed_interface = InterfaceApp()
+        self.exposed_rules = RulesApp()
+        self.exposed_traffic = TrafficControllerApp(self._traffic_records,
+                                                    self.exposed_rules)
+        self.exposed_monitor = ResourceMonitor(self._resource_records)
+        self.exposed_tcpdump = TCPDump()
+        self.exposed_iperf = Iperf()
+        self.exposed_results = Results()
+
 
 
 class LydianController(object):
 
     def __init__(self):
-        self.lydian_port = conf.AXON_PORT
+        self.lydian_port = conf.LYDIAN_PORT
         self.service = LydianService()
         self.protocol_config = self.service.RPYC_PROTOCOL_CONFIG
         self.logger = logging.getLogger(__name__)
