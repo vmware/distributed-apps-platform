@@ -12,7 +12,6 @@ from queue import Queue
 import rpyc
 from rpyc.utils.server import ThreadPoolServer
 
-from jasper.apps import config as conf
 
 from jasper.apps.config import get_configs
 from jasper.apps.interface import InterfaceApp
@@ -25,7 +24,11 @@ from jasper.apps.recorder import RecordManager
 from jasper.apps.results import Results
 from jasper.apps.rules import RulesApp
 
+import jasper.utils.logger as logger
+import jasper.apps.config as config
+
 rpyc.core.protocol.DEFAULT_CONFIG['allow_pickle'] = True
+LYDIAN_PORT = 5649
 
 
 class LydianServiceBase(rpyc.Service):
@@ -69,7 +72,7 @@ class LydianService(LydianServiceBase):
 class LydianController(object):
 
     def __init__(self):
-        self.lydian_port = conf.LYDIAN_PORT
+        self.lydian_port = LYDIAN_PORT
         self.service = LydianService()
         self.protocol_config = self.service.RPYC_PROTOCOL_CONFIG
         self.logger = logging.getLogger(__name__)
@@ -100,6 +103,8 @@ class LydianController(object):
 
 
 def main():
+    logger.setup_logging(log_dir=config.LOG_DIR,
+                         log_file=config.LOG_FILE)
     lydian_service = LydianController()
     lydian_service.start()
 

@@ -18,8 +18,12 @@ from axon.apps.base import BaseApp
 from axon.common import consts, utils
 =======
 from jasper.apps.base import BaseApp
+<<<<<<< HEAD
 import jasper.utils.logger as logger
 >>>>>>> f88c338... lydian: RPyC srvice
+=======
+
+>>>>>>> 17eec04... Lydian: Remove cyclic dependency
 
 log = logging.getLogger(__name__)
 configs = None
@@ -54,11 +58,14 @@ ELASTIC_SEARCH_PORT = 9200
 
 # # # # # All Configurable Variables set below # # # # #
 
+<<<<<<< HEAD
 LINUX_OS = "Linux" in platform.uname()
 LOG_FILE = os.environ.get('LOG_FILE', consts.LOG_FILE)
 LOG_DIR = os.environ.get('LOG_DIR', consts.LOG_DIR)
 utils.setup_logging(log_dir=LOG_DIR, log_file=LOG_FILE)
 
+=======
+>>>>>>> 17eec04... Lydian: Remove cyclic dependency
 
 # Traffic Server Configs
 REQUEST_QUEUE_SIZE = 100
