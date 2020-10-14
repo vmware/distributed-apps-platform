@@ -72,6 +72,8 @@ class RecordManager(BaseApp):
     write record to the db recorder provided
     """
     RECORD_UPDATER_THREAD_POOL_SIZE = 2
+    RESOURCE_RECORD_REPORT_FREQ = 4
+    TRAFFIC_RECORD_REPORT_FREQ = 4
 
     def __init__(self, traffic_records, resource_records):
         self._traffic_recorders = [
@@ -96,7 +98,7 @@ class RecordManager(BaseApp):
         while not self._stopped.is_set():
             try:
                 # TODO : Add logic for flush interval / buffer.
-                t_record = self._traffic_records.get(timeout=3)
+                t_record = self._traffic_records.get(timeout=self.TRAFFIC_RECORD_REPORT_FREQ)
                 for recorder in self._traffic_recorders:
                     recorder.write(t_record)
             except Exception as err:
@@ -106,7 +108,7 @@ class RecordManager(BaseApp):
         while not self._stopped.is_set():
             try:
                 # TODO : Add logic for flush interval / buffer.
-                t_record = self._resource_records.get(timeout=3)
+                t_record = self._resource_records.get(timeout=self.RESOURCE_RECORD_REPORT_FREQ)
                 for recorder in self._resource_recorders:
                     recorder.write(t_record)
             except Exception as err:

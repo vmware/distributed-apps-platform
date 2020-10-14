@@ -23,13 +23,15 @@ log = logging.getLogger(__name__)
 
 @exposify
 class ResourceMonitor(BaseApp):
-    def __init__(self, rqueue, interval=3, proc_name='runner'):
+
+    REPORT_INTERVAL = 2
+    def __init__(self, rqueue, interval=None, proc_name='runner'):
         """
         A simple resource monitor that writes cpu / memory percentage
         to wavefront at requested interval.
         """
         self._rqueue = rqueue    # records queue to put records onto.
-        self._interval = interval
+        self._interval = interval or self.REPORT_INTERVAL
         self._switch = threading.Event()
         self._proc_name = proc_name
         self._thread = None
