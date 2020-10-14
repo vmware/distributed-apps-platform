@@ -82,7 +82,7 @@ class LydianService(LydianServiceBase):
 
     def expose(self):
         for key in self.EXPOSED:
-            setattr(self, 'exposed_'+ key, key)
+            setattr(self, 'exposed_'+ key, getattr(self, key))
 
 
 class LydianController(object):
