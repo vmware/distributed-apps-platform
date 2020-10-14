@@ -202,6 +202,18 @@ class ConfigManager(Manager):
         return self._client.configs.set_param(param, val)
 
 
+class ResultsManager(Manager):
+
+    def traffic(self, reqid):
+        return self._client.results.traffic(reqid)
+
+
+class TrafficControllerManager(Manager):
+
+    def register_traffic(self, traffic_rules):
+        return self._client.register_traffic(traffic_rules)
+
+
 class LydianClient(object):
     """
     Top level object to access Lydian API
@@ -229,14 +241,28 @@ class LydianClient(object):
         self._proxy_host = proxy_host
         self.rpc_client = None
         self._connect(retry_count, sleep_interval, request_timeout)
-        self.traffic = TrafficManger(self.rpc_client.root)
-        self.stats = StatsManager(self.rpc_client.root)
+
+        # Interface / Namespaces
         self.namespace = NamespaceManager(self.rpc_client.root)
         self.interface = InterfaceManager(self.rpc_client.root)
+
+        # Traffic Apps
+        self.traffic = TrafficManger(self.rpc_client.root)
+        self.controller = TrafficControllerManager(self.rpc_client.root)
+
+        # Results / Query Apps
+        self.stats = StatsManager(self.rpc_client.root)
+        self.results = ResultsManager(self.rpc_client.root)
+
+        # Resource Monitor
         self.monitor = ResourceMonitorManager(self.rpc_client.root)
+        # Packet Capture
         self.pcap = TCPDumpManager(self.rpc_client.root)
+        # IPerf Traffic
         self.iperf = IperfManager(self.rpc_client.root)
+
         self.scapy = ScapyManager(self.rpc_client.root)
+        # Params / Configs
         self.configs = ConfigManager(self.rpc_client.root)
 
     def _connect(self, retry_count, sleep_interval, request_timeout):
