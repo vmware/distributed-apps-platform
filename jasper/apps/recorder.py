@@ -101,6 +101,8 @@ class RecordManager(BaseApp):
                 t_record = self._traffic_records.get(timeout=self.TRAFFIC_RECORD_REPORT_FREQ)
                 for recorder in self._traffic_recorders:
                     recorder.write(t_record)
+            except queue.Empty:
+                pass
             except Exception as err:
                 log.error("Error in handling Traffic records : %r", err)
 
@@ -111,6 +113,8 @@ class RecordManager(BaseApp):
                 t_record = self._resource_records.get(timeout=self.RESOURCE_RECORD_REPORT_FREQ)
                 for recorder in self._resource_recorders:
                     recorder.write(t_record)
+            except queue.Empty:
+                pass
             except Exception as err:
                 log.error("Error in handling Resource records %r", err)
 

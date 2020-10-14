@@ -90,7 +90,7 @@ if __name__ == '__main__':
         z = Zipper(output_file='lydian.egg')
         z.add_module('rpyc')
         z.add_module('sql30')
-        z.add_module('psutil')
+        # z.add_module('psutil')    # TODO : Resolve this.
         z.add_module('wavefront-sdk-python')
         z.add_module('wavefront-api-client')
         z.add_dir(dirname="jasper", atroot="./jasper/")
