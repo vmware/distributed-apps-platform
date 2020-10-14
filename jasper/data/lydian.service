@@ -10,7 +10,8 @@ Description=Lydian Daemon
 
 [Service]
 Type=idle
-Environment="PYTHONPATH=$PYTHONPATH:~/lydian.egg"
+Environment="PYTHONPATH=lydian.egg"
+WorkingDirectory=/root
 ExecStart=/usr/bin/python -mjasper.controller.rpyc_controller
 StandardOutput=journal+console
 EnvironmentFile=/etc/lydian/lydian.conf
