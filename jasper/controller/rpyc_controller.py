@@ -84,6 +84,20 @@ class LydianService(LydianServiceBase):
         for key in self.EXPOSED:
             setattr(self, 'exposed_'+ key, getattr(self, key))
 
+    def start(self):
+        try:
+            self.monitor.start()
+            self.recorder.start()
+        except Exception as err:
+            self.logger.exception("Error in starting Services %r", err)
+
+    def stop(self):
+        try:
+            self.monitor.stop()
+            self.recorder.stop()
+        except Exception as err:
+            self.logger.exception("Error while stopping Services %r", err)
+
 
 class LydianController(object):
 
@@ -101,20 +115,11 @@ class LydianController(object):
             logger=self.logger, nbThreads=50)
 
     def start(self):
-        try:
-            self.service.monitor.start()
-        except Exception as err:
-            self.logger.exception("Error in starting Resource Monitoring - "
-                                  "%r", err)
+        self.service.start()
         self.lydian_service.start()
 
     def stop(self):
-        try:
-            self.service.monitor.stop()
-        except Exception as err:
-            self.logger.exception("Error while stopping Resource Monitoring - "
-                                  "%r", err)
-
+        self.service.stop()
         self.lydian_service.close()
 
 
