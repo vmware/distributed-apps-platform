@@ -15,6 +15,7 @@ from jasper.utils.pack import generate_egg
 def prep_node(hostip, username='root', password='FAKE_PASSWORD'):
 
     with Host(host=hostip, user=username, passwd=password) as host:
+        host.req_call('systemctl stop lydian')
 
         data_dir = os.path.dirname(os.path.realpath(__file__))
         # Copy service file
