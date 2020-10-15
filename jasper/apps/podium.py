@@ -13,6 +13,8 @@ from jasper.utils.common import get_mgmt_ifname, get_host_name
 from jasper.utils.prep import prep_node
 from jasper.controller.client import LydianClient
 
+import jasper.common.consts as consts
+
 
 log =logging.getLogger(__name__)
 
@@ -51,7 +53,7 @@ class Podium(BaseApp):
 
         return False
 
-    def add_endpoints(self, hostip):
+    def add_endpoints(self, hostip, username=None, password=None):
         """
         Add endpoints from the host, reachable by hostip.
         """
@@ -59,19 +61,39 @@ class Podium(BaseApp):
             log.info("%s is already added.", hostip)
             return
 
+        username = username or self._ep_username
+        password = password or self._ep_password
+
         try:
-            prep_node(hostip, self._ep_username, self._ep_password)
-            if not self.wait_on_host(hostip):
-                log.error("Could not start service on %s", hostip)
-            
             with LydianClient(hostip) as client:
-                client.interface.get_all_ips()
-                client.namespace.list_namespaces_ips()
+                # fetch regular interfaces
+                for iface in client.interface.list_interfaces():
+                    if not any([iface.startswith(x) for x in 
+                                consts.NAMESPACE_INTERFACE_NAME_PREFIXES]):
+                        continue
+                    ips = client.interface.get_ips_by_interface(iface)
+                    for ip in ips:
+                        self._ep_hosts[ip] = hostip
+
+                # Fetch Namespace Interfaces
+                for ip in client.namespace.list_namespaces_ips():
+                    self._ep_hosts[ip] = hostip
 
             self._ep_hosts[hostip] = hostip
 
-        except Exception:
-            pass
+        except Exception as err:
+            log.error("Error in adding endpoint %s - %r", hostip, err)
+
+    def add_hosts(self, hostip, username=None, password=None):
+        username = username or self._ep_username
+        password = password or self._ep_password
+        try:
+            prep_node(hostip, username, password)
+            if not self.wait_on_host(hostip):
+                log.error("Could not start service on %s", hostip)
+            self.add_endpoints(hostip, username, password)
+        except Exception as err:
+            log.error("Error in preparing host %s - %r", hostip, err)
 
     def is_host_up(self, hostip):
         try:

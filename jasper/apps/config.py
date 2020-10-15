@@ -74,8 +74,8 @@ ALLOW_REUSE_ADDRESS = True
 
 
 # Env Configs
-TEST_ID = os.environ.get('TEST_ID', None)
-TESTBED_NAME = os.environ.get('TESTBED_NAME', None)
+TEST_ID = os.environ.get('TEST_ID', '')
+TESTBED_NAME = os.environ.get('TESTBED_NAME', '')
 AXON_PORT = int(os.environ.get('AXON_PORT', 5678))
 
 
