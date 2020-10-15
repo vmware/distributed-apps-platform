@@ -213,7 +213,7 @@ class ResultsManager(Manager):
 class TrafficControllerManager(Manager):
 
     def register_traffic(self, traffic_rules):
-        return self._client.register_traffic(traffic_rules)
+        return self._client.controller.register_traffic(traffic_rules)
 
 
 class LydianClient(object):

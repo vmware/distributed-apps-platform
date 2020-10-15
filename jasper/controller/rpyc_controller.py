@@ -56,7 +56,8 @@ class LydianService(LydianServiceBase):
         'traffic',
         'iperf',
         'tcpdump',
-        'results'
+        'results',
+        'controller'
     ]
 
     def __init__(self):
