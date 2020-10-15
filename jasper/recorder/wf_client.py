@@ -20,17 +20,22 @@ def _get_wf_sender():
         token='d9302bfa-89b4-4d7f-995e-830887b9e903')
 
 
-class WavefrontTrafficRecorder(object):
+class WavefrontRecorder(object):
 
     def __init__(self):
         self._client = _get_wf_sender()
+        self._testbed = conf.TESTBED_NAME or ''
+        self._testid = conf.TEST_ID or ''
+
+
+class WavefrontTrafficRecorder(WavefrontRecorder):
 
     def write(self, record):
         # assert isinstance(trec, TrafficRecord)
         prefix = 'lydian.traffic.' + record.protocol + ".result"
         tags = {
-            "datacenter": conf.TESTBED_NAME,
-            "test_id": conf.TEST_ID,
+            "datacenter": self._testbed,
+            "test_id": self._testbed,
             "reqid": record.reqid,
             "ruleid": record.ruleid,
             "source": record.source,
@@ -44,16 +49,13 @@ class WavefrontTrafficRecorder(object):
                     tags=tags)
 
 
-
-class WavefrontResourceRecorder(object):
-    def __init__(self):
-        self._client = _get_wf_sender()
+class WavefrontResourceRecorder(WavefrontRecorder):
 
     def write(self, record):
         # assert isinstance(trec, ResourceRecord)
         prefix = 'lydian.resources.'
-        tags = {"datacenter": conf.TESTBED_NAME,
-                "test_id": conf.TEST_ID}
+        tags = {"datacenter": self._testbed,
+                "test_id": self._testid}
         for key, val in record.as_dict().items():
             if key in ['_id', '_timestamp']:
                 continue
