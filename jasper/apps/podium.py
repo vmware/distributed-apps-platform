@@ -68,7 +68,7 @@ class Podium(BaseApp):
             with LydianClient(hostip) as client:
                 # fetch regular interfaces
                 for iface in client.interface.list_interfaces():
-                    if not any([iface.startswith(x) for x in 
+                    if not any([iface.startswith(x) for x in
                                 consts.NAMESPACE_INTERFACE_NAME_PREFIXES]):
                         continue
                     ips = client.interface.get_ips_by_interface(iface)
@@ -113,16 +113,26 @@ class Podium(BaseApp):
             srchost = self.get_ep_host(rule['src'])
             dsthost = self.get_ep_host(rule['dst'])
 
-            with LydianClient(srchost) as sclient:
-                sclient.controller.register_traffic(rule)
+            if not srchost:
+                log.error("No host found for running traffic from IP : %s",
+                          rule['src'])
+                continue
+            elif not dsthost:
+                log.error("No host found for running traffic from IP : %s",
+                          rule['dst'])
+                continue
 
+            # Start Server before the client.
             with LydianClient(dsthost) as dclient:
-                dclient.controller.register_traffic(rule)
+                dclient.controller.register_traffic([rule])
+
+            with LydianClient(srchost) as sclient:
+                sclient.controller.register_traffic([rule])
 
 
 def get_podium():
     global _podium
     if not _podium:
         _podium = Podium()
-    
+
     return _podium

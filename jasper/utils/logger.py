@@ -1,7 +1,7 @@
 import logging
 import os
 
-import jasper.apps.config as config
+import jasper.common.consts as consts
 
 
 def create_log_dir(log_dir):
@@ -21,8 +21,8 @@ def setup_logging(log_dir=None, log_file=None):
     """
     Sets up Logging handlers and other environment.
     """
-    log_dir = log_dir if log_dir else config.LOG_DIR
-    log_file = log_file if log_file else config.LOG_FILE
+    log_dir = log_dir if log_dir else consts.LOG_DIR
+    log_file = log_file if log_file else consts.LOG_FILE
     create_log_dir(log_dir)
 
     log_file_name = os.path.join(log_dir, log_file)

@@ -26,9 +26,9 @@ from jasper.apps.rules import RulesApp
 
 import jasper.utils.logger as logger
 import jasper.apps.config as config
+import jasper.common.consts as consts
 
 rpyc.core.protocol.DEFAULT_CONFIG['allow_pickle'] = True
-LYDIAN_PORT = 5649
 
 
 class LydianServiceBase(rpyc.Service):
@@ -53,7 +53,6 @@ class LydianService(LydianServiceBase):
         'namespace',
         'rules',
         'interface',
-        'traffic',
         'iperf',
         'tcpdump',
         'results',
@@ -72,8 +71,8 @@ class LydianService(LydianServiceBase):
         self.namespace = NamespaceApp()
         self.interface = InterfaceApp()
         self.rules = RulesApp()
-        self.traffic = TrafficControllerApp(self._traffic_records,
-                                                    self.rules)
+        self.controller = TrafficControllerApp(self._traffic_records,
+                                               self.rules)
         self.monitor = ResourceMonitor(self._resource_records)
         self.tcpdump = TCPDump()
         self.iperf = Iperf()
@@ -103,7 +102,7 @@ class LydianService(LydianServiceBase):
 class LydianController(object):
 
     def __init__(self):
-        self.lydian_port = LYDIAN_PORT
+        self.lydian_port = consts.LYDIAN_PORT
         self.service = LydianService()
         self.protocol_config = self.service.RPYC_PROTOCOL_CONFIG
         self.logger = logging.getLogger(__name__)

@@ -109,6 +109,7 @@ class TrafficControllerApp(BaseApp):
 
     def _get_traffic_rule(self, rule):
         """ Rule config. """
+        log.info("Processing rule : %s", rule)
         trule = core.TrafficRule()
 
         for key, val in rule.items():
@@ -118,10 +119,12 @@ class TrafficControllerApp(BaseApp):
         return trule
 
     def register_traffic(self, traffic_rules=None):
+        log.info("Registering Traffic : %r", traffic_rules)
         for rule in traffic_rules:
             # create a rule and add it to database.
             trule = self._get_traffic_rule(rule)
             self.rules.add(trule)
+        log.info("Registered Traffic Successfully: %r", traffic_rules)
 
     def start(self, ruleid):
         """ Start a Traffic task (again). """
