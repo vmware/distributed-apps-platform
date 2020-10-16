@@ -8,7 +8,7 @@
 Traffic Controller App handles all the pre processing and post processing
 work for Traffic Generation.
 '''
-
+import pickle
 import logging
 
 from jasper.apps.base import BaseApp, exposify
@@ -110,6 +110,9 @@ class TrafficControllerApp(BaseApp):
     def _get_traffic_rule(self, rule):
         """ Rule config. """
         log.info("Processing rule : %s", rule)
+        log.info("%s", type(rule).__name__)
+        rule = dict(rule)
+        log.info("After eval %s", type(rule).__name__)
         trule = core.TrafficRule()
 
         for key, val in rule.items():
@@ -119,12 +122,33 @@ class TrafficControllerApp(BaseApp):
         return trule
 
     def register_traffic(self, traffic_rules=None):
+        try:
+            traffic_rules = pickle.loads(traffic_rules)
+        except Exception:
+            # unpickled data. Let the error be raised later
+            # if we cann't process it.
+            pass    # unpickled data.
         log.info("Registering Traffic : %r", traffic_rules)
         for rule in traffic_rules:
             # create a rule and add it to database.
+            log.info("%s", type(rule).__name__)
             trule = self._get_traffic_rule(rule)
-            self.rules.add(trule)
+            # self.rules.add(trule)     # TODO : Fix rules app and enable it.
         log.info("Registered Traffic Successfully: %r", traffic_rules)
+
+    def register_rule(self, trule):
+        try:
+            trule = pickle.loads(trule)
+        except Exception:
+            # unpickled data. Let the error be raised later
+            # if we cann't process it.
+            pass    # unpickled data.
+
+        log.info("Registering Traffic : %r", trule)
+        self._add_rule_info(trule)
+        # self.rules.add(trule)     # TODO : Fix rules app and enableit.
+        log.info("Registered Traffic Successfully: %r", trule)
+        return trule
 
     def start(self, ruleid):
         """ Start a Traffic task (again). """

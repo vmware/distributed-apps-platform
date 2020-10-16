@@ -4,6 +4,7 @@
 # The full license information can be found in LICENSE.txt
 # in the root directory of this project.
 import errno
+import pickle
 import socket
 import time
 
@@ -213,7 +214,12 @@ class ResultsManager(Manager):
 class TrafficControllerManager(Manager):
 
     def register_traffic(self, traffic_rules):
+        traffic_rules = pickle.dumps(traffic_rules)
         return self._client.controller.register_traffic(traffic_rules)
+
+    def register_rule(self, trule):
+        trule = pickle.dumps(trule)
+        return self._client.controller.register_rule(trule)
 
 
 class LydianClient(object):
