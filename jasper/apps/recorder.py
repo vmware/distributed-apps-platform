@@ -37,7 +37,6 @@ class TrafficRecordDB(db.Model):
                     'expected': 'text',
                     'result': 'text'
                     },
-                'primary_key': 'timestamp'  # avoid duplicate entries.
             }]
         }
     VALIDATE_BEFORE_WRITE = True
