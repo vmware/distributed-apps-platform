@@ -16,7 +16,6 @@ echo "Deletion successful."
 echo "Running debian builder"
 sudo mkdir -p ./debian/opt
 sudo cp -rf ./axon ./debian/opt/
-sudo cp -rf ./jasper ./debian/opt/
 sudo cp -rf ./etc ./debian/opt/axon/
 sudo dpkg-deb --build ./debian ./debian/dist/axon_service.deb
 echo "Debian is created successfully."
