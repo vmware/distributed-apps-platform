@@ -5,17 +5,23 @@
 # in the root directory of this project.
 
 import argparse
+import logging
 import os
 import tempfile
 
 from lydian.utils.ssh_host import Host
 from lydian.utils.pack import generate_egg
 
+log = logging.getLogger(__name__)
+
 
 def prep_node(hostip, username='root', password='FAKE_PASSWORD'):
 
     with Host(host=hostip, user=username, passwd=password) as host:
-        host.req_call('systemctl stop lydian')
+        try:
+            host.req_call('systemctl stop lydian')
+        except ValueError:
+            pass    # preparing for first time.
 
         data_dir = os.path.dirname(os.path.realpath(__file__))
         # Copy service file
@@ -34,8 +40,14 @@ def prep_node(hostip, username='root', password='FAKE_PASSWORD'):
         host.put_file(config_file, '/etc/lydian/lydian.conf')
 
         host.req_call('mv /tmp/lydian.egg ~/')
-        host.req_call('sudo systemctl daemon-reload')
-        host.req_call('systemctl start lydian')
+        try:
+            host.req_call('sudo systemctl daemon-reload')
+            host.req_call('sudo systemctl enable lydian.service')
+            host.req_call('systemctl start lydian')
+        except Exception as err:
+            log.error("Error in starting service at %s : %r", hostip, err)
+            return False
+    return True
 
 
 def main():
