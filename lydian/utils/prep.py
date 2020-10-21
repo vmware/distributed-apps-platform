@@ -41,13 +41,32 @@ def prep_node(hostip, username='root', password='FAKE_PASSWORD'):
 
         host.req_call('mv /tmp/lydian.egg ~/')
         try:
-            host.req_call('sudo systemctl daemon-reload')
             host.req_call('sudo systemctl enable lydian.service')
+            host.req_call('sudo systemctl daemon-reload')
             host.req_call('systemctl start lydian')
         except Exception as err:
             log.error("Error in starting service at %s : %r", hostip, err)
             return False
     return True
+
+
+def cleanup_node(hostip, username='root', password='FAKE_PASSWORD'):
+    """
+    Cleans up Lydian service from the endpoints.
+    """
+
+    with Host(host=hostip, user=username, passwd=password) as host:
+
+        def _func(cmnd):
+            try:
+                host.req_call(cmnd)
+            except ValueError:
+                pass
+        _func('systemctl stop lydian')
+        _func('sudo systemctl disable lydian.service')
+        _func('rm /etc/lydian/lydian.conf')
+        _func('rm /etc/systemd/system/lydian.service')
+        _func('rm /var/log/lydian/lydian.log')
 
 
 def main():
