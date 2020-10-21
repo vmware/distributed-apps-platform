@@ -73,11 +73,10 @@ class Podium(BaseApp):
         try:
             with LydianClient(hostip) as client:
                 # fetch regular interfaces
-                for iface in client.interface.list_interfaces():
+                for iface, ips in client.interface.get_interface_ips_map().items():
                     if not any([iface.startswith(x) for x in
                                 consts.NAMESPACE_INTERFACE_NAME_PREFIXES]):
                         continue
-                    ips = client.interface.get_ips_by_interface(iface)
                     for ip in ips:
                         self._ep_hosts[ip] = hostip
 

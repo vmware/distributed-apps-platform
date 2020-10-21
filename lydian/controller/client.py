@@ -129,6 +129,9 @@ class InterfaceManager(Manager):
     def get_ips_by_interface(self, interface):
         return self._client.interface.get_ips_by_interface(interface)
 
+    def get_interface_ips_map(self):
+        return pickle.loads(self._client.interface.get_interface_ips_map())
+
 
 class ResourceMonitorManager(Manager):
 

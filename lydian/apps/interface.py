@@ -4,6 +4,8 @@
 # The full license information can be found in LICENSE.txt
 # in the root directory of this project.
 
+import pickle
+
 from lydian.apps.base import BaseApp, exposify
 from lydian.utils.network_utils import InterfaceManager
 
@@ -25,3 +27,8 @@ class InterfaceApp(BaseApp):
     def get_ips_by_interface(self, interface):
         return self._if_mngr.get_ips_by_interface(interface)
 
+    def get_interface_ips_map(self):
+        result = {}
+        for iface in self.list_interfaces():
+            result[iface] = self.get_ips_by_interface(iface)
+        return pickle.dumps(result)
