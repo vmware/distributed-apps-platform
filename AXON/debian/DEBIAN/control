@@ -1,0 +1,9 @@
+Source: axon
+Package: axon
+Version: 0.3.4
+Section: base
+Priority: optional
+Architecture: all
+Depends:
+Maintainer: VMware Inc <cqe-hybrid@vmware.com>
+Description: Axon Service

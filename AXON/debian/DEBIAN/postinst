@@ -1,0 +1,23 @@
+#!/bin/bash
+# Copyright (c) 2019 VMware, Inc. All Rights Reserved.
+# SPDX-License-Identifier: BSD-2 License
+# The full license information can be found in LICENSE.txt
+# in the root directory of this project.
+
+set -x
+echo "Running Post Install Scripts"
+echo "configuring axon"
+sudo mkdir /etc/axon
+sudo cp /opt/axon/etc/axon.conf /etc/axon/axon.conf
+echo "" | sudo tee --append /etc/axon/axon.conf
+echo HELPER_IP=$HELPER_IP |sudo tee --append /etc/axon/axon.conf
+echo TEST_ID=$TEST_ID |sudo tee --append /etc/axon/axon.conf
+echo RIAK_PORT=$RIAK_PORT |sudo tee --append /etc/axon/axon.conf
+echo NAMESPACE_MODE=$NAMESPACE_MODE |sudo tee --append /etc/axon/axon.conf
+echo "copying axon service file to systemd"
+sudo cp /opt/axon/etc/axon.service /etc/systemd/system/axon.service
+echo "reloading daemon"
+sudo systemctl daemon-reload
+echo "starting axon daemon"
+sudo systemctl start axon
+sudo systemctl enable axon
