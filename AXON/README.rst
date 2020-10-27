@@ -1,3 +1,6 @@
+.. image:: https://img.shields.io/pypi/dm/validation-app-engine
+   :alt: PyPI - Downloads
+
 validation-app-engine
 =====================
 

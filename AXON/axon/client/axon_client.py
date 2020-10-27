@@ -263,8 +263,7 @@ class AxonClient(object):
                 time.sleep(sleep_interval)
             except socket.error as e:
                 last_exception = e
-                errno = e.errno
-                if errno == errno.ECONNRESET or errno == errno.ECONNREFUSED:
+                if e.errno == errno.ECONNRESET or e.errno == errno.ECONNREFUSED:
                     time.sleep(sleep_interval)
                 else:
                     raise
