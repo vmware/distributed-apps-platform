@@ -13,7 +13,7 @@ with open("lydian/__init__.py") as fp:
 setuptools.setup(
     name="lydian",
     version=version['__version__'],
-    author="Vipin Sharma",
+    author="Vipin Sharma, Pradeep Singh, Spiro Kourtessis, Gavin Chang",
     author_email="sharmavipin@vmware.com",
     description="Tool for Traffic Generation, Management and Monitoring",
     long_description=long_description,

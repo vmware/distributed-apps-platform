@@ -22,11 +22,7 @@ import signal
 import subprocess
 import time
 
-<<<<<<< HEAD:AXON/axon/apps/console.py
 from axon.apps.base import BaseApp
-=======
-from lydian.apps.base import BaseApp
->>>>>>> 58904ca... lydian : Initial changes to prepare for release - lydian 0.1.0:lydian/apps/console.py
 
 log = logging.getLogger(__name__)
 

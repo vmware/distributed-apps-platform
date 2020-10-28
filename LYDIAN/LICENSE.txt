@@ -1,8 +1,8 @@
-validation-app-engine
-Copyright (c) 2019 VMware, Inc.  All rights reserved
+LYDIAN
+Copyright (c) 2020 VMware, Inc.  All rights reserved
 
 The BSD-2 license (the "License") set forth below applies to all
-parts of the validation-app-engine.
+parts of the LYDIAN.
 You may not use this file except in compliance with the License.
 
 BSD-2 License
