@@ -3,15 +3,17 @@
 # SPDX-License-Identifier: BSD-2 License
 # The full license information can be found in LICENSE.txt
 # in the root directory of this project.
-
-import importlib
-import logging
-import os
-import zipfile
-
 '''
 A simple module for zipping files and creating egg files.
 '''
+import importlib
+import logging
+import os
+import tempfile
+import time
+import zipfile
+
+log = logging.getLogger(__name__)
 
 
 class Zipper(object):
@@ -82,18 +84,62 @@ class Zipper(object):
                         _arcfile = os.path.join(atroot,
                                                 os.path.relpath(_file, srcdir))
                     print ("Writing ", _file, " --> ", _arcfile)
+                    log.info("Writing %s --> %s", _file, _arcfile)
                     zf.write(filename=_file, arcname=_arcfile)
 
 
-if __name__ == '__main__':
+def install_egg():
+    """
+    Installs egg in Lydian package.
+    """
+    lydian_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), '../'))
+    install_dir = os.path.join(lydian_path, 'data')
+
+    lock_file = os.path.join(install_dir, 'install.lock')
+    # Locking mechanism
+    while os.path.exists(lock_file):
+        log.info("Waiting for other egg installation to finish.")
+        time.sleep(7)
+
+    egg_file = os.path.join(install_dir, 'lydian.egg')
+    if os.path.exists(egg_file):
+        log.info("Egg already installed. Creation skipped.")
+        return
+
     try:
-        z = Zipper(output_file='lydian.egg')
+        temp_egg_file = tempfile.NamedTemporaryFile(dir='/tmp',
+            prefix='lydian_egg_', suffix='.egg', delete=False)
+
+        # Create Lock file
+        # TODO : Following is still not a full proof locking
+        # mechanism. If preparing of hosts need to go parallel
+        # this needs to be done in a better way.
+        with open(lock_file, 'w+') as _:
+            _ = _
+
+        z = Zipper(output_file=temp_egg_file.name)
+
+        # Pack Lydian dependency packages.
         z.add_module('rpyc')
         z.add_module('sql30')
-        # z.add_module('psutil')    # TODO : Resolve this.
         z.add_module('wavefront-sdk-python')
         z.add_module('wavefront-api-client')
-        z.add_dir(dirname="lydian", atroot="./lydian/")
-        logging.info("Generated sample.egg")
+
+        # Pack Lydian Source
+        z.add_dir(dirname=lydian_path, atroot="./lydian/")
+        os.system('cp %s %s' % (temp_egg_file.name, egg_file))
+        logging.info("Generated egg at %s", egg_file)
     except Exception as err:
-        logging.info("Error in zipping directory")
+        logging.info("Error in zipping directory :%r", err)
+    finally:
+        # release lock file
+        if os.path.exists(lock_file):
+            os.remove(lock_file)
+
+        if os.path.exists(temp_egg_file.name):
+            os.remove(temp_egg_file.name)
+
+
+if __name__ == '__main__':
+    install_egg()

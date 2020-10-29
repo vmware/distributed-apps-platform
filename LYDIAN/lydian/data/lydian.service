@@ -12,7 +12,7 @@ Description=Lydian Daemon
 Type=idle
 Environment="PYTHONPATH=lydian.egg"
 WorkingDirectory=/root
-ExecStart=/usr/local/bin/python3 -mlydian.controller.rpyc_controller
+ExecStart=%s -mlydian.controller.rpyc_controller
 StandardOutput=journal+console
 EnvironmentFile=/etc/lydian/lydian.conf
 

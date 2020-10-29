@@ -10,12 +10,13 @@ import os
 import tempfile
 
 from lydian.utils.ssh_host import Host
-from lydian.utils.pack import generate_egg
+from lydian.utils.install import install_egg
 
 log = logging.getLogger(__name__)
 
 
-def prep_node(hostip, username='root', password='FAKE_PASSWORD'):
+def prep_node(hostip, username='root', password='FAKE_PASSWORD',
+              egg_dir=None, egg_file='lydian.egg', config_file_path=None):
 
     with Host(host=hostip, user=username, passwd=password) as host:
         try:
@@ -24,22 +25,39 @@ def prep_node(hostip, username='root', password='FAKE_PASSWORD'):
             pass    # preparing for first time.
 
         data_dir = os.path.dirname(os.path.realpath(__file__))
-        # Copy service file
-        service_file = os.path.join(data_dir, '../data/lydian.service')
 
-        host.put_file(service_file,
-                      '/etc/systemd/system/lydian.service')
+        # Copy service file
+        python3_path = host.req_call('which python3').strip()
+
+        # Read Service file contents
+        service_file_lines = []
+        with open(os.path.join(data_dir, '../data/lydian.service')) as fp:
+            service_file_lines = fp.readlines()
+
+        service_file_lines = [x if not x.startswith('ExecStart=') else
+                              x % python3_path for x in service_file_lines]
+
+        # Modify service file with python path.
+        with tempfile.NamedTemporaryFile(mode='w', dir='/tmp',
+                                         prefix='lydian_service_') as sfile:
+            sfile.writelines(service_file_lines)
+            sfile.flush()
+            host.put_file(sfile.name, '/etc/systemd/system/lydian.service')
 
         # Copy Egg file
-        egg_file = os.path.join(data_dir, '../data/lydian.egg')
-        host.put_file(egg_file, '/tmp/lydian.egg')
+        egg_file = os.path.join(egg_dir, egg_file) if egg_dir else \
+            os.path.join(data_dir, '../data/lydian.egg')
+        if not os.path.exists(egg_file):
+            # Running first time, install egg
+            install_egg()
+        host.put_file(egg_file, '/root/lydian.egg')
 
         # Copy Config File.
-        config_file = os.path.join(data_dir, '../data/lydian.conf')
+        config_file = config_file_path or os.path.join(data_dir,
+                                                       '../data/lydian.conf')
         host.req_call('mkdir -p /etc/lydian')
         host.put_file(config_file, '/etc/lydian/lydian.conf')
 
-        host.req_call('mv /tmp/lydian.egg ~/')
         try:
             host.req_call('sudo systemctl enable lydian.service')
             host.req_call('sudo systemctl daemon-reload')
