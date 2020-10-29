@@ -20,7 +20,7 @@ class Zipper(object):
     EXPAND_LINKS = True
     SKIP_COMPILED = True
 
-    def __init__(self, output_file, source=None):
+    def __init__(self, output_file, source=None, verbose=False):
         # Output file with path
         self.dst = output_file
 
@@ -31,6 +31,8 @@ class Zipper(object):
 
         # skip compiled code
         self.skip_compiled = self.SKIP_COMPILED
+
+        self.verbose = verbose or os.environ.get('LYDIAN_VERBOSE', False)
 
         self.clear()
 
@@ -83,8 +85,9 @@ class Zipper(object):
                     if atroot:
                         _arcfile = os.path.join(atroot,
                                                 os.path.relpath(_file, srcdir))
-                    print ("Writing ", _file, " --> ", _arcfile)
-                    log.info("Writing %s --> %s", _file, _arcfile)
+                    # print ("Writing ", _file, " --> ", _arcfile)
+                    if self.verbose:
+                        log.debug("Writing %s --> %s", _file, _arcfile)
                     zf.write(filename=_file, arcname=_arcfile)
 
 
