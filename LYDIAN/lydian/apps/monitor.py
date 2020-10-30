@@ -13,7 +13,10 @@ import queue
 import threading
 import time
 
-import psutil
+try:
+    import psutil
+except ModuleNotFoundError:
+    import lydian.utils.lpsutil as psutil
 
 from lydian.apps.base import BaseApp, exposify
 from lydian.recorder.record import ResourceRecord

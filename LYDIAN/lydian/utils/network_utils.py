@@ -9,7 +9,10 @@ import multiprocessing
 import platform
 if "Linux" in platform.uname():  # noqa
     from lydian.utils import nsenter
-import psutil
+try:
+    import psutil
+except ModuleNotFoundError:
+    import lydian.utils.lpsutil as psutil
 import subprocess
 
 INTERFACE_FAMILY = (2, 10)
