@@ -1,6 +1,6 @@
 # Copyright (C) 2020 VMware, Inc. All rights reserved.
 rpyc==4.0.2
-sql30>=0.1.4
+sql30>=0.1.5
 paramiko>=2.7.1
 wavefront-sdk-python>=1.1.1
 wavefront-api-client==2.33.15
