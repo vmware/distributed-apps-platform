@@ -22,9 +22,9 @@ The project is organized as following.
 
 LYDIAN is a Traffic Generation, Traffic Management and Traffic Reporting tool.
 
-It is based on Distributed System principles. It uses RPC for communication across nodes, Local Database for persistence and Daemon services for resiliency. 
+It is based on Distributed System principles. It uses RPC for communication across nodes, Local Database for persistence and Daemon services for resiliency.
 
-LYDIAN has its own in-built simple TCP/UDP client and servers and it also offers simple integration with other 3rd party tools such as IPERF. It recognizes the collection of nodes (to and from where traffic needs to be generated) as a "Cluster" and nodes can be attached and detached to cluster at any time during the operation. 
+LYDIAN has its own in-built simple TCP/UDP client and servers and it also offers simple integration with other 3rd party tools such as IPERF. It recognizes the collection of nodes (to and from where traffic needs to be generated) as a "Cluster" and nodes can be attached and detached to cluster at any time during the operation.
 
 Installation
 ------------
@@ -87,10 +87,10 @@ from lydian.utils.ssh_host import Host
 VM_IP = '1.2.3.4'
 
 # Delete any old PCAP file at endpoint
-with Host(VM_IP, user='root', passwd='!cisco') as host:
-    host.req_call('rm -rf /tmp/test_pcap.pcap')  
+with Host(VM_IP, user='root', passwd='PASSWD') as host:
+    host.req_call('rm -rf /tmp/test_pcap.pcap')
 
-# Also remove any local file 
+# Also remove any local file
 try:
     os.remove('/tmp/test_pcap.pcap')
 except FileNotFoundError:
@@ -107,7 +107,7 @@ time.sleep(10)
 podium.stop_pcap(vm1, pcap_file_name='test_pcap.pcap')
 
 # Download file locally.
-with Host(VM_IP, user='root', passwd='!cisco') as host:
+with Host(VM_IP, user='root', passwd='PASSWD') as host:
     host.get_file('rm -rf /tmp/test_pcap.pcap')
 
 # Run any tool on this file like tcpreplay/ wireshark on this file or simply check
@@ -133,7 +133,7 @@ Repository & License
 ------------
 LYDIAN is a fork from VMWARE's project https://github.com/vmware/validation-app-engine . It has its own independent workflow and internal architecture so nothing should be assumed from the flow and calls perspective. However, corresponding licenses apply to the usage of this tool. Please check them in LICENSE FILE.
 
-https://github.com/gitvipin/validation-app-engine 
+https://github.com/gitvipin/validation-app-engine
 
 
 Requirements
