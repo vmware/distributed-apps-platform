@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 def prep_node(hostip, username='root', password='FAKE_PASSWORD',
-              egg_dir=None, egg_file='lydian.egg', config_file_path=None):
+              egg_file_src=None, config_file_path=None):
 
     with Host(host=hostip, user=username, passwd=password) as host:
         try:
@@ -45,16 +45,20 @@ def prep_node(hostip, username='root', password='FAKE_PASSWORD',
             host.put_file(sfile.name, '/etc/systemd/system/lydian.service')
 
         # Copy Egg file
-        egg_file = os.path.join(egg_dir, egg_file) if egg_dir else \
-            os.path.join(data_dir, '../data/lydian.egg')
-        if not os.path.exists(egg_file):
-            # Running first time, install egg
-            install_egg()
+        egg_file = os.environ.get('LYDIAN_EGG_PATH', egg_file_src)
+        if not egg_file:
+            egg_file = os.path.join(data_dir, '../data/lydian.egg')
+            if not os.path.exists(egg_file):
+                # Running first time, install egg
+                install_egg()
+        assert os.path.exists(egg_file), "Egg file not present."
         host.put_file(egg_file, '/root/lydian.egg')
 
         # Copy Config File.
-        config_file = config_file_path or os.path.join(data_dir,
-                                                       '../data/lydian.conf')
+        config_file = os.environ.get('LYDIAN_CONFIG_PATH', config_file_path)
+        if not config_file:
+            config_file = os.path.join(data_dir, '../data/lydian.conf')
+
         host.req_call('mkdir -p /etc/lydian')
         host.put_file(config_file, '/etc/lydian/lydian.conf')
 
