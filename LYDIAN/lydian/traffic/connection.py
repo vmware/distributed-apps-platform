@@ -41,6 +41,9 @@ class Connection(object):
     def clear_event(self):
         self._stop_event.clear()
 
+    def set_event(self):
+        self._stop_event.set()
+
     def start(self):
         raise NotImplementedError("%s::start not implemented" % type(self).name)
 

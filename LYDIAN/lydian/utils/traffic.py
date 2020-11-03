@@ -16,6 +16,7 @@ $ python -mlydian.utils.traffic -t -v -c -p localhost 5649
 '''
 
 import argparse
+import os
 import signal
 import sys
 
@@ -51,6 +52,9 @@ def main():
         '-u', '--udp', action="store_true",
         help="Run UDP traffic.")
     parser.add_argument(
+        '-x', '--http', action="store_true",
+        help="Run HTTP traffic.")
+    parser.add_argument(
         '-v', '--verbose', action="store_true",
         help="Verbose mode")
 
@@ -64,6 +68,8 @@ def main():
         Client, Server = hclient.TCPClient, hserver.TCPServer
     elif args.udp:
         Client, Server = hclient.UDPClient, hserver.UDPServer
+    elif args.http:
+        Client, Server = hclient.HTTPClient, hserver.HTTPServer
 
     assert(args.port)
     try:
@@ -75,8 +81,13 @@ def main():
 
     def ping_handler(payload, data):
         if is_py3:
-            payload = payload.decode()
-            data = data.decode()
+            try:
+                payload = payload.decode()
+                data = data.decode()
+            except Exception:
+                # HTTP Request handler might pass string itself.
+                pass
+
         if payload == data:
             _print("Success : Sent: %s , received: %s" % (payload, data))
         else:
@@ -92,7 +103,11 @@ def main():
         if _server:
             _server.close()
             print ("\nClosed the server connection")
-        sys.exit(0)
+
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(1)  # TODO : Fix it (for HTTP Protocol)
 
     signal.signal(signal.SIGINT, signal_handler)
 

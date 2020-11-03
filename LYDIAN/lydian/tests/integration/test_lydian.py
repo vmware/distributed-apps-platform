@@ -58,7 +58,13 @@ class TrafficAppTest(unittest.TestCase):
         self.monitor.start()
 
     def test_traffic(self):
-        traffic_rules = [self.DUMMY_RULE]
+        rules = [('TCP', 9465), ('UDP', 9465), ('HTTP', 9466)]
+        traffic_rules = []
+        for protocol, port in rules:
+            _rule = dict(self.DUMMY_RULE)
+            _rule['protocol'] = protocol
+            _rule['port'] = port
+            traffic_rules.append(_rule)
 
         self.controller.register_traffic(traffic_rules)
 

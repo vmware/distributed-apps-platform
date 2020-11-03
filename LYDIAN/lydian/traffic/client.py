@@ -7,6 +7,8 @@ import logging
 import socket
 import time
 
+from urllib.request import urlopen
+
 from lydian.traffic.connection import Connection
 from lydian.utils.common import is_ipv6_address, is_py3
 
@@ -147,5 +149,21 @@ class UDPClient(Client):
             # TODO : check if raise is an issue.
             # return False
             raise
+        finally:
+            self._handler(payload, data)
+
+
+class HTTPClient(Client):
+
+    def ping(self, payload):
+        try:
+            data = ''.encode('utf-8')
+            url = 'http://%s:%s' % (self.server, self.port)
+            status = urlopen(url).code
+            data = payload if status == 200 else data
+        except Exception as err:
+            if self.verbose:
+                self.log.error("ping to %s:%s failed. Error - %r",
+                               self.server, self.port, err)
         finally:
             self._handler(payload, data)

@@ -5,6 +5,8 @@
 # in the root directory of this project.
 
 import socket
+import http.server as hserver
+import threading
 import time
 
 from lydian.traffic.connection import Connection
@@ -120,3 +122,52 @@ class UDPServer(Server):
         """
         if data:
             self.socket.sendto(data, addr)  # send same data back as echo
+
+
+try:
+    _HTTPServer = hserver.ThreadingHTTPServer
+except AttributeError:
+    import socketserver
+    class _HTTPServer(socketserver.ThreadingMixIn, hserver.HTTPServer):
+        pass
+
+
+class HTTPServer(Server):
+    """
+    Basic HTTP Server
+    """
+    BLOCKING_WAIT_TIME = 3
+
+    class _HTTPRequestHandler(hserver.SimpleHTTPRequestHandler):
+        def log_message(self, format, *args):
+            pass  # Log disabled.
+
+    def __init__(self, *args, **kwargs):
+        super(HTTPServer, self).__init__(*args, **kwargs)
+        self.verbose = kwargs.get('verbose', False)
+        if self.verbose:
+            self.handler = hserver.SimpleHTTPRequestHandler
+        else:
+            self.handler =  self._HTTPRequestHandler
+        self.httpd = None
+        self._thread = None
+        self.clear_event()
+
+    def start(self, blocking=True):
+        """ Starts HTTP Server. """
+        self.httpd = _HTTPServer(("", self.port), self.handler)
+        self._thread = threading.Thread(target=self.httpd.serve_forever,
+                                        daemon=True)
+        self._thread.start()
+        if blocking:
+            # TCP / UDP server are blocking by default. blocking is set
+            # on by default here to match that behavior.
+            self._thread.join()
+
+    def stop(self):
+        """ Stops HTTP Server. """
+        self.set_event()
+        self.httpd.shutdown()
+        self.httpd.server_close()
+        self._thread.join()
+        self._thread, self.httpd = None, None

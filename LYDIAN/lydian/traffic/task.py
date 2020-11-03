@@ -9,8 +9,8 @@ import queue
 import threading
 
 from lydian.traffic.core import TrafficRecord
-from lydian.traffic.client import TCPClient, UDPClient
-from lydian.traffic.server import TCPServer, UDPServer
+from lydian.traffic.client import TCPClient, UDPClient, HTTPClient
+from lydian.traffic.server import TCPServer, UDPServer, HTTPServer
 
 
 log = logging.getLogger(__name__)
@@ -105,7 +105,11 @@ class TrafficClientTask(TrafficTask):
             return TCPClient(server=server, port=port,
                              handler=self.ping_handler)
         elif self._trule.is_UDP():
-            return UDPClient(server=server, port=port)
+            return UDPClient(server=server, port=port,
+                             handler=self.ping_handler)
+        elif self._trule.is_HTTP():
+            return HTTPClient(server=server, port=port,
+                              handler=self.ping_handler)
         else:
             msg = "LYDIAN: Unsupported protocol on rule %s" % self._trule
             raise NotImplementedError(msg)
@@ -147,6 +151,8 @@ class TrafficServerTask(TrafficTask):
             return TCPServer(port=port)
         elif self._trule.is_UDP():
             return UDPServer(port=port)
+        elif self._trule.is_HTTP():
+            return HTTPServer(port=port)
         else:
             msg = "LYDIAN: Unsupported protocol on rule %s" % self._trule
             raise NotImplementedError(msg)

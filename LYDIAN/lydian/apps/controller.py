@@ -111,8 +111,6 @@ class TrafficControllerApp(BaseApp):
         """ Rule config. """
         log.info("Processing rule : %s", rule)
         log.info("%s", type(rule).__name__)
-        rule = dict(rule)
-        log.info("After eval %s", type(rule).__name__)
         trule = core.TrafficRule()
 
         for key, val in rule.items():
