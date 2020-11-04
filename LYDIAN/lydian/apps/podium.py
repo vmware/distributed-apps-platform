@@ -7,11 +7,12 @@
 import logging
 import time
 
+from lydian.apps import rules
 from lydian.apps.base import BaseApp, exposify
-from lydian.utils.prep import prep_node
+from lydian.common import consts
 from lydian.controller.client import LydianClient
-
-import lydian.common.consts as consts
+from lydian.traffic.core import TrafficRule
+from lydian.utils.prep import prep_node
 
 
 log = logging.getLogger(__name__)
@@ -27,21 +28,24 @@ def _get_host_ip(host, func_ip=None):
 
 @exposify
 class Podium(BaseApp):
+    NAME = 'PODIUM'
 
     TENNAT_VM_USERNAME = 'root'
     TENNAT_VM_PASSWORD = '!cisco'
 
     HOST_WAIT_TIME = 4
 
-    def __init__(self, username=None, password=None):
+    def __init__(self, username=None, password=None, db_file=None):
         """
         Podium app for running the show.
-        # TODO : Add persistence to Podium app.
+
         """
         self._primary = True
         self._ep_hosts = {}
         self._ep_username = username or self.TENNAT_VM_USERNAME
         self._ep_password = password or self.TENNAT_VM_PASSWORD
+        self.rules_app = rules.RulesApp()
+        self.rules = self.rules_app.rules
 
     @property
     def endpoints(self):
@@ -112,6 +116,7 @@ class Podium(BaseApp):
     def register_traffic(self, intent):
         # TODO : Optimization opportunities
         # Club all requests to same host in one call.
+        _trules = []
         for rule in intent:
             srchost = self.get_ep_host(rule['src'])
             dsthost = self.get_ep_host(rule['dst'])
@@ -131,6 +136,18 @@ class Podium(BaseApp):
 
             with LydianClient(srchost) as sclient:
                 sclient.controller.register_traffic([rule])
+
+            # Create TrafficRule
+            trule = TrafficRule()
+            for key, value in rule.items():
+                setattr(trule, key, value)
+            trule.fill()
+            _trules.append(trule)
+            ruleid = getattr(trule, 'ruleid')
+            if ruleid:
+                self.rules[ruleid] = trule
+        # Persist rules to local db
+        self.rules_app.save_to_db(_trules)
 
 
 def get_podium():
