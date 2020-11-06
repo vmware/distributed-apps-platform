@@ -16,15 +16,13 @@ import logging
 
 from sql30 import db
 
-
 from lydian.apps.base import BaseApp, exposify
 from lydian.traffic.core import TrafficRule
 
 log = logging.getLogger(__name__)
 
 
-@exposify
-class RulesApp(db.Model, BaseApp):
+class RulesDB(db.Model):
     NAME = "RULES"
     DB_NAME = './rules.db'
     TABLE = 'rules'
@@ -43,6 +41,10 @@ class RulesApp(db.Model, BaseApp):
     INACTIVE = 'INACTIVE'
     ACTIVE = 'ACTIVE'
 
+
+@exposify
+class RulesApp(BaseApp, RulesDB):
+
     def __init__(self, db_file=None):
 
         db_name = db_file or self.DB_NAME
@@ -51,6 +53,10 @@ class RulesApp(db.Model, BaseApp):
         self._rules = {}    # represents local cache.
         self.table = self.TABLE
         self.load_from_db()
+
+    @property
+    def rules(self):
+        return self._rules
 
     def get(self, ruleid):
         return self._rules.get(ruleid)
@@ -61,21 +67,14 @@ class RulesApp(db.Model, BaseApp):
         corresponding object.
         """
         if save_to_db:
-            if trule.ruleid in self._rules:
-                # Local Cache is always in sync with Database.
-                self.update(condition={'ruleid': trule.ruleid},
-                            **trule.as_dict())
-            else:
-                self.create(**trule.as_dict())
-            # Commit the records.
-            self.commit()
+            self.save_to_db([trule])
         self._rules[trule.ruleid] = trule
 
     def add_rules(self, trules):
         """ Adds multiple rules. """
         for trule in trules:
             self.add(trule, save_to_db=False)
-        self.commit()
+        self.save_to_db(trules)
 
     def load_from_db(self):
         """ Loads rules from DB to local file."""
@@ -91,22 +90,29 @@ class RulesApp(db.Model, BaseApp):
 
             ruleid = getattr(trule, 'ruleid', None)
             if not ruleid:
-                self.error("Skipped Invalid rule with no ruleid : %s",
+                log.error("Skipped Invalid rule with no ruleid : %s",
                            trule.__dict__)
             self._rules[ruleid] = trule
 
-    def save_to_db(self):
+    def save_to_db(self, trules):
         """
-        Save config params in local cache to database file.
+        Save local cache to database file.
         """
-        curr_rule_ids = [x[0] for x in self.read()]  # first value is ruleid
-        for ruleid, trule in self._rules.items():
-            if ruleid in curr_rule_ids:
-                self.update(condition={'ruleid': ruleid}, **trule.as_dict())
-            else:
-                self.create(**trule.as_dict())
-
-        self.commit()
+        with RulesDB() as db:
+            db.table = self.table
+            curr_rule_ids = [x[0] for x in db.read()]  # first value is ruleid
+            for trule in trules:
+                ruleid = getattr(trule, 'ruleid', None)
+                if not ruleid:
+                    log.error("Skipped Invalid rule with no ruleid : %s",
+                               trule.__dict__)
+                    continue
+                _rule = trule.as_dict()
+                _rule = {k: v for k, v in _rule.items() if k in TrafficRule.SCHEMA}
+                if ruleid in curr_rule_ids:
+                    db.update(condition={'ruleid': ruleid}, **_rule)
+                else:
+                    db.write(**_rule)
 
     def disable(self, ruleid):
         """ Disables a rule. """
@@ -141,5 +147,5 @@ class RulesApp(db.Model, BaseApp):
         return rule.state == self.ACTIVE
 
     def close(self):
-        self.save_to_db()
-        super(RulesApp, self).commit()
+        all_trules = list(self._rules.values())
+        self.save_to_db(all_trules)

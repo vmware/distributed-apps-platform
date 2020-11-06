@@ -11,6 +11,7 @@ import unittest
 import uuid
 
 from lydian.apps.rules import RulesApp
+from lydian.traffic.core import TrafficRule
 
 
 DB_NAME = './rules_test.db'
@@ -33,34 +34,38 @@ class RulesAppTest(unittest.TestCase):
             os.remove(DB_NAME)
 
     def _get_new_app(self):
-        class DummyTrafficManager(object):
+        return RulesApp(DB_NAME)
 
-            def start(self, ruleid):
-                log.info("Starting Traffic for rule %s ", ruleid)
-
-            def stop(self, ruleid):
-                pass
-
-        return RulesApp(DummyTrafficManager(), DB_NAME)
+    def _get_trule(self, rule):
+        trule = TrafficRule()
+        for k, v in rule.items():
+            setattr(trule, k, v)
+        trule.fill()
+        return trule
 
     def test_add(self):
         self.rulesApp = self._get_new_app()
+        trule = self._get_trule(self.DUMMY_RULE)
+
+        self.rulesApp.add(trule)
 
         # TEST : Add one rule
-        self.rulesApp.add(self.DUMMY_RULE)
+        self.rulesApp.add(trule)
 
         # TEST : Adding same rule would lead to a warning
         # but no assertion / exception to break the run.
-        self.rulesApp.add(self.DUMMY_RULE)
+        self.rulesApp.add(trule)
 
-        rules = []
+        trules = []
         for x in range(5):
             rule = {k: v for k, v in self.DUMMY_RULE.items()}
+
             rule['ruleid'] = '%s' % uuid.uuid4()
-            rules.append(rule)
+            trule = self._get_trule(rule)
+            trules.append(trule)
 
         # TEST : Adding multiple rules.
-        self.rulesApp.add_rules(rules)
+        self.rulesApp.add_rules(trules)
 
         self.rulesApp.save_to_db()
         self.rulesApp.close()
@@ -72,19 +77,19 @@ class RulesAppTest(unittest.TestCase):
         self.rulesApp.load_from_db()
 
         # TEST : All the rules must be prsent.
-        rules.append(self.DUMMY_RULE)
 
-        for rule in rules:
-            assert self.rulesApp.get(rule['ruleid'])
+        assert self.rulesApp.get(trule.ruleid)
+        for trule in trules:
+            assert self.rulesApp.get(trule.ruleid)
 
         # TEST : Diable / Enable of rules should work.
-        self.rulesApp.disable(rules[0]['ruleid'])
+        self.rulesApp.disable(trules[0].ruleid)
         # disable and enable the rule
-        self.rulesApp.disable(rules[1]['ruleid'])
-        self.rulesApp.enable(rules[1]['ruleid'])
+        self.rulesApp.disable(trules[1].ruleid)
+        self.rulesApp.enable(trules[1].ruleid)
 
-        assert not self.rulesApp.is_enabled(rules[0]['ruleid'])
-        assert self.rulesApp.is_enabled(rules[1]['ruleid'])
+        assert not self.rulesApp.is_enabled(trules[0].ruleid)
+        assert self.rulesApp.is_enabled(trules[1].ruleid)
 
     def tearDown(self):
         os.remove(DB_NAME)

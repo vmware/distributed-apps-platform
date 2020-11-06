@@ -131,7 +131,7 @@ class TrafficControllerApp(BaseApp):
             # create a rule and add it to database.
             log.info("%s", type(rule).__name__)
             trule = self._get_traffic_rule(rule)
-            # self.rules.add(trule)     # TODO : Fix rules app and enable it.
+            self.rules.add(trule)
         log.info("Registered Traffic Successfully: %r", traffic_rules)
 
     def register_rule(self, trule):
@@ -144,7 +144,7 @@ class TrafficControllerApp(BaseApp):
 
         log.info("Registering Traffic : %r", trule)
         self._add_rule_info(trule)
-        # self.rules.add(trule)     # TODO : Fix rules app and enableit.
+        self.rules.add(trule)
         log.info("Registered Traffic Successfully: %r", trule)
         return trule
 
