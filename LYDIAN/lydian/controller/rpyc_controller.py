@@ -4,29 +4,25 @@
 # The full license information can be found in LICENSE.txt
 # in the root directory of this project.
 
-import collections
+
 import logging
-# from multiprocessing import Queue
 from queue import Queue
 
 import rpyc
 from rpyc.utils.server import ThreadPoolServer
 
-
-from lydian.apps.config import get_configs
+from lydian.apps import config
+from lydian.apps.controller import TrafficControllerApp
 from lydian.apps.interface import InterfaceApp
 from lydian.apps.iperf import Iperf
 from lydian.apps.monitor import ResourceMonitor
 from lydian.apps.namespace import NamespaceApp
-from lydian.apps.tcpdump import TCPDump
-from lydian.apps.controller import TrafficControllerApp
 from lydian.apps.recorder import RecordManager
 from lydian.apps.results import Results
 from lydian.apps.rules import RulesApp
+from lydian.apps.tcpdump import TCPDump
+from lydian.utils import logger
 
-import lydian.utils.logger as logger
-import lydian.apps.config as config
-import lydian.common.consts as consts
 
 rpyc.core.protocol.DEFAULT_CONFIG['allow_pickle'] = True
 
@@ -56,7 +52,8 @@ class LydianService(LydianServiceBase):
         'iperf',
         'tcpdump',
         'results',
-        'controller'
+        'controller',
+        'configs'
     ]
 
     def __init__(self):
@@ -77,12 +74,13 @@ class LydianService(LydianServiceBase):
         self.tcpdump = TCPDump()
         self.iperf = Iperf()
         self.results = Results()
+        self.configs = config.get_configs()
 
         self.expose()
 
     def expose(self):
         for key in self.EXPOSED:
-            setattr(self, 'exposed_'+ key, getattr(self, key))
+            setattr(self, 'exposed_' + key, getattr(self, key))
 
     def start(self):
         try:
@@ -101,9 +99,11 @@ class LydianService(LydianServiceBase):
 
 class LydianController(object):
 
+    LYDIAN_PORT = config.get_param('LYDIAN_PORT')
+
     def __init__(self):
-        self.lydian_port = consts.LYDIAN_PORT
         self.service = LydianService()
+        self.lydian_port = self.LYDIAN_PORT
         self.protocol_config = self.service.RPYC_PROTOCOL_CONFIG
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.WARN)

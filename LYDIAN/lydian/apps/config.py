@@ -49,8 +49,7 @@ elif WIN_OS:
     LOG_DIR = WIN_LOG_DIR
 LOG_FILE = "lydian.log"
 
-# Axon Service Constants
-AXON_PORT = 5678
+# Lydian Service Constants
 LYDIAN_PORT = 5649
 
 # Recorder Constants
@@ -80,8 +79,8 @@ ALLOW_REUSE_ADDRESS = True
 # Env Configs
 TEST_ID = os.environ.get('TEST_ID', '')
 TESTBED_NAME = os.environ.get('TESTBED_NAME', '')
-AXON_PORT = int(os.environ.get('AXON_PORT', 5678))
-
+LYDIAN_PORT = int(os.environ.get('LYDIAN_PORT', LYDIAN_PORT))
+LYDIAN_CONFIG = os.environ.get('LYDIAN_CONFIG', '/etc/lydian/lydian.conf')
 
 # Wavefront recorder configs
 WAVEFRONT_PROXY_ADDRESS = os.environ.get('WAVEFRONT_PROXY_ADDRESS', None)
@@ -154,6 +153,18 @@ class Config(ConfigDB, BaseApp):
         We do not write these configs into the database yet as database
         configs are supposed to overwrite.
         """
+
+        try:
+            with open(LYDIAN_CONFIG, 'r') as fh:
+                for line in fh:
+                    line = line.strip()
+                    if line.startswith('#'):
+                        continue
+                    else:
+                        param, val = line.split('=')
+                        self._params[param] = val
+        except FileNotFoundError:
+            pass
 
         module_name = sys.modules[__name__]
         VARS = [var for var in dir(module_name) if var.isupper()]

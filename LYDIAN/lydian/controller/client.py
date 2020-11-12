@@ -9,8 +9,8 @@ import socket
 import time
 
 import rpyc
-import lydian.common.consts as consts
 
+from lydian.apps import config
 
 rpyc.core.protocol.DEFAULT_CONFIG['allow_pickle'] = True
 
@@ -230,7 +230,7 @@ class LydianClient(object):
     Top level object to access Lydian API
     """
 
-    def __init__(self, host, port=consts.LYDIAN_PORT,
+    def __init__(self, host, port=config.get_param('LYDIAN_PORT'),
                  proxy_host=None, request_timeout=180,
                  retry_count=5, sleep_interval=.5):
         """ Initialization of Client object

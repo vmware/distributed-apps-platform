@@ -1,7 +1,10 @@
 import logging
 import os
 
-import lydian.common.consts as consts
+from lydian.apps import config
+
+LOG_DIR = config.get_param('LOG_DIR')
+LOG_FILE = config.get_param('LOG_FILE')
 
 
 def create_log_dir(log_dir):
@@ -21,8 +24,8 @@ def setup_logging(log_dir=None, log_file=None):
     """
     Sets up Logging handlers and other environment.
     """
-    log_dir = log_dir if log_dir else consts.LOG_DIR
-    log_file = log_file if log_file else consts.LOG_FILE
+    log_dir = log_dir or LOG_DIR
+    log_file = log_file or LOG_FILE
     create_log_dir(log_dir)
 
     log_file_name = os.path.join(log_dir, log_file)

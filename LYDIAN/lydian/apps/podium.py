@@ -8,12 +8,11 @@ import logging
 import time
 
 from lydian.apps import rules
+from lydian.apps import config
 from lydian.apps.base import BaseApp, exposify
-from lydian.common import consts
 from lydian.controller.client import LydianClient
 from lydian.traffic.core import TrafficRule
 from lydian.utils.prep import prep_node
-
 
 log = logging.getLogger(__name__)
 
@@ -34,6 +33,7 @@ class Podium(BaseApp):
     TENNAT_VM_PASSWORD = '!cisco'
 
     HOST_WAIT_TIME = 4
+    NAMESPACE_INTERFACE_NAME_PREFIXES = config.get_param('NAMESPACE_INTERFACE_NAME_PREFIXES')
 
     def __init__(self, username=None, password=None, db_file=None):
         """
@@ -77,7 +77,7 @@ class Podium(BaseApp):
                 # fetch regular interfaces
                 for iface, ips in client.interface.get_interface_ips_map().items():
                     if not any([iface.startswith(x) for x in
-                                consts.NAMESPACE_INTERFACE_NAME_PREFIXES]):
+                                self.NAMESPACE_INTERFACE_NAME_PREFIXES]):
                         continue
                     for ip in ips:
                         self._ep_hosts[ip] = hostip
