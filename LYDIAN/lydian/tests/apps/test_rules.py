@@ -13,7 +13,7 @@ import uuid
 from lydian.apps.rules import RulesApp
 
 
-DB_NAME = 'rules_test.db'
+DB_NAME = './rules_test.db'
 log = logging.getLogger(__name__)
 
 

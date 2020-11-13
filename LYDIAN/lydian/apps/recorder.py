@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 class TrafficRecordDB(db.Model):
-    DB_NAME = 'traffic.db'
+    DB_NAME = './traffic.db'
     TABLE = 'traffic'
 
     DB_SCHEMA = {

@@ -110,7 +110,7 @@ ELASTIC_SEARCH_SERVER_PORT = os.environ.get(
 
 
 class ConfigDB(db.Model):
-    DB_NAME = 'params.db'
+    DB_NAME = './params.db'
     TABLE = 'config'
 
     DB_SCHEMA = {
@@ -127,6 +127,7 @@ class ConfigDB(db.Model):
             }]
         }
     VALIDATE_BEFORE_WRITE = True
+
 
 class Config(ConfigDB, BaseApp):
     NAME = "CONFIG"

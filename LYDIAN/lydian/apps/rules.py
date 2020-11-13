@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 @exposify
 class RulesApp(db.Model, BaseApp):
     NAME = "RULES"
-    DB_NAME = 'rules.db'
+    DB_NAME = './rules.db'
     TABLE = 'rules'
     DB_SCHEMA = {
         'db_name': DB_NAME,
