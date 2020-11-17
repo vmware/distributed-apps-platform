@@ -18,6 +18,12 @@ log = logging.getLogger(__name__)
 @exposify
 class Results(BaseApp):
 
-    def traffic(self, reqid):
+    def traffic(self, reqid, **kwargs):
+        _filter = {}
+        for key, value in kwargs.items():
+            if key in TrafficRecordDB.SCHEMA:
+                _filter[key] = value
+            else:
+                log.info("Skipping invalid TrafficRecord key:%s", key)
         with TrafficRecordDB() as db:
-            return db.read(tbl=db.TABLE, reqid=reqid)
+            return db.read(tbl=db.TABLE, reqid=reqid, **_filter)

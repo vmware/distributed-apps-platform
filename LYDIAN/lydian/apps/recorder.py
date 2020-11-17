@@ -27,23 +27,24 @@ except ModuleNotFoundError:
 class TrafficRecordDB(db.Model):
     DB_NAME = './traffic.db'
     TABLE = 'traffic'
+    SCHEMA = {
+        'timestamp': 'text',
+        'reqid': 'text',
+        'ruleid': 'text',
+        'source': 'text',
+        'destination': 'text',
+        'protocol': 'text',
+        'port': 'text',
+        'expected': 'text',
+        'result': 'text'
+    }
 
     DB_SCHEMA = {
         'db_name': DB_NAME,
         'tables': [
             {
                 'name': TABLE,
-                'fields': {
-                    'timestamp': 'text',
-                    'reqid': 'text',
-                    'ruleid': 'text',
-                    'source': 'text',
-                    'destination': 'text',
-                    'protocol': 'text',
-                    'port': 'text',
-                    'expected': 'text',
-                    'result': 'text'
-                    },
+                'fields': SCHEMA,
             }]
         }
     VALIDATE_BEFORE_WRITE = True

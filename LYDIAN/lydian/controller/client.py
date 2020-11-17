@@ -210,8 +210,8 @@ class ConfigManager(Manager):
 
 class ResultsManager(Manager):
 
-    def traffic(self, reqid):
-        return self._client.results.traffic(reqid)
+    def traffic(self, reqid, **kwargs):
+        return self._client.results.traffic(reqid, **kwargs)
 
 
 class TrafficControllerManager(Manager):

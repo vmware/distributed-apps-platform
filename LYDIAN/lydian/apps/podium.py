@@ -5,6 +5,8 @@
 # in the root directory of this project.
 
 import logging
+from queue import Queue
+import threading
 import time
 
 from lydian.apps import rules
@@ -148,6 +150,48 @@ class Podium(BaseApp):
                 self.rules[ruleid] = trule
         # Persist rules to local db
         self.rules_app.save_to_db(_trules)
+
+    def get_rules_by_reqid(self, reqid):
+        trules = [trule for rule_id, trule in self.rules.items() if getattr(trule, 'reqid') == reqid]
+        return trules
+
+    def _get_ep_result(self, src_ip, reqid, results_q, **kwargs):
+        host_ip = self.get_ep_host(src_ip)
+
+        # TODO: with contextmanager, getting EOFError: stream has been closed. Need to investigate.
+        # try:
+        #     with LydianClient(host_ip) as client:
+        #         return client.results.traffic(reqid)
+        # except Exception:
+        #     pass
+        client = LydianClient(host_ip)
+        results_q.put(client.results.traffic(reqid, **kwargs))
+
+    def _get_results(self, trules, **kwargs):
+        threads = []
+        results_q = Queue()
+        for trule in trules:
+            src_ip = getattr(trule, 'src')
+            req_id = getattr(trule, 'reqid')
+            if not src_ip or not req_id:
+                log.error("Unable to get src or reqid for rule:%r", trule)
+                continue
+            thread = threading.Thread(target=self._get_ep_result,
+                                      args=(src_ip, req_id, results_q),
+                                      kwargs=kwargs)
+            thread.start()
+            threads.append(thread)
+        for thread in threads:
+            thread.join()
+
+        results = [results_q.get() for _ in range(results_q.qsize())]
+
+        return results
+
+    def get_results(self, reqid, **kwargs):
+        trules = self.get_rules_by_reqid(reqid)
+        results = self._get_results(trules, **kwargs)
+        return results
 
 
 def get_podium():
