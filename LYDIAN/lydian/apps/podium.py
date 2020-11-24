@@ -151,6 +151,24 @@ class Podium(BaseApp):
         # Persist rules to local db
         self.rules_app.save_to_db(_trules)
 
+    def _traffic_op(self, reqid, op_type):
+        trules = self.get_rules_by_reqid(reqid)
+        for trule in trules:
+            ruleid = getattr(trule, 'ruleid')
+            src_ip = getattr(trule, 'src')
+            host_ip = self.get_ep_host(src_ip)
+            client = LydianClient(host_ip)
+            if op_type == 'start':
+                client.controller.start(ruleid)
+            elif op_type == 'stop':
+                client.controller.stop(ruleid)
+
+    def start_traffic(self, reqid):
+        self._traffic_op(reqid, op_type='start')
+
+    def stop_traffic(self, reqid):
+        self._traffic_op(reqid, op_type='stop')
+
     def get_rules_by_reqid(self, reqid):
         trules = [trule for rule_id, trule in self.rules.items() if getattr(trule, 'reqid') == reqid]
         return trules

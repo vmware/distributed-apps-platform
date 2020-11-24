@@ -224,6 +224,12 @@ class TrafficControllerManager(Manager):
         trule = pickle.dumps(trule)
         return self._client.controller.register_rule(trule)
 
+    def start(self, ruleid):
+        self._client.controller.start(ruleid)
+
+    def stop(self, ruleid):
+        self._client.controller.stop(ruleid)
+
 
 class LydianClient(object):
     """
@@ -300,8 +306,7 @@ class LydianClient(object):
                 time.sleep(sleep_interval)
             except socket.error as e:
                 last_exception = e
-                errno = e.errno
-                if errno == errno.ECONNRESET or errno == errno.ECONNREFUSED:
+                if e.errno == errno.ECONNRESET or e.errno == errno.ECONNREFUSED:
                     time.sleep(sleep_interval)
                 else:
                     raise

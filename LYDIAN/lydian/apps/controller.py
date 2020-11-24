@@ -149,13 +149,22 @@ class TrafficControllerApp(BaseApp):
 
     def start(self, ruleid):
         """ Start a Traffic task (again). """
-        trule = self.rules.rules[ruleid]
-        self._client_mgr.start(trule)
+
+        trule = self.rules.rules.get(ruleid, None)
+        if trule:
+            self._client_mgr.start(trule)
+        else:
+            log.error("Unable to find rule for id:%s", ruleid)
 
     def stop(self, ruleid):
+
         """ Stop a Traffic task. """
-        trule = self.rules.rules[ruleid]
-        self._client_mgr.stop(trule)
+
+        trule = self.rules.rules.get(ruleid, None)
+        if trule:
+            self._client_mgr.stop(trule)
+        else:
+            log.error("Unable to find rule for id:%s", ruleid)
 
     def close(self):
         self._client_mgr.close()
