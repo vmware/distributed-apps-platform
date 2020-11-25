@@ -33,8 +33,12 @@ log = logging.getLogger(__name__)
 configs = None
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 #### CONSTANTS ####
+=======
+# CONSTANTS
+>>>>>>> ef09167... lydian: Fix ValueError in config
 SYSTEM = platform.system()
 LINUX_OS = True if SYSTEM == 'Linux' else False
 MAC_OS = True if SYSTEM == 'Darwin' else False
@@ -77,8 +81,8 @@ ALLOW_REUSE_ADDRESS = True
 
 
 # Env Configs
-TEST_ID = os.environ.get('TEST_ID', '')
-TESTBED_NAME = os.environ.get('TESTBED_NAME', '')
+TEST_ID = os.environ.get('TEST_ID', '1234')
+TESTBED_NAME = os.environ.get('TESTBED_NAME', 'LYDIAN_DFLT_TB')
 LYDIAN_PORT = int(os.environ.get('LYDIAN_PORT', LYDIAN_PORT))
 LYDIAN_CONFIG = os.environ.get('LYDIAN_CONFIG', '/etc/lydian/lydian.conf')
 
@@ -101,7 +105,8 @@ RECORDER = os.environ.get('RECORDER', None)
 RECORD_COUNT_UPDATER_SLEEP_INTERVAL = 30
 RECORD_UPDATER_THREAD_POOL_SIZE = 50
 
-ELASTIC_SEARCH_SERVER_ADDRESS = os.environ.get('ELASTIC_SEARCH_SERVER_ADDRESS', None)
+ELASTIC_SEARCH_SERVER_ADDRESS = os.environ.get('ELASTIC_SEARCH_SERVER_ADDRESS',
+                                               None)
 ELASTIC_SEARCH_SERVER_PORT = os.environ.get(
     'ELASTIC_SEARCH_SERVER_PORT', ELASTIC_SEARCH_PORT)
 
@@ -153,7 +158,6 @@ class Config(ConfigDB, BaseApp):
         We do not write these configs into the database yet as database
         configs are supposed to overwrite.
         """
-
         try:
             with open(LYDIAN_CONFIG, 'r') as fh:
                 for line in fh:
@@ -161,11 +165,16 @@ class Config(ConfigDB, BaseApp):
                     if line.startswith('#'):
                         continue
                     else:
-                        param, val = line.split('=')
-                        self._params[param] = val
+                        try:
+                            # handle cases like 'x="deployment=ovf"'
+                            kindex = line.index('=')
+                            param = line[:kindex].strip()
+                            val = line[kindex+1:].strip()
+                            self._params[param] = val
+                        except ValueError:
+                            pass
         except FileNotFoundError:
             pass
-
         module_name = sys.modules[__name__]
         VARS = [var for var in dir(module_name) if var.isupper()]
         for var in VARS:
@@ -226,8 +235,8 @@ class Config(ConfigDB, BaseApp):
         """
         type_name = type(val).__name__
         if isinstance(val, set):
-              # json.dumps can't serialize sets. We still return the
-              # value as set as type is stored as "set"
+            # json.dumps can't serialize sets. We still return the
+            # value as set as type is stored as "set"
             val = list(val)
         record = db_handle.read(param=param)
         if record:
