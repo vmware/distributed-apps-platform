@@ -9,12 +9,19 @@ import queue
 import threading
 
 from lydian.apps.base import BaseApp, exposify
-from lydian.recorder.wf_client import WavefrontTrafficRecorder, WavefrontResourceRecorder
 from lydian.traffic.core import TrafficRecord
 from sql30 import db
 
 
 log = logging.getLogger(__name__)
+
+try:
+    from lydian.recorder.wf_client import WavefrontTrafficRecorder, \
+        WavefrontResourceRecorder
+except ModuleNotFoundError:
+    log.warn("Wavefront package is not installed. Recording to it is disabled.")
+    from lydian.utils.mock import WavefrontTrafficRecorder, \
+        WavefrontResourceRecorder
 
 
 class TrafficRecordDB(db.Model):
@@ -40,7 +47,6 @@ class TrafficRecordDB(db.Model):
             }]
         }
     VALIDATE_BEFORE_WRITE = True
-
 
 
 class TrafficRecorder(TrafficRecordDB):
