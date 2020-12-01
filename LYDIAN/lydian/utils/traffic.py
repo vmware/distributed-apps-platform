@@ -43,6 +43,12 @@ def main():
         '-i', '--ipv6', action="store_true",
         help="Use IPv6 client / servers.")
     parser.add_argument(
+        '-l', '--load',
+        help="Payload for traffic.")
+    parser.add_argument(
+        '-n', '--num_pings',
+        help="Number of pings to send.")
+    parser.add_argument(
         '-p', '--port', nargs='+',
         help="Port to connect")
     parser.add_argument(
@@ -116,9 +122,12 @@ def main():
         _server = Server(port=port, verbose=verbose, ipv6=ipv6)
         _server.start()
     else:
+        payload = args.load
+        tries = args.num_pings or 5
         _client = Client(server=host, port=port, verbose=verbose,
-                         handler=ping_handler)
-        _client.start(tries=10)
+                         handler=ping_handler, payload=payload,
+                         tries=tries)
+        _client.start()
 
 
 if __name__ == '__main__':

@@ -20,12 +20,12 @@ class PingValidationError(Exception):
 
 
 class Client(Connection):
-    PAYLOAD = 'Dunkirk!!'
+    PAYLOAD = 'Rampur!!'
     PING_INTERVAL = 2   # default request rate is 30ppm
     CONNECTION_TIMEOUT = 2
 
     def __init__(self, server, port, verbose=False, handler=None,
-                 interval=None, ipv6=None):
+                 interval=None, ipv6=None, payload=None, tries=None):
         """
         A simple TCP client which binds to a specified host and port.
         """
@@ -38,7 +38,19 @@ class Client(Connection):
             self.interval = self.PING_INTERVAL
         self._handler = handler or self.echo_validator
         self._ipv6 = ipv6 or is_ipv6_address(self.server)
+        self._payload = payload or self.PAYLOAD
+        self._tries = tries or None
         super(Client, self).__init__(verbose=verbose)
+
+    @property
+    def payload(self):
+        return self._payload
+
+    @property
+    def tries(self):
+        return self._tries
+
+    ping_count = tries
 
     def echo_validator(self, payload, data):
         """
@@ -52,11 +64,14 @@ class Client(Connection):
             raise PingValidationError()
 
     def start(self, payload=None, tries=None):
-        payload = self.PAYLOAD if payload is None else payload
+        payload = payload or self.payload
+        tries = tries or self.tries
         try:
             tries = int(tries) if tries is not None else None
         except Exception as err:
-            _ = err
+            if not tries:
+                log.error("tries %s is invalid. Client will run forever."
+                          " Error: %s", tries, err)
             tries = None
 
         while not self.is_event_set():
