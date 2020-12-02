@@ -21,34 +21,64 @@ class PingValidationError(Exception):
 
 class Client(Connection):
     PAYLOAD = 'Rampur!!'
-    PING_INTERVAL = 2   # default request rate is 30ppm
     CONNECTION_TIMEOUT = 2
+    FREQUECY = 30       # 30 pings per minute.
+    PING_INTERVAL = 2   # default request rate is 30ppm
 
     def __init__(self, server, port, verbose=False, handler=None,
-                 interval=None, ipv6=None, payload=None, tries=None):
+                 interval=None, ipv6=None, payload=None, tries=None,
+                 sockettimeout=None, frequency=30):
         """
         A simple TCP client which binds to a specified host and port.
         """
         self.server = server
         self.port = port
+
+        self._handler = handler or self.echo_validator
+        self._ipv6 = ipv6 or is_ipv6_address(self.server)
+
+        self._payload = payload or self.PAYLOAD
+        self._tries = tries or None
+        self._sockettimeout = sockettimeout or self.CONNECTION_TIMEOUT
+
+        # Set frequency
+        try:
+            assert isinstance(frequency, int)
+            assert 1 <= frequency <= 60, "Invalid frequency"
+            self._frequency = frequency or 30
+        except Exception as err:
+            self._frequency = self.FREQUENCY
+            log.error("Invalid frequency %s, ignored. Default 30 shall be"
+                      " used.", frequency)
+
+        # Set ping interval. Takes precedence over frequency.
         try:
             self.interval = int(interval)
         except (ValueError, TypeError) as err:
             _ = err
-            self.interval = self.PING_INTERVAL
-        self._handler = handler or self.echo_validator
-        self._ipv6 = ipv6 or is_ipv6_address(self.server)
-        self._payload = payload or self.PAYLOAD
-        self._tries = tries or None
+            self.interval = 60 / self.frequency
+
         super(Client, self).__init__(verbose=verbose)
 
     @property
     def payload(self):
+        """ Payload for ping. """
         return self._payload
 
     @property
     def tries(self):
+        """ Number of total pings to be sent."""
         return self._tries
+
+    @property
+    def sockettimeout(self):
+        """ Socket timetout """
+        return self._sockettimeout
+
+    @property
+    def frequency(self):
+        """ Number of pings per minute (PPM). Default is 30"""
+        return self._frequency
 
     ping_count = tries
 
@@ -85,7 +115,8 @@ class Client(Connection):
                 time.sleep(self.interval)
 
     def ping(self, payload):
-        raise NotImplementedError("Ping not implemented in %s" % self.__class__.__name__)
+        raise NotImplementedError("Ping not implemented in %s" %
+                                  self.__class__.__name__)
 
     def _prepare_payload(self, payload):
         return payload.encode('utf-8') if is_py3() else payload
@@ -99,7 +130,7 @@ class TCPClient(Client):
         """
         sock_type = socket.AF_INET6 if self._ipv6 else socket.AF_INET
         self.socket = socket.socket(sock_type, socket.SOCK_STREAM)
-        self.socket.settimeout(self.CONNECTION_TIMEOUT)
+        self.socket.settimeout(self.sockettimeout)
 
     def ping(self, payload):
         data = None
@@ -107,7 +138,7 @@ class TCPClient(Client):
             # create socket
             self._create_socket()
             self.socket.connect((self.server, self.port))
-            self.socket.settimeout(None)
+            # self.socket.settimeout(self.sockettimeout)
             payload = self._prepare_payload(payload)
             self.socket.send(payload)
             data = self.socket.recv(self.MAX_PAYLOAD_SIZE)
@@ -136,7 +167,7 @@ class UDPClient(Client):
         """
         sock_type = socket.AF_INET6 if self._ipv6 else socket.AF_INET
         self.socket = socket.socket(sock_type, socket.SOCK_DGRAM)
-        self.socket.settimeout(self.CONNECTION_TIMEOUT)
+        self.socket.settimeout(self.sockettimeout)
 
     def ping(self, payload):
         try:

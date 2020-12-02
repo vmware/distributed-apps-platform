@@ -38,6 +38,10 @@ class TrafficTask(object):
     def target(self):
         return None
 
+    @property
+    def traffic_rule(self):
+        return self._trule
+
     def _create_task(self):
         if self.target.is_vmhost():
             self._create_vmhost_task()
@@ -98,18 +102,26 @@ class TrafficClientTask(TrafficTask):
         return self._record_queue
 
     def _get_client(self):
-        server = self._trule.dst
-        port = self._trule.port
+        kwargs = {}
+        kwargs['server'] = self._trule.server
+        kwargs['port'] = self._trule.port
+        kwargs['handler'] = self.ping_handler
 
-        if self._trule.is_TCP():
-            return TCPClient(server=server, port=port,
-                             handler=self.ping_handler)
-        elif self._trule.is_UDP():
-            return UDPClient(server=server, port=port,
-                             handler=self.ping_handler)
-        elif self._trule.is_HTTP():
-            return HTTPClient(server=server, port=port,
-                              handler=self.ping_handler)
+        kwargs['payload'] = getattr(self.traffic_rule, 'payload', None)
+        kwargs['tries'] = getattr(self.traffic_rule, 'tries', None)
+        kwargs['sockettimeout'] = getattr(self.traffic_rule, 'sockettimeout',
+                                          None)
+        frequency = getattr(self.traffic_rule, 'frequency', None)
+        if frequency:
+            kwargs['frequency'] = frequency
+        kwargs['interval'] = getattr(self.traffic_rule, 'interval', None)
+
+        if self.traffic_rule.is_TCP():
+            return TCPClient(**kwargs)
+        elif self.traffic_rule.is_UDP():
+            return UDPClient(**kwargs)
+        elif self.traffic_rule.is_HTTP():
+            return HTTPClient(**kwargs)
         else:
             msg = "LYDIAN: Unsupported protocol on rule %s" % self._trule
             raise NotImplementedError(msg)
