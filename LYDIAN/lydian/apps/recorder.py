@@ -8,7 +8,9 @@ import logging
 import queue
 import threading
 
+from lydian.apps import config
 from lydian.apps.base import BaseApp, exposify
+from lydian.common.core import Subscribe
 from lydian.traffic.core import TrafficRecord
 from sql30 import db
 
@@ -50,19 +52,26 @@ class TrafficRecordDB(db.Model):
     VALIDATE_BEFORE_WRITE = True
 
 
-class TrafficRecorder(TrafficRecordDB):
+class TrafficRecorder(TrafficRecordDB, Subscribe):
     NAME = "TRAFFIC_RECORDER"
-
     MAXSIZE = 3000
     FLUSH_FREQ = 3  # every 3 seconds.
+    CONFIG_PARAMS = ['SQLITE_TRAFFIC_RECORDING']
 
     def __init__(self, db_file=None):
         # Set database name.
         db_name = db_file or self.DB_NAME
-        super(TrafficRecorder, self).__init__(db_name=db_name)
+        TrafficRecordDB.__init__(self, db_name=db_name)
+        Subscribe.__init__(self)
         self._fields = self._get_fields(self.TABLE)
 
+    @property
+    def enabled(self):
+        return self.get_config('SQLITE_TRAFFIC_RECORDING')
+
     def write(self, trec):
+        if not self.enabled:
+            return
         # TODO : Create a pool of records and flush them periodically instead.
         if isinstance(trec, TrafficRecord):
             with TrafficRecordDB() as db:
@@ -72,16 +81,19 @@ class TrafficRecorder(TrafficRecordDB):
 
 
 @exposify
-class RecordManager(BaseApp):
+class RecordManager(Subscribe, BaseApp):
     """
     This class act as a deamon to read traffic record queue and to
     write record to the db recorder provided
     """
-    RECORD_UPDATER_THREAD_POOL_SIZE = 2
-    RESOURCE_RECORD_REPORT_FREQ = 4
-    TRAFFIC_RECORD_REPORT_FREQ = 4
+
+    CONFIG_PARAMS = ['RECORD_UPDATER_THREAD_POOL_SIZE',
+                     'RESOURCE_RECORD_REPORT_FREQ',
+                     'TRAFFIC_RECORD_REPORT_FREQ']
 
     def __init__(self, traffic_records, resource_records):
+        Subscribe.__init__(self)
+        BaseApp.__init__(self)
         self._traffic_recorders = [
             TrafficRecorder(),
             WavefrontTrafficRecorder()
@@ -104,7 +116,8 @@ class RecordManager(BaseApp):
         while not self._stopped.is_set():
             try:
                 # TODO : Add logic for flush interval / buffer.
-                t_record = self._traffic_records.get(timeout=self.TRAFFIC_RECORD_REPORT_FREQ)
+                t_record = self._traffic_records.get(
+                    timeout=self.get_config('TRAFFIC_RECORD_REPORT_FREQ'))
                 for recorder in self._traffic_recorders:
                     recorder.write(t_record)
             except queue.Empty:
@@ -116,7 +129,8 @@ class RecordManager(BaseApp):
         while not self._stopped.is_set():
             try:
                 # TODO : Add logic for flush interval / buffer.
-                t_record = self._resource_records.get(timeout=self.RESOURCE_RECORD_REPORT_FREQ)
+                t_record = self._resource_records.get(
+                    timeout=self.get_config('RESOURCE_RECORD_REPORT_FREQ'))
                 for recorder in self._resource_recorders:
                     recorder.write(t_record)
             except queue.Empty:

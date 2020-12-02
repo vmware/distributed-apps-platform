@@ -10,6 +10,7 @@ import os
 import platform
 import socket
 import sys
+from collections import defaultdict
 
 from sql30 import db
 
@@ -87,12 +88,19 @@ LYDIAN_PORT = int(os.environ.get('LYDIAN_PORT', LYDIAN_PORT))
 LYDIAN_CONFIG = os.environ.get('LYDIAN_CONFIG', '/etc/lydian/lydian.conf')
 
 # Wavefront recorder configs
+WAVEFRONT_TRAFFIC_RECORDING = os.environ.get('WAVEFRONT_TRAFFIC_RECORDING',
+                                             True)
+WAVEFRONT_RESOURCE_RECORDING = os.environ.get('WAVEFRONT_RESOURCE_RECORDING',
+                                              True)
 WAVEFRONT_PROXY_ADDRESS = os.environ.get('WAVEFRONT_PROXY_ADDRESS', None)
 WAVEFRONT_SERVER_ADDRESS = os.environ.get('WAVEFRONT_SERVER_ADDRESS', '')
 WAVEFRONT_SERVER_API_TOKEN = os.environ.get('WAVEFRONT_SERVER_API_TOKEN', '')
 WAVEFRONT_SOURCE_TAG = os.environ.get('WAVEFRONT_SOURCE', socket.gethostname())
 WAVEFRONT_REPORT_PERC = float(os.environ.get('WAVEFRONT_REPORT_PERC', 1.0))
 
+# SQLITE recording configs
+SQLITE_TRAFFIC_RECORDING = os.environ.get('SQLITE_TRAFFIC_RECORDING', True)
+SQLITE_RESOURCE_RECORDING = os.environ.get('SQLITE_RESOURCE_RECORDING', True)
 
 # Namespace Configs
 NAMESPACE_MODE = os.environ.get("NAMESPACE_MODE", False)
@@ -102,8 +110,11 @@ NAMESPACE_INTERFACE_NAME_PREFIXES = ["veth", "eth"]
 
 # Recorder Configs
 RECORDER = os.environ.get('RECORDER', None)
-RECORD_COUNT_UPDATER_SLEEP_INTERVAL = 30
-RECORD_UPDATER_THREAD_POOL_SIZE = 50
+RECORD_UPDATER_THREAD_POOL_SIZE = int(os.environ.get('RECORD_UPDATER_THREAD_POOL_SIZE', 2))
+RESOURCE_RECORD_REPORT_FREQ = int(os.environ.get('RESOURCE_RECORD_REPORT_FREQ', 4))
+TRAFFIC_RECORD_REPORT_FREQ = int(os.environ.get('TRAFFIC_RECORD_REPORT_FREQ', 4))
+RECORD_COUNT_UPDATER_SLEEP_INTERVAL = int(os.environ.get('RECORD_COUNT_UPDATER_SLEEP_INTERVAL', 30))
+RECORD_UPDATER_THREAD_POOL_SIZE = int(os.environ.get('RECORD_UPDATER_THREAD_POOL_SIZE', 50))
 
 ELASTIC_SEARCH_SERVER_ADDRESS = os.environ.get('ELASTIC_SEARCH_SERVER_ADDRESS',
                                                None)
@@ -144,6 +155,9 @@ class Config(ConfigDB, BaseApp):
 
         # set params
         self._params = {}
+
+        # subscribers to notify upon value update
+        self._subscribers = defaultdict(set)
 
         # Read configs, load from db file.
 
@@ -228,6 +242,25 @@ class Config(ConfigDB, BaseApp):
             with ConfigDB() as db:
                 db.table = self.TABLE
                 self._persist_param(param, val, db)
+                self._notify_subscriber(param)
+
+    def subscribe_notification(self, params, subscriber, callback):
+        for param in params:
+            if param in self._params and callable(getattr(subscriber, callback, None)):
+                self._subscribers[param].add((subscriber, callback))
+            else:
+                log.warn('Skip subscribing: %s since it is not in supported config params', param)
+
+    def unsubscribe_notification(self, params, subscriber, callback):
+        for param in params:
+            if param in self._subscriber:
+                self._subscribers[param].discard((subscriber, callback))
+
+    def _notify_subscriber(self, param):
+        if param in self._subscribers:
+            for subscriber, callback in self._subscribers[param]:
+                _callback = getattr(subscriber, callback)
+                _callback(param)
 
     def _persist_param(self, param, val, db_handle):
         """

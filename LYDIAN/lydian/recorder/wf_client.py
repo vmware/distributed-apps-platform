@@ -7,6 +7,7 @@
 from wavefront_sdk import WavefrontDirectClient
 
 import lydian.apps.config as conf
+import lydian.common.core as core
 
 def _get_wf_sender():
     # Create a sender with:
@@ -20,17 +21,27 @@ def _get_wf_sender():
         token='d9302bfa-89b4-4d7f-995e-830887b9e903')
 
 
-class WavefrontRecorder(object):
+class WavefrontRecorder(core.Subscribe):
+    ENABLE_PARAM = 'WAVEFRONT_RECORDING'
 
     def __init__(self):
+        super(WavefrontRecorder, self).__init__()
         self._client = _get_wf_sender()
         self._testbed = conf.TESTBED_NAME or ''
         self._testid = conf.TEST_ID or ''
 
+    @property
+    def enabled(self):
+        return self.get_config(self.ENABLE_PARAM)
+
 
 class WavefrontTrafficRecorder(WavefrontRecorder):
+    CONFIG_PARAMS = ['WAVEFRONT_TRAFFIC_RECORDING']
+    ENABLE_PARAM = 'WAVEFRONT_TRAFFIC_RECORDING'
 
     def write(self, record):
+        if not self.enabled:
+            return
         # assert isinstance(trec, TrafficRecord)
         prefix = 'lydian.traffic.' + record.protocol + ".result"
         tags = {
@@ -41,7 +52,7 @@ class WavefrontTrafficRecorder(WavefrontRecorder):
             "source": record.source,
             "destination": record.destination
             }
-        value=1 if record.result else 0
+        value = 1 if record.result else 0
         self._client.send_metric(
                     name=prefix, value=value,
                     timestamp=record.timestamp,
@@ -50,8 +61,12 @@ class WavefrontTrafficRecorder(WavefrontRecorder):
 
 
 class WavefrontResourceRecorder(WavefrontRecorder):
+    CONFIG_PARAMS = ['WAVEFRONT_RESOURCE_RECORDING']
+    ENABLE_PARAM = 'WAVEFRONT_RESOURCE_RECORDING'
 
     def write(self, record):
+        if not self.enabled:
+            return
         # assert isinstance(trec, ResourceRecord)
         prefix = 'lydian.resources.'
         tags = {"datacenter": self._testbed,
