@@ -77,7 +77,7 @@ class TrafficControllerApp(BaseApp):
         for ns_name, ns_interfaces in self._ns_mgr.get_namespace_interface_map().items():
             ns_target = core.NSHost(name=ns_name, ip=self.host)
             for interface in ns_interfaces:
-                self._ep_map[interface['address']] = ns_target
+                self._ep_map[interface.address] = ns_target
 
     def discover_interfaces(self):
         """ Re/Discovers insterfaces """
@@ -129,7 +129,6 @@ class TrafficControllerApp(BaseApp):
         log.info("Registering Traffic : %r", traffic_rules)
         for rule in traffic_rules:
             # create a rule and add it to database.
-            log.info("%s", type(rule).__name__)
             trule = self._get_traffic_rule(rule)
             self.rules.add(trule)
         log.info("Registered Traffic Successfully: %r", traffic_rules)

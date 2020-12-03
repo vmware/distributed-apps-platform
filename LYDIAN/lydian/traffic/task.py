@@ -5,12 +5,15 @@
 # in the root directory of this project.
 
 import logging
+import os
 import queue
 import threading
 
+from lydian.common import consts as consts
 from lydian.traffic.core import TrafficRecord
 from lydian.traffic.client import TCPClient, UDPClient, HTTPClient
 from lydian.traffic.server import TCPServer, UDPServer, HTTPServer
+from lydian.utils.nsenter import Namespace
 
 
 log = logging.getLogger(__name__)
@@ -20,12 +23,14 @@ class TrafficTask(object):
 
     CLIENT = 'CLIENT'
     SERVER = 'SERVER'
+    LINUX_NS_DIR = '/var/run/netns/'
 
     def __init__(self, trule):
         self._task = None
         self._type = None
         self._trule = trule   # Traffic Rule
         self._task_thread = None
+        self._ns_task_iter = None   # used only in NS Tasks
         self._create_task()
 
     def is_client(self):
@@ -62,16 +67,20 @@ class TrafficTask(object):
     def _create_container_task(self):
         raise NotImplementedError("_create_container_task")
 
+    def _ns_task_helper(self, ns_name, func):
+        with Namespace(os.path.join(self.LINUX_NS_DIR,ns_name), 'net'):
+            yield func()
+
     def start(self, blocking=False):
         if blocking:
             self._task.start()
         else:
-            self._task_thread = threading.Thread(target=self._task.start)
+            self._task_thread = threading.Thread(target=self._task.start, daemon=True)
             self._task_thread.start()
 
     def _join_thread(self):
         if self._task_thread:
-            self._task_thread.join()
+            self._task_thread.join(consts.THREADS_JOIN_TIMEOUT)
             self._task_thread = None
 
     def stop(self):
@@ -81,6 +90,13 @@ class TrafficTask(object):
     def close(self):
         self._task.close()
         self._join_thread()
+        if self._ns_task_iter:
+            # release resources.
+            try:
+                next(self._ns_task_iter)
+            except StopIteration:
+                pass    # expected.
+            self._ns_task_iter = None
 
     def is_running(self):
         return not self._task.stopped()
@@ -103,8 +119,8 @@ class TrafficClientTask(TrafficTask):
 
     def _get_client(self):
         kwargs = {}
-        kwargs['server'] = self._trule.server
-        kwargs['port'] = self._trule.port
+        kwargs['server'] = self.traffic_rule.dst
+        kwargs['port'] = self.traffic_rule.port
         kwargs['handler'] = self.ping_handler
 
         kwargs['payload'] = getattr(self.traffic_rule, 'payload', None)
@@ -128,6 +144,11 @@ class TrafficClientTask(TrafficTask):
 
     def _create_vmhost_task(self):
         self._task = self._get_client()
+
+    def _create_namspace_task(self):
+        self._ns_task_iter = self._ns_task_helper(self.target.name,
+                                                  self._get_client)
+        self._task = next(self._ns_task_iter)
 
     def ping_handler(self, payload, data):
         try:
@@ -171,3 +192,8 @@ class TrafficServerTask(TrafficTask):
 
     def _create_vmhost_task(self):
         self._task = self._get_server()
+
+    def _create_namspace_task(self):
+        self._ns_task_iter = self._ns_task_helper(self.target.name,
+                                                  self._get_server)
+        self._task = next(self._ns_task_iter)

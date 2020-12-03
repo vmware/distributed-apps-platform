@@ -9,6 +9,7 @@ import http.server as hserver
 import threading
 import time
 
+from lydian.common import consts as consts
 from lydian.traffic.connection import Connection
 
 
@@ -167,7 +168,9 @@ class HTTPServer(Server):
     def stop(self):
         """ Stops HTTP Server. """
         self.set_event()
-        self.httpd.shutdown()
-        self.httpd.server_close()
-        self._thread.join()
+        if self.httpd:
+            self.httpd.shutdown()
+            self.httpd.server_close()
+        if self._thread:
+            self._thread.join(consts.THREADS_JOIN_TIMEOUT)
         self._thread, self.httpd = None, None

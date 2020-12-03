@@ -138,12 +138,11 @@ class TCPClient(Client):
             # create socket
             self._create_socket()
             self.socket.connect((self.server, self.port))
-            # self.socket.settimeout(self.sockettimeout)
             payload = self._prepare_payload(payload)
             self.socket.send(payload)
             data = self.socket.recv(self.MAX_PAYLOAD_SIZE)
             # close socket connection
-            self.socket.close()
+            self.socket_close()
 
             if self.verbose:
                 msg = "ping to %s:%s pass. data - %r" % (
@@ -154,7 +153,7 @@ class TCPClient(Client):
             msg = "ping to %s:%s failed. Error - %r" % (
                 self.server, self.port, err)
             if self.verbose:
-                self.log.error(msg)
+                log.error(msg)
         finally:
             self._handler(payload, data)
 
@@ -182,7 +181,7 @@ class UDPClient(Client):
                 data, server = None, None
             _ = server
             # close socket connection
-            self.socket.close()
+            self.socket_close()
 
             if self.verbose:
                 msg = "ping to %s:%s pass. data - %r" % (
@@ -190,11 +189,9 @@ class UDPClient(Client):
                 self.log.info(msg)
             return data
         except Exception as err:
-            self.log.error("ping to %s:%s failed. Error - %r",
-                           self.server, self.port, err)
-            # TODO : check if raise is an issue.
-            # return False
-            raise
+            if self.verbose:
+                log.error("ping to %s:%s failed. Error - %r",
+                          self.server, self.port, err)
         finally:
             self._handler(payload, data)
 
@@ -209,7 +206,7 @@ class HTTPClient(Client):
             data = payload if status == 200 else data
         except Exception as err:
             if self.verbose:
-                self.log.error("ping to %s:%s failed. Error - %r",
-                               self.server, self.port, err)
+                log.error("ping to %s:%s failed. Error - %r",
+                          self.server, self.port, err)
         finally:
             self._handler(payload, data)

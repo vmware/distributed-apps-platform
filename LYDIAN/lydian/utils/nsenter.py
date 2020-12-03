@@ -53,17 +53,22 @@ def fdopen(path):
 
 
 @contextlib.contextmanager
-def namespace(nspath, nstype):
+def namespace(nspath, nstype, verbose=False):
     """Enter the provided namespace"""
     if nstype not in VALID_NAMESPACES:
         raise ValueError("invalid namespace type %r" % nstype)
 
     with fdopen("/proc/self/ns/%s" % nstype) as original_ns:
         with fdopen(nspath) as new_ns:
-            logger.info("entering %s namespace %s", nstype, nspath)
+            if verbose:
+                logger.debug("Entering %s namespace %s", nstype,
+                             nspath)
             setns(new_ns)
         try:
             yield
         finally:
-            logger.info("leaving %s namespace %s", nstype, nspath)
+            if verbose:
+                logger.debug("Leaving %s namespace %s", nstype, nspath)
             setns(original_ns)
+
+Namespace = namespace

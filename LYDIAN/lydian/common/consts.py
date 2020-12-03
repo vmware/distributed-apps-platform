@@ -5,6 +5,8 @@
 # in the root directory of this project.
 '''
 Common constants for Lydian application.
+NOTE: This module shouldn't have dependency on any other internal
+module.
 '''
 import os
 import platform
@@ -28,3 +30,5 @@ if LINUX_OS or MAC_OS:
 elif WIN_OS:
     LOG_DIR = WIN_LOG_DIR
 LOG_FILE = "lydian.log"
+
+THREADS_JOIN_TIMEOUT = 5    # Wait for 5 seconds while joining the threads.

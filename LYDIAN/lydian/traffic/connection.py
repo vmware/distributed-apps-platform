@@ -47,10 +47,14 @@ class Connection(object):
     def start(self):
         raise NotImplementedError("%s::start not implemented" % type(self).name)
 
-    def close(self):
-        self.stop()
+    def socket_close(self):
         if self.socket:
             self.socket.close()
             self.socket = None
+
+    def close(self):
+        self.stop()
+        self.socket_close()
+
 
     stopped = is_event_set

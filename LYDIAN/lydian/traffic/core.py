@@ -18,23 +18,27 @@ class Target(object):
     HOST_TYPE = None
 
     def __init__(self, name=None, ip=None):
-        self.name = name
-        self.ip = ip    # which IP you login to run operations on.
+        self._name = name
+        self._ip = ip    # which IP you login to run operations on.
         self._target_type = self.HOST_TYPE
 
     @property
-    def type(self):
+    def target_type(self):
         return self._target_type
 
+    @property
+    def name(self):
+        return self._name
+
     def is_namespace(self):
-        return self.type == self.NAMESPACE
+        return self.target_type == self.NAMESPACE
 
     def is_vmhost(self):
         """ Returns True is target is a POSIX VM """
-        return self.type == self.POSIX
+        return self.target_type == self.POSIX
 
     def is_container(self):
-        return self.type == self.CONTAINER
+        return self.target_type == self.CONTAINER
 
 
 class VMHost(Target):
