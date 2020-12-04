@@ -13,6 +13,8 @@ try:
     import psutil
 except ModuleNotFoundError:
     import lydian.utils.lpsutil as psutil
+
+import re
 import subprocess
 
 INTERFACE_FAMILY = (2, 10)
@@ -86,18 +88,19 @@ class NamespaceManager(object):
             if not ns_list:
                 return
             for ns in ns_list.decode().rstrip().split("\n"):
-                ns_info = str(ns).split()
-                id = None
-                if len(ns_info) > 1:
-                    id = ns_info[1]
-                name = ns_info[0]
-                self._namespace_map[name] = Namespace(name, id)
-                interfaces = Namespace(name, id).interfaces
-                if interfaces:
-                    self._namespace_interface_map[name] = \
-                        Namespace(name, id).interfaces
-                else:
-                    self._namespace_interface_map[name] = None
+                ns_name, ns_id = None, None
+                try:
+                    lindex = ns.index(' ')
+                    ns_name = ns[:lindex]
+                    ns_id = re.findall('[0-9]+', ns[lindex:])[0]
+                except Exception as err:
+                    log.error("Cannot parse Namespace info for : %s", ns)
+                    continue
+
+                _ns = Namespace(ns_name, ns_id)
+                self._namespace_map[ns_name] = _ns
+                interfaces = _ns.interfaces
+                self._namespace_interface_map[ns_name] = interfaces or None
 
     def discover_namespaces(self):
         self._discover_namespaces()
