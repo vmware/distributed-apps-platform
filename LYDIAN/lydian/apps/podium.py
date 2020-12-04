@@ -4,10 +4,12 @@
 # The full license information can be found in LICENSE.txt
 # in the root directory of this project.
 
+import itertools
 import logging
 from queue import Queue
 import threading
 import time
+import uuid
 
 from lydian.apps import rules
 from lydian.apps import config
@@ -115,6 +117,52 @@ class Podium(BaseApp):
     def get_ep_host(self, epip):
         return self._ep_hosts.get(epip, None)
 
+    def create_traffic_intent(self, src_ip, dst_ip, dst_port, protocol, reqid=None,
+                            connected=True, **kwargs):
+
+        intent = {
+            'reqid': reqid or '%s' % uuid.uuid4(),
+            'ruleid': '%s' % uuid.uuid4(),
+            'src': src_ip,
+            'dst': dst_ip,
+            'port': dst_port,
+            'protocol': protocol,
+            'connected': connected
+        }
+        for k, v in kwargs.items():
+            if k in TrafficRule.SCHEMA:
+                intent[k] = v
+        return intent
+
+    def create_traffic_rule(self, intent):
+
+        trule = TrafficRule()
+        for key, value in intent.items():
+            setattr(trule, key, value)
+        trule.fill()
+        return trule
+
+    def run_traffic(self, src_ip, dst_ip, dst_port, protocol, duration=-1):
+        _intent = self.create_traffic_intent(src_ip, dst_ip, dst_port, protocol)
+        reqid = _intent.get('reqid')
+        self.register_traffic([_intent])
+        if duration > 0:
+            time.sleep(duration)
+            self.stop_traffic(reqid)
+        return reqid
+
+    def run_mesh_ping(self, hosts, dst_port, protocol, duration=-1):
+        reqid = '%s' % uuid.uuid4()
+        host_pairs = list(itertools.permutations(hosts, 2))
+        intents = []
+        for src, dst in host_pairs:
+            intents.append(self.create_traffic_intent(src, dst, dst_port, protocol, reqid=reqid))
+        self.register_traffic(intents)
+        if duration > 0:
+            time.sleep(duration)
+            self.stop_traffic(reqid)
+        return reqid
+
     def register_traffic(self, intent):
         # TODO : Optimization opportunities
         # Club all requests to same host in one call.
@@ -140,10 +188,7 @@ class Podium(BaseApp):
                 sclient.controller.register_traffic([rule])
 
             # Create TrafficRule
-            trule = TrafficRule()
-            for key, value in rule.items():
-                setattr(trule, key, value)
-            trule.fill()
+            trule = self.create_traffic_rule(rule)
             _trules.append(trule)
             ruleid = getattr(trule, 'ruleid')
             if ruleid:
@@ -173,7 +218,7 @@ class Podium(BaseApp):
         trules = [trule for rule_id, trule in self.rules.items() if getattr(trule, 'reqid') == reqid]
         return trules
 
-    def _get_ep_result(self, src_ip, reqid, results_q, **kwargs):
+    def get_host_result(self, src_ip, reqid, results_q=None, duration=None, **kwargs):
         host_ip = self.get_ep_host(src_ip)
 
         # TODO: with contextmanager, getting EOFError: stream has been closed. Need to investigate.
@@ -183,9 +228,16 @@ class Podium(BaseApp):
         # except Exception:
         #     pass
         client = LydianClient(host_ip)
-        results_q.put(client.results.traffic(reqid, **kwargs))
+        current_time = time.time()
+        if duration is not None:
+            # Creating a tuple of range for timestamp field
+            kwargs['timestamp'] = (str(current_time - duration), str(current_time))
+        if results_q:
+            results_q.put(client.results.traffic(reqid, **kwargs))
+        else:
+            return client.results.traffic(reqid, **kwargs)
 
-    def _get_results(self, trules, **kwargs):
+    def _get_results(self, trules, duration=None, **kwargs):
         threads = []
         results_q = Queue()
         for trule in trules:
@@ -194,8 +246,8 @@ class Podium(BaseApp):
             if not src_ip or not req_id:
                 log.error("Unable to get src or reqid for rule:%r", trule)
                 continue
-            thread = threading.Thread(target=self._get_ep_result,
-                                      args=(src_ip, req_id, results_q),
+            thread = threading.Thread(target=self.get_host_result,
+                                      args=(src_ip, req_id, results_q, duration),
                                       kwargs=kwargs)
             thread.start()
             threads.append(thread)
@@ -206,10 +258,98 @@ class Podium(BaseApp):
 
         return results
 
-    def get_results(self, reqid, **kwargs):
+    def get_results(self, reqid, duration=None, **kwargs):
         trules = self.get_rules_by_reqid(reqid)
-        results = self._get_results(trules, **kwargs)
+        results = self._get_results(trules, duration=duration, **kwargs)
         return results
+
+    def get_traffic_stats(self, reqid, duration=None):
+        stats = {'success': 0,
+                 'failure': 0}
+
+        pass_records = self.get_results(reqid, duration=duration, result='1')
+        fail_records = self.get_results(reqid, duration=duration, result='0')
+
+        for host_pass_record in pass_records:
+            stats['success'] += len(host_pass_record)
+
+        for host_fail_record in fail_records:
+            stats['failure'] += len(host_fail_record)
+
+        return stats
+
+    def get_traffic_pass_percent(self, reqid, duration=None):
+        stats = self.get_traffic_stats(reqid, duration=duration)
+        total = stats['success'] + stats['failure']
+        return round(stats['success'] * 100 / total, 2) if total else 0
+
+    def get_traffic_fail_percent(self, reqid, duration=None):
+        stats = self.get_traffic_stats(reqid, duration=duration)
+        total = stats['success'] + stats['failure']
+        return round(stats['failure'] * 100 / total, 2) if total else 100
+
+    def get_param(self, host_ip, param):
+        host_ip = self.get_ep_host(host_ip)
+        with LydianClient(host_ip) as client:
+            return client.configs.get_param(param)
+
+    def set_param(self, host_ip, param, val):
+        host_ip = self.get_ep_host(host_ip)
+        with LydianClient(host_ip) as client:
+            client.configs.set_param(param, val)
+
+    def get_host_latency(self, src_ip, reqid, method, results_q=None, duration=None, **kwargs):
+        host_ip = self.get_ep_host(src_ip)
+
+        with LydianClient(host_ip) as client:
+            current_time = time.time()
+            if duration is not None:
+                # Creating a tuple of range for timestamp field
+                kwargs['timestamp'] = (str(current_time - duration), str(current_time))
+            if results_q:
+                results_q.put(client.results.get_latency_stat(reqid=reqid, method=method, **kwargs))
+            else:
+                return client.results.get_latency_stat(reqid=reqid, method=method, **kwargs)
+
+    def _get_latencies(self, trules, method, duration=None, **kwargs):
+        threads = []
+        latencies_q = Queue()
+        for trule in trules:
+            src_ip = getattr(trule, 'src')
+            req_id = getattr(trule, 'reqid')
+            if not src_ip or not req_id:
+                log.error("Unable to get src or reqid for rule:%r", trule)
+                continue
+            thread = threading.Thread(target=self.get_host_latency,
+                                      args=(src_ip, req_id, method, latencies_q, duration),
+                                      kwargs=kwargs)
+            thread.start()
+            threads.append(thread)
+        for thread in threads:
+            thread.join()
+
+        latencies_q = [latencies_q.get() for _ in range(latencies_q.qsize())]
+
+        return latencies_q
+
+    def get_latency(self, reqid, method, duration=None, **kwargs):
+        trules = self.get_rules_by_reqid(reqid)
+        latencies = self._get_latencies(trules, method, duration=duration, **kwargs)
+        if method == 'avg':
+            return round(sum(latencies) / len(latencies), 2)
+        elif method == 'min':
+            return round(min(latencies), 2)
+        elif method == 'max':
+            return round(max(latencies), 2)
+
+    def get_avg_latency(self, reqid, duration=None, **kwargs):
+        return self.get_latency(reqid, method='avg', duration=duration, **kwargs)
+
+    def get_min_latency(self, reqid, duration=None, **kwargs):
+        return self.get_latency(reqid, method='min', duration=duration, **kwargs)
+
+    def get_max_latency(self, reqid, duration=None, **kwargs):
+        return self.get_latency(reqid, method='max', duration=duration, **kwargs)
 
 
 def get_podium():

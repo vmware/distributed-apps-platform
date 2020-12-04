@@ -213,6 +213,18 @@ class ResultsManager(Manager):
     def traffic(self, reqid, **kwargs):
         return self._client.results.traffic(reqid, **kwargs)
 
+    def get_latency_stat(self, reqid, method, **kwargs):
+        return self._client.results.get_latency_stat(reqid=reqid, method=method, **kwargs)
+
+    def get_avg_latency(self, reqid, **kwargs):
+        return self._client.results.get_avg_latency(reqid, **kwargs)
+
+    def get_min_latency(self, reqid, **kwargs):
+        return self._client.results.get_min_latency(reqid, **kwargs)
+
+    def get_max_latency(self, reqid, **kwargs):
+        return self._client.results.get_max_latency(reqid, **kwargs)
+
 
 class TrafficControllerManager(Manager):
 
