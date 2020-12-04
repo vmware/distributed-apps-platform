@@ -11,6 +11,9 @@ import fcntl
 import os
 import socket
 import struct
+import subprocess
+
+from lydian.apps.console import Console
 
 
 def get_ipv4_address(ifname, ipv6=False):
@@ -32,8 +35,9 @@ def get_ip_address(ifname, ipv6=False):
     cmnd = 'ip addr show %s' % ifname
     prefix = 'inet6 ' if ipv6 else 'inet '
     try:
-        addr = os.popen(cmnd).read().split(prefix)[1].split("/")[0]
-    except:
+        status, output = Console().run_command(cmnd)
+        addr = output.split(prefix)[1].split("/")[0]
+    except Exception:
         addr = None
     return addr
 
@@ -72,15 +76,19 @@ def net_if_addrs():
 class Dummy(object):
     percent = 0
 
+
 dummy = Dummy()
+
 
 def cpu_percent():
     """ returns system CPU Percentage utilization """
     return 0
 
+
 def virtual_memory():
     """ returns system virtual memory percentage utilization """
     return dummy
+
 
 def net_connections():
     """ returns number of system connections open """
@@ -100,6 +108,7 @@ class Process(object):
 
     def connections(self):
         return []
+
 
 if __name__ == '__main__':
     _ = net_if_addrs()
