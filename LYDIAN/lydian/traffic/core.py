@@ -169,3 +169,4 @@ class TrafficRecord(Record):
         self.port = None            # port on server where Traffic is sent.
         self.expected = None        # ping expectation (Pass/Fail : True/False)
         self.result = None          # Actual result
+        self.latency = None         # ping latency

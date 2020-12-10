@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: BSD-2 License
 # The full license information can be found in LICENSE.txt
 # in the root directory of this project.
+
 import logging
 import socket
 import time
@@ -14,6 +15,7 @@ from lydian.utils.common import is_ipv6_address, is_py3
 
 log = logging.getLogger(__name__)
 
+LATENCY_RESOLUTION = 1000   # Save Latency in milliseconds.
 
 class PingValidationError(Exception):
     pass
@@ -82,13 +84,13 @@ class Client(Connection):
 
     ping_count = tries
 
-    def echo_validator(self, payload, data):
+    def echo_validator(self, payload, data, latency):
         """
         Ping Validator
         """
         try:
             assert(data == self.PAYLOAD)
-            log.info("Sent : %s Received : %s", self.PAYLOAD, data)
+            log.info("Sent : %s Received : %s, taken %s ms", self.PAYLOAD, data, latency)
         except AssertionError as err:
             _ = err
             raise PingValidationError()
@@ -134,13 +136,17 @@ class TCPClient(Client):
 
     def ping(self, payload):
         data = None
+        latency = 0
         try:
+            start_time = time.time()
             # create socket
             self._create_socket()
             self.socket.connect((self.server, self.port))
             payload = self._prepare_payload(payload)
             self.socket.send(payload)
             data = self.socket.recv(self.MAX_PAYLOAD_SIZE)
+            # latency in milliseconds
+            latency = round((time.time() - start_time) * LATENCY_RESOLUTION)
             # close socket connection
             self.socket_close()
 
@@ -155,7 +161,7 @@ class TCPClient(Client):
             if self.verbose:
                 log.error(msg)
         finally:
-            self._handler(payload, data)
+            self._handler(payload, data, latency)
 
 
 class UDPClient(Client):
@@ -169,7 +175,9 @@ class UDPClient(Client):
         self.socket.settimeout(self.sockettimeout)
 
     def ping(self, payload):
+        latency = 0
         try:
+            start_time = time.time()
             # create socket
             self._create_socket()
             addr = (self.server, self.port)
@@ -180,9 +188,10 @@ class UDPClient(Client):
             except Exception:
                 data, server = None, None
             _ = server
+            # latency in milliseconds
+            latency = round((time.time() - start_time) * LATENCY_RESOLUTION)
             # close socket connection
             self.socket_close()
-
             if self.verbose:
                 msg = "ping to %s:%s pass. data - %r" % (
                     self.server, self.port, data)
@@ -193,20 +202,24 @@ class UDPClient(Client):
                 log.error("ping to %s:%s failed. Error - %r",
                           self.server, self.port, err)
         finally:
-            self._handler(payload, data)
+            self._handler(payload, data, latency)
 
 
 class HTTPClient(Client):
 
     def ping(self, payload):
+        latency = 0
         try:
+            start_time = time.time()
             data = ''.encode('utf-8')
             url = 'http://%s:%s' % (self.server, self.port)
             status = urlopen(url).code
             data = payload if status == 200 else data
+            # latency in milliseconds
+            latency = round((time.time() - start_time) * LATENCY_RESOLUTION)
         except Exception as err:
             if self.verbose:
                 log.error("ping to %s:%s failed. Error - %r",
                           self.server, self.port, err)
         finally:
-            self._handler(payload, data)
+            self._handler(payload, data, latency)

@@ -38,7 +38,8 @@ class TrafficRecordDB(db.Model):
         'protocol': 'text',
         'port': 'text',
         'expected': 'text',
-        'result': 'text'
+        'result': 'text',
+        'latency': 'text'
     }
 
     DB_SCHEMA = {
