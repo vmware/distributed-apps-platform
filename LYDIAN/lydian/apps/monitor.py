@@ -36,6 +36,7 @@ class ResourceMonitor(BaseApp):
         self._rqueue = rqueue    # records queue to put records onto.
         self._interval = interval or self.REPORT_INTERVAL
         self._switch = threading.Event()
+        self._switch.set()  # Stopped until started.
         self._proc_name = proc_name
         self._thread = None
 

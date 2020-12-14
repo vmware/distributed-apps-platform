@@ -164,9 +164,9 @@ class TrafficClientTask(TrafficTask):
             rec.latency = latency
             # log.info("Traffic: %r", rec)
             self.record_queue.put(rec, block=False, timeout=2)
-        except queue.Full:
-            log.error("Cann't put Traffic Record %r into the queue.",
-                      rec)
+        except queue.Full as err:
+            log.error("Cann't put Traffic Record %r into the queue: %r",
+                      rec, err)
 
 
 class TrafficServerTask(TrafficTask):

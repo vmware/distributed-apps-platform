@@ -104,7 +104,10 @@ class RecordManager(Subscribe, BaseApp):
         ]
         self._traffic_records = traffic_records
         self._resource_records = resource_records
+
         self._stopped = threading.Event()
+        self._stopped.set()  # stopped untile started.
+
         self._handlers = []
 
     def stopped(self):
