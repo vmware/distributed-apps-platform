@@ -9,6 +9,7 @@ from wavefront_sdk import WavefrontDirectClient
 import lydian.apps.config as conf
 import lydian.common.core as core
 
+
 def _get_wf_sender():
     # Create a sender with:
     # your Wavefront URL
@@ -43,18 +44,30 @@ class WavefrontTrafficRecorder(WavefrontRecorder):
         if not self.enabled:
             return
         # assert isinstance(trec, TrafficRecord)
-        prefix = 'lydian.traffic.' + record.protocol + ".result"
+        prefix = 'lydian.traffic.' + record.protocol
         tags = {
             "datacenter": self._testbed,
             "test_id": self._testbed,
             "reqid": record.reqid,
             "ruleid": record.ruleid,
             "source": record.source,
-            "destination": record.destination
+            "destination": record.destination,
+            "timestamp": record.timestamp
             }
+
+        # Record Traffic Data
         value = 1 if record.result else 0
+        name = prefix + ".result"
         self._client.send_metric(
-                    name=prefix, value=value,
+                    name=name, value=value,
+                    timestamp=record.timestamp,
+                    source=conf.WAVEFRONT_SOURCE_TAG,
+                    tags=tags)
+
+        # Record Latency data
+        name = prefix + ".latency"
+        self._client.send_metric(
+                    name=name, value=record.latency,
                     timestamp=record.timestamp,
                     source=conf.WAVEFRONT_SOURCE_TAG,
                     tags=tags)
