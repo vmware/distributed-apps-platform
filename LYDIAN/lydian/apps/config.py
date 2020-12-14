@@ -101,7 +101,6 @@ WAVEFRONT_REPORT_PERC = float(os.environ.get('WAVEFRONT_REPORT_PERC', 1.0))
 # SQLITE recording configs
 SQLITE_TRAFFIC_RECORDING = os.environ.get('SQLITE_TRAFFIC_RECORDING', True)
 SQLITE_RESOURCE_RECORDING = os.environ.get('SQLITE_RESOURCE_RECORDING', True)
-
 # Namespace Configs
 NAMESPACE_MODE = os.environ.get("NAMESPACE_MODE", False)
 NAMESPACE_MODE = True if NAMESPACE_MODE in ['True', True] else False
@@ -172,6 +171,7 @@ class Config(ConfigDB, BaseApp):
         We do not write these configs into the database yet as database
         configs are supposed to overwrite.
         """
+        BOOLS = ('TRUE', 'FALSE')
         try:
             with open(LYDIAN_CONFIG, 'r') as fh:
                 for line in fh:
@@ -184,6 +184,8 @@ class Config(ConfigDB, BaseApp):
                             kindex = line.index('=')
                             param = line[:kindex].strip()
                             val = line[kindex+1:].strip()
+                            if val.upper() in BOOLS:
+                                val = True if val.upper() == "TRUE" else False
                             self._params[param] = val
                         except ValueError:
                             pass
@@ -193,6 +195,8 @@ class Config(ConfigDB, BaseApp):
         VARS = [var for var in dir(module_name) if var.isupper()]
         for var in VARS:
             param, val = var, getattr(module_name, var)
+            if str(val).upper() in BOOLS:
+                val = True if str(val).upper() == "TRUE" else False
             self._params[param] = val
 
     def _type_handler(self, val, type_name):
@@ -202,7 +206,7 @@ class Config(ConfigDB, BaseApp):
                 'float': lambda x: float(x),
                 'tuple': lambda x: tuple(x),
                 'set': lambda x: set(x),
-                'bool': lambda x: True if x == 'True' else False,
+                'bool': lambda x: True if x == True else False,
                 'NoneType': lambda x: None,
             }
         val = json.loads(val)
