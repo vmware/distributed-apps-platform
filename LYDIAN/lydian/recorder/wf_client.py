@@ -4,22 +4,58 @@
 # The full license information can be found in LICENSE.txt
 # in the root directory of this project.
 
-from wavefront_sdk import WavefrontDirectClient
+import logging
 
 import lydian.apps.config as conf
 import lydian.common.core as core
 
+log = logging.getLogger(__name__)
+
+try:
+    from wavefront_sdk import WavefrontDirectClient, WavefrontProxyClient
+except ModuleNotFoundError:
+    log.warn("Wavefront package is not installed. "
+             "Recording to it would be disabled.")
+    from lydian.utils.mock import WavefrontDirectClient, \
+        WavefrontProxyClient
+
+def _get_wf_proxy_send():
+    """
+    Returns Wavefront Proxy client.
+    """
+    host = conf.get_param('WAVEFRONT_PROXY_ADDRESS')
+    if not host:
+        return None
+
+    metrics_port = conf.get_param('WAVEFRONT_PROXY_METRICS_PORT')
+    distribution_port = conf.get_param('WAVEFRONT_PROXY_DISTRIBUTION_PORT')
+    tracing_port = conf.get_param('WAVEFRONT_PROXY_TRACING_PORT')
+    event_port = conf.get_param('WAVEFRONT_PROXY_EVENT_PORT')
+
+    return WavefrontProxyClient(
+        host=host,
+        metrics_port=metrics_port,
+        distribution_port=distribution_port,
+        tracing_port=tracing_port,
+        event_port=event_port)
 
 def _get_wf_sender():
-    # Create a sender with:
-    # your Wavefront URL
-    # a Wavefront API token that was created with direct ingestion permission
+    """
+    Returns Wavefront sender
+    """
     # max queue size (in data points). Default: 50,000
     # batch size (in data points). Default: 10,000
     # flush interval  (in seconds). Default: 1 second
+
+    # First try to get Wavefront Proxy client
+    proxy = _get_wf_proxy_send()
+    if proxy:
+        return proxy
+
+    server = conf.get_param('WAVEFRONT_SERVER_ADDRESS')
+    token = conf.get_param('WAVEFRONT_SERVER_API_TOKEN')
     return WavefrontDirectClient(
-        server='https://vmware.wavefront.com',
-        token='d9302bfa-89b4-4d7f-995e-830887b9e903')
+        server=server, token=token)
 
 
 class WavefrontRecorder(core.Subscribe):
@@ -28,8 +64,8 @@ class WavefrontRecorder(core.Subscribe):
     def __init__(self):
         super(WavefrontRecorder, self).__init__()
         self._client = _get_wf_sender()
-        self._testbed = conf.TESTBED_NAME or ''
-        self._testid = conf.TEST_ID or ''
+        self._testbed = conf.get_param('TESTBED_NAME')
+        self._testid = conf.get_param('TEST_ID')
 
     @property
     def enabled(self):
@@ -51,8 +87,7 @@ class WavefrontTrafficRecorder(WavefrontRecorder):
             "reqid": record.reqid,
             "ruleid": record.ruleid,
             "source": record.source,
-            "destination": record.destination,
-            "timestamp": record.timestamp
+            "destination": record.destination
             }
 
         # Record Traffic Data

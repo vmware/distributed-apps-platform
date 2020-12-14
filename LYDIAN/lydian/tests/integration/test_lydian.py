@@ -56,11 +56,10 @@ class TrafficAppTest(unittest.TestCase):
         self.results = Results()
 
         self.db_pool = RecordManager(self.traffic_records, self.resource_records)
-
-        self.db_pool.start()
+        # self.db_pool.start()
         self.monitor.start()
 
-    def test_traffic(self):
+    def _test_register_traffic(self):
         rules = [('TCP', 9465), ('UDP', 9465), ('HTTP', 9466)]
         traffic_rules = []
         for protocol, port in rules:
@@ -71,27 +70,46 @@ class TrafficAppTest(unittest.TestCase):
             _rule['port'] = port
             traffic_rules.append(_rule)
 
-        reqid = self.DUMMY_RULE['reqid']
+        self.reqid = self.DUMMY_RULE['reqid']
         self.controller.register_traffic(traffic_rules)
         time.sleep(6)  # Wait for taffic to run for 10 seconds.
-        records = self.results.traffic(self.DUMMY_RULE['reqid'])
+        self.traffic_rules = traffic_rules
+
+    def _test_wf_client(self):
+        """ Tests WF Clients """
+        trec = WavefrontTrafficRecorder()
+        t_rec = self.traffic_records.get()
+        trec.write(t_rec)
+
+        rrec = WavefrontResourceRecorder()
+        r_rec = self.resource_records.get()
+        rrec.write(r_rec)
+
+    def _test_recorder(self):
+        """ Tests Data Rcorder """
+        self.db_pool.start()
+        time.sleep(6)   # Wait for 6 seconds for DB Pool to empty queue
+        records = self.results.traffic(self.reqid)
         assert records, "Traffic results missing"
 
+    def _test_start_stop_traffic(self):
         # Check for Start / Stop Traffic
-        ruleid = traffic_rules[0]['ruleid']
+        ruleid = self.traffic_rules[0]['ruleid']
         self.controller.stop(ruleid)
         time.sleep(10)
         # Ensure no traffic recorder in last 10 seconds.
         ts = int(time.time())
-        records = self.results.traffic(reqid=reqid, ruleid=ruleid, timestamp=(ts-8, ts))
+        records = self.results.traffic(reqid=self.reqid,
+                                       ruleid=ruleid,
+                                       timestamp=(ts-8, ts))
         assert not records, "Stop traffic not working..."
         self.controller.start(ruleid)
 
-        # DEBUGGING TIPS
-        # tcp_client = self.controller._client_mgr._traffic_tasks[ruleid]
-        # tcp_client.stop()
-        # time.sleep(3)   # time should be code update frequency
-        # tcp_client.start()
+    def test_main(self):
+        self._test_register_traffic()
+        self._test_wf_client()
+        self._test_recorder()
+        self._test_start_stop_traffic()
 
     def tearDown(self):
         self.controller.close()

@@ -4,13 +4,17 @@
 # The full license information can be found in LICENSE.txt
 # in the root directory of this project.
 
-import socket
+
 import http.server as hserver
+import logging
+import socket
 import threading
 import time
 
 from lydian.common import consts as consts
 from lydian.traffic.connection import Connection
+
+log = logging.getLogger(__name__)
 
 
 class Server(Connection):
