@@ -149,11 +149,13 @@ class TrafficControllerApp(BaseApp):
 
     def start(self, ruleid):
         """ Start a Traffic task (again). """
-        self._client_mgr.start(ruleid)
+        trule = self.rules.rules[ruleid]
+        self._client_mgr.start(trule)
 
     def stop(self, ruleid):
         """ Stop a Traffic task. """
-        self._client_mgr.stop(ruleid)
+        trule = self.rules.rules[ruleid]
+        self._client_mgr.stop(trule)
 
     def close(self):
         self._client_mgr.close()

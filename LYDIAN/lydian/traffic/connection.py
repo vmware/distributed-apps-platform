@@ -27,6 +27,7 @@ class Connection(object):
         self.log = logging.getLogger(__name__)
         self.verbose = verbose
         self._stop_event = threading.Event()
+        self._stop_event.set()      # stopped until started
         self.socket = None
 
     def _create_socket(self):

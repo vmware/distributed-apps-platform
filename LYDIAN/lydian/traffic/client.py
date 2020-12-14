@@ -96,6 +96,7 @@ class Client(Connection):
             raise PingValidationError()
 
     def start(self, payload=None, tries=None):
+        self.clear_event()
         payload = payload or self.payload
         tries = tries or self.tries
         try:

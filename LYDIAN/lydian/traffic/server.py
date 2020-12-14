@@ -50,6 +50,7 @@ class TCPServer(Server):
         API to start server at the requested port and other settings.
         """
         try:
+            self.clear_event()
             # Create a socket
             self._create_socket()
 
@@ -72,8 +73,7 @@ class TCPServer(Server):
                     self.log.info(msg)
                 self._handler(conn)
         except Exception as err:
-            _ = err
-            pass
+            log.error("Error in starting (TCP) server : %r", err)
         finally:
             self.close()
 
@@ -99,23 +99,27 @@ class UDPServer(Server):
         """
         API to start server at the requested port and other settings.
         """
-        # Create a socket
-        self._create_socket()
+        try:
+            self.clear_event()
+            # Create a socket
+            self._create_socket()
 
-        # Bind ot the port
-        self.socket.bind((self.host, self.port))
+            # Bind at the port
+            self.socket.bind((self.host, self.port))
 
-        if self.verbose:  # TODO : more stringent check
-            self.log.info("UDP Server started on %s:%s", self.host, self.port)
+            if self.verbose:  # TODO : more stringent check
+                self.log.info("UDP Server started on %s:%s", self.host, self.port)
 
-        while not self.is_event_set():
-            data, addr = self.socket.recvfrom(self.MAX_PAYLOAD_SIZE)
-            if self.verbose:
-                msg = "Connection request received from: %s:%s" % (addr[0], addr[1])
-                self.log.info(msg)
-            self._handler(data, addr)
-
-        self.socket.close()
+            while not self.is_event_set():
+                data, addr = self.socket.recvfrom(self.MAX_PAYLOAD_SIZE)
+                if self.verbose:
+                    msg = "Connection request received from: %s:%s" % (addr[0], addr[1])
+                    self.log.info(msg)
+                self._handler(data, addr)
+        except Exception as err:
+            log.error("Error in starting (UDP) server : %r", err)
+        finally:
+            self.close()
 
     def echo_handler(self, data, addr):
         """
