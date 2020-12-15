@@ -35,14 +35,14 @@ class ResourceMonitor(BaseApp):
         """
         self._rqueue = rqueue    # records queue to put records onto.
         self._interval = interval or self.REPORT_INTERVAL
-        self._switch = threading.Event()
-        self._switch.set()  # Stopped until started.
+        self._stop_switch = threading.Event()
+        self._stop_switch.set()  # Stopped until started.
         self._proc_name = proc_name
         self._thread = None
 
     def _run(self):
         p = psutil.Process(os.getpid())
-        while self._switch.is_set():
+        while not self._stop_switch.is_set():
             sys_cpu_percent = round(psutil.cpu_percent(), 2)
             sys_mem_percent = round(psutil.virtual_memory().percent, 2)
             sys_net_conns = int(len(psutil.net_connections()))
@@ -73,7 +73,7 @@ class ResourceMonitor(BaseApp):
         """
         Stops Resource Monitoring.
         """
-        self._switch.clear()
+        self._stop_switch.set()
         if self.is_running():
             self._thread.join()
             self._thread = None
@@ -83,7 +83,7 @@ class ResourceMonitor(BaseApp):
         """
         Starts Resource monitoring (in a separate thread)
         """
-        self._switch.set()
+        self._stop_switch.clear()
         if not self._thread:
             self._thread = threading.Thread(target=self._run)
             self._thread.setDaemon(True)

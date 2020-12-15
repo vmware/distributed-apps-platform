@@ -93,7 +93,8 @@ WAVEFRONT_TRAFFIC_RECORDING = os.environ.get('WAVEFRONT_TRAFFIC_RECORDING',
 WAVEFRONT_RESOURCE_RECORDING = os.environ.get('WAVEFRONT_RESOURCE_RECORDING',
                                               True)
 WAVEFRONT_PROXY_ADDRESS = os.environ.get('WAVEFRONT_PROXY_ADDRESS', None)
-WAVEFRONT_SERVER_ADDRESS = os.environ.get('WAVEFRONT_SERVER_ADDRESS', '')
+WAVEFRONT_SERVER_ADDRESS = os.environ.get('WAVEFRONT_SERVER_ADDRESS',
+                                          'https://vmware.wavefront.com')
 WAVEFRONT_SERVER_API_TOKEN = os.environ.get('WAVEFRONT_SERVER_API_TOKEN', '')
 WAVEFRONT_SOURCE_TAG = os.environ.get('WAVEFRONT_SOURCE', socket.gethostname())
 WAVEFRONT_REPORT_PERC = float(os.environ.get('WAVEFRONT_REPORT_PERC', 1.0))
@@ -144,6 +145,7 @@ class ConfigDB(db.Model):
 
 
 class Config(ConfigDB, BaseApp):
+    BOOLS = ('TRUE', 'FALSE')
     NAME = "CONFIG"
 
     def __init__(self, db_file=None):
@@ -158,10 +160,16 @@ class Config(ConfigDB, BaseApp):
         # subscribers to notify upon value update
         self._subscribers = defaultdict(set)
 
-        # Read configs, load from db file.
+        # Initialize params as default.
+        self._set_defaults()
 
+        # Override user provided configs.
         self._read_config()
+
+        # Load any dynamically modified configs.
         self.load_from_db()
+
+        # Save latest configs to DB
         self.save_to_db()
 
     def _read_config(self):
@@ -171,7 +179,6 @@ class Config(ConfigDB, BaseApp):
         We do not write these configs into the database yet as database
         configs are supposed to overwrite.
         """
-        BOOLS = ('TRUE', 'FALSE')
         try:
             with open(LYDIAN_CONFIG, 'r') as fh:
                 for line in fh:
@@ -184,18 +191,20 @@ class Config(ConfigDB, BaseApp):
                             kindex = line.index('=')
                             param = line[:kindex].strip()
                             val = line[kindex+1:].strip()
-                            if val.upper() in BOOLS:
+                            if val.upper() in self.BOOLS:
                                 val = True if val.upper() == "TRUE" else False
                             self._params[param] = val
                         except ValueError:
                             pass
         except FileNotFoundError:
             pass
+
+    def _set_defaults(self):
         module_name = sys.modules[__name__]
         VARS = [var for var in dir(module_name) if var.isupper()]
         for var in VARS:
             param, val = var, getattr(module_name, var)
-            if str(val).upper() in BOOLS:
+            if str(val).upper() in self.BOOLS:
                 val = True if str(val).upper() == "TRUE" else False
             self._params[param] = val
 
