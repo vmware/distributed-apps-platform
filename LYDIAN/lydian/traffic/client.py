@@ -34,7 +34,7 @@ class Client(Connection):
         A simple TCP client which binds to a specified host and port.
         """
         self.server = server
-        self.port = port
+        self.port = int(port)
 
         self._handler = handler or self.echo_validator
         self._ipv6 = ipv6 or is_ipv6_address(self.server)

@@ -52,6 +52,9 @@ class TrafficControllerApp(BaseApp):
         self._client_mgr = ClientManager(self._recore_queue)
         self._server_mgr = ServerManager()
 
+        # Resume Active rules
+        self._resume_active_rules()
+
     @property
     def host(self):
         return self._host
@@ -152,6 +155,8 @@ class TrafficControllerApp(BaseApp):
 
         trule = self.rules.rules.get(ruleid, None)
         if trule:
+            # Enable the trule
+            self.rules.enable(ruleid)
             self._client_mgr.start(trule)
         else:
             log.error("Unable to find rule for id:%s", ruleid)
@@ -163,8 +168,20 @@ class TrafficControllerApp(BaseApp):
         trule = self.rules.rules.get(ruleid, None)
         if trule:
             self._client_mgr.stop(trule)
+            # Disable the trule
+            self.rules.disable(ruleid)
         else:
             log.error("Unable to find rule for id:%s", ruleid)
+
+    def _resume_active_rules(self):
+        active_rules = [rule for ruleid, rule in self.rules.rules.items()
+                        if rule.state == self.rules.ACTIVE]
+        log.info("Restarting traffic on rules : %s",
+                 ','.join([x.ruleid for x in active_rules]))
+
+        # Starting all ACTIVE rules
+        for trule in active_rules:
+            self._add_rule_info(trule)
 
     def close(self):
         self._client_mgr.close()
