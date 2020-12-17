@@ -105,11 +105,27 @@ class TrafficAppTest(unittest.TestCase):
         assert not records, "Stop traffic not working..."
         self.controller.start(ruleid)
 
+    def _test_persistence(self):
+        self.controller.close()
+        self.db_pool.close()
+        time.sleep(5)
+        os.remove('./traffic.db')
+        # import pdb ; pdb.set_trace()
+        self.controller = TrafficControllerApp(self.traffic_records, self.rulesApp)
+        self.db_pool = RecordManager(self.traffic_records, self.resource_records)
+        self.db_pool.start()
+        ts = int(time.time())
+        time.sleep(10)
+        ruleid = self.traffic_rules[0]['ruleid']
+        records = self.results.traffic(reqid=self.reqid)
+        assert records, "Persistence not working"
+
     def test_main(self):
         self._test_register_traffic()
         self._test_wf_client()
         self._test_recorder()
         self._test_start_stop_traffic()
+        # self._test_persistence()
 
     def tearDown(self):
         self.controller.close()
