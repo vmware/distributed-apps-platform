@@ -72,7 +72,7 @@ def prep_node(hostip, username='root', password='FAKE_PASSWORD',
     return True
 
 
-def cleanup_node(hostip, username='root', password='FAKE_PASSWORD'):
+def cleanup_node(hostip, username='root', password='FAKE_PASSWORD', remove_db=True):
     """
     Cleans up Lydian service from the endpoints.
     """
@@ -82,13 +82,15 @@ def cleanup_node(hostip, username='root', password='FAKE_PASSWORD'):
         def _func(cmnd):
             try:
                 host.req_call(cmnd)
-            except ValueError:
-                pass
+            except ValueError as err:
+                log.warn("cmnd: %s, error: %s", cmnd, err)
         _func('systemctl stop lydian')
         _func('sudo systemctl disable lydian.service')
         _func('rm /etc/lydian/lydian.conf')
         _func('rm /etc/systemd/system/lydian.service')
         _func('rm /var/log/lydian/lydian.log')
+        if remove_db:
+            _func('rm traffic.db params.db rules.db')
 
 
 def main():

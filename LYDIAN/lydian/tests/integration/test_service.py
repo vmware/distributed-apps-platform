@@ -40,7 +40,6 @@ class TrafficAppTest(unittest.TestCase):
 
 
     def test_traffic(self):
-        import pdb ; pdb.set_trace()
         traffic_rules = [self.DUMMY_RULE]
 
         with LydianClient('localhost') as client:

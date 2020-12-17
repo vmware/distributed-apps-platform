@@ -110,7 +110,6 @@ class TrafficAppTest(unittest.TestCase):
         self.db_pool.close()
         time.sleep(5)
         os.remove('./traffic.db')
-        # import pdb ; pdb.set_trace()
         self.controller = TrafficControllerApp(self.traffic_records, self.rulesApp)
         self.db_pool = RecordManager(self.traffic_records, self.resource_records)
         self.db_pool.start()
@@ -132,3 +131,5 @@ class TrafficAppTest(unittest.TestCase):
         self.db_pool.close()
         self.rulesApp.close()
         os.remove(self.DB_FILE)
+        os.remove("./traffic.db")
+        os.remove("./params.db")
