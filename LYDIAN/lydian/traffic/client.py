@@ -23,7 +23,7 @@ class PingValidationError(Exception):
 
 class Client(Connection):
     PAYLOAD = 'Rampur!!'
-    CONNECTION_TIMEOUT = 2
+    CONNECTION_TIMEOUT = 1.8
     FREQUECY = 30       # 30 pings per minute.
     PING_INTERVAL = 2   # default request rate is 30ppm
 
@@ -147,7 +147,7 @@ class TCPClient(Client):
             self.socket.send(payload)
             data = self.socket.recv(self.MAX_PAYLOAD_SIZE)
             # latency in milliseconds
-            latency = round((time.time() - start_time) * LATENCY_RESOLUTION)
+            latency = round((time.time() - start_time) * LATENCY_RESOLUTION, 2)
             # close socket connection
             self.socket_close()
 
@@ -190,7 +190,7 @@ class UDPClient(Client):
                 data, server = None, None
             _ = server
             # latency in milliseconds
-            latency = round((time.time() - start_time) * LATENCY_RESOLUTION)
+            latency = round((time.time() - start_time) * LATENCY_RESOLUTION, 2)
             # close socket connection
             self.socket_close()
             if self.verbose:
@@ -217,7 +217,7 @@ class HTTPClient(Client):
             status = urlopen(url).code
             data = payload if status == 200 else data
             # latency in milliseconds
-            latency = round((time.time() - start_time) * LATENCY_RESOLUTION)
+            latency = round((time.time() - start_time) * LATENCY_RESOLUTION, 2)
         except Exception as err:
             if self.verbose:
                 log.error("ping to %s:%s failed. Error - %r",

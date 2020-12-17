@@ -131,6 +131,7 @@ class TrafficClientTask(TrafficTask):
         if frequency:
             kwargs['frequency'] = frequency
         kwargs['interval'] = getattr(self.traffic_rule, 'interval', None)
+        kwargs['verbose'] = getattr(self.traffic_rule, 'verbose', None)
 
         if self.traffic_rule.is_TCP():
             return TCPClient(**kwargs)
@@ -157,7 +158,7 @@ class TrafficClientTask(TrafficTask):
             rec.destination = self._trule.dst
             rec.protocol = self._trule.protocol
             rec.port = self._trule.port
-            rec.expected = self._trule.connected
+            rec.expected = self._trule.connected in [1, '1']
             rec.result = not rec.expected ^ (data == payload)
             rec.reqid = self._trule.reqid
             rec.ruleid = self._trule.ruleid
