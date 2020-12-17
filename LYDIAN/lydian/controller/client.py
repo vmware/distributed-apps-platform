@@ -243,6 +243,29 @@ class TrafficControllerManager(Manager):
         self._client.controller.stop(ruleid)
 
 
+class MockTrafficManager(Manager):
+
+    def register_traffic(self, traffic_rules):
+        traffic_rules = pickle.dumps(traffic_rules)
+        return self._client.controller.register_traffic(traffic_rules)
+
+    def register_rule(self, trule):
+        trule = pickle.dumps(trule)
+        return self._client.controller.register_rule(trule)
+
+    def start_traffic(self, ruleid):
+        self._client.controller.start_traffic(ruleid)
+
+    def stop_traffic(self, ruleid):
+        self._client.controller.stop_traffic(ruleid)
+
+    def start(self):
+        self._client.controller.start()
+
+    def stop_traffic(self, ruleid):
+        self._client.controller.stop()
+
+
 class LydianClient(object):
     """
     Top level object to access Lydian API
