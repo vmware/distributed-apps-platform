@@ -51,6 +51,10 @@ class Podium(BaseApp):
         self.rules_app = rules.RulesApp()
         self.rules = self.rules_app.rules
 
+        # Update config file based on default constants, config file
+        # and any previously set configs (in .db file). In that order.
+        config.update_config()
+
     @property
     def endpoints(self):
         return self._ep_hosts.keys()

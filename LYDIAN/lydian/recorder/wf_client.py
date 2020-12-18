@@ -96,7 +96,7 @@ class WavefrontTrafficRecorder(WavefrontRecorder):
         self._client.send_metric(
                     name=name, value=value,
                     timestamp=record.timestamp,
-                    source=conf.WAVEFRONT_SOURCE_TAG,
+                    source=conf.get_param('WAVEFRONT_SOURCE_TAG'),
                     tags=tags)
 
         # Record Latency data
@@ -104,7 +104,7 @@ class WavefrontTrafficRecorder(WavefrontRecorder):
         self._client.send_metric(
                     name=name, value=record.latency,
                     timestamp=record.timestamp,
-                    source=conf.WAVEFRONT_SOURCE_TAG,
+                    source=conf.get_param('WAVEFRONT_SOURCE_TAG'),
                     tags=tags)
 
 
@@ -126,4 +126,5 @@ class WavefrontResourceRecorder(WavefrontRecorder):
             self._client.send_metric(
                     name=metric, value=val,
                     timestamp=record.timestamp,
-                    source=conf.WAVEFRONT_SOURCE_TAG, tags=tags)
+                    source=conf.get_param('WAVEFRONT_SOURCE_TAG'),
+                    tags=tags)

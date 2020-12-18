@@ -14,6 +14,7 @@ from collections import defaultdict
 
 from sql30 import db
 
+<<<<<<< HEAD
 <<<<<<< HEAD:jasper/apps/config.py
 <<<<<<< HEAD
 from axon.apps.base import BaseApp
@@ -27,12 +28,17 @@ import jasper.utils.logger as logger
 =======
 from lydian.apps.base import BaseApp
 >>>>>>> d9f9229... lydian : Initial changes to prepare for release - lydian 0.1.0:lydian/apps/config.py
+=======
+import lydian.apps.base as base
+import lydian.common.consts as consts 
+>>>>>>> e11d80d... lydian: Integrate node preparation with constants, configs updates.
 
 >>>>>>> 17eec04... Lydian: Remove cyclic dependency
 
 log = logging.getLogger(__name__)
 configs = None
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -131,6 +137,8 @@ ELASTIC_SEARCH_SERVER_PORT = os.environ.get(
 
 # # # # # End of Configurable Variables  # # # # #
 
+=======
+>>>>>>> e11d80d... lydian: Integrate node preparation with constants, configs updates.
 
 class ConfigDB(db.Model):
     DB_NAME = './params.db'
@@ -152,7 +160,7 @@ class ConfigDB(db.Model):
     VALIDATE_BEFORE_WRITE = True
 
 
-class Config(ConfigDB, BaseApp):
+class Config(ConfigDB, base.BaseApp):
     BOOLS = ('TRUE', 'FALSE')
     NAME = "CONFIG"
 
@@ -188,7 +196,8 @@ class Config(ConfigDB, BaseApp):
         configs are supposed to overwrite.
         """
         try:
-            with open(LYDIAN_CONFIG, 'r') as fh:
+            cfg_file = self.get_param('LYDIAN_CONFIG')
+            with open(cfg_file, 'r') as fh:
                 for line in fh:
                     line = line.strip()
                     if line.startswith('#'):
@@ -199,6 +208,8 @@ class Config(ConfigDB, BaseApp):
                             kindex = line.index('=')
                             param = line[:kindex].strip()
                             val = line[kindex+1:].strip()
+                            val = val.strip('"')
+                            val = val.strip("'")
                             if val.upper() in self.BOOLS:
                                 val = True if val.upper() == "TRUE" else False
                             self._params[param] = val
@@ -208,10 +219,10 @@ class Config(ConfigDB, BaseApp):
             pass
 
     def _set_defaults(self):
-        module_name = sys.modules[__name__]
-        VARS = [var for var in dir(module_name) if var.isupper()]
-        for var in VARS:
-            param, val = var, getattr(module_name, var)
+        """
+        Initialized params with default constants.
+        """
+        for param, val in consts.get_constants().items():
             if str(val).upper() in self.BOOLS:
                 val = True if str(val).upper() == "TRUE" else False
             self._params[param] = val
@@ -305,6 +316,18 @@ class Config(ConfigDB, BaseApp):
     exposed_get_param = get_param
     exposed_set_param = set_param
 
+    def write_config_file(self, file_name, overwrite=True):
+        mode = 'w+' if overwrite  else 'w'
+        marker = '#' * 5
+        with open(file_name, mode) as fp:
+            fp.write("### LYDIAN Service Config file ###")
+            for category in consts.get_categories():
+                fp.write("\n\n")
+                fp.write("%s %s constants %s" % (marker,
+                    category._NAME, marker))
+                for key, val in consts.get_constants([category]).items():
+                    fp.write('\n%s = %s' % (key, self.get_param(key)))
+
 
 def get_configs():
     global configs
@@ -320,3 +343,11 @@ def get_param(param):
 
 def set_param(param, val):
     return get_configs().set_param(param, val)
+
+
+def update_config():
+    """ Update Config file at local installation """
+    data_dir = os.path.dirname(os.path.realpath(__file__))
+    data_dir = os.path.join(data_dir, '../data')
+    cfg_file = os.path.join(data_dir, 'lydian.conf')
+    get_configs().write_config_file(file_name=cfg_file)

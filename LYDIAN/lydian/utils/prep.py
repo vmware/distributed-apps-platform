@@ -9,6 +9,7 @@ import logging
 import os
 import tempfile
 
+from lydian.apps.config import get_configs
 from lydian.utils.ssh_host import Host
 from lydian.utils.install import install_egg
 
@@ -16,7 +17,9 @@ log = logging.getLogger(__name__)
 
 
 def prep_node(hostip, username='root', password='FAKE_PASSWORD',
-              egg_file_src=None, config_file_path=None):
+              egg_file_src=None, cfg_path=None):
+
+    config = get_configs()
 
     with Host(host=hostip, user=username, passwd=password) as host:
         try:
@@ -45,7 +48,7 @@ def prep_node(hostip, username='root', password='FAKE_PASSWORD',
             host.put_file(sfile.name, '/etc/systemd/system/lydian.service')
 
         # Copy Egg file
-        egg_file = os.environ.get('LYDIAN_EGG_PATH', egg_file_src)
+        egg_file = config.get_param('LYDIAN_EGG_PATH') or egg_file_src
         if not egg_file:
             egg_file = os.path.join(data_dir, '../data/lydian.egg')
             if not os.path.exists(egg_file):
@@ -55,7 +58,7 @@ def prep_node(hostip, username='root', password='FAKE_PASSWORD',
         host.put_file(egg_file, '/root/lydian.egg')
 
         # Copy Config File.
-        config_file = os.environ.get('LYDIAN_CONFIG_PATH', config_file_path)
+        config_file = config.get_param('LYDIAN_HOSTPREP_CONFIG') or cfg_path
         if not config_file:
             config_file = os.path.join(data_dir, '../data/lydian.conf')
 

@@ -42,8 +42,8 @@ class TrafficAppTest(unittest.TestCase):
 
     def setUp(self):
         setup_logging()
-        if os.path.exists(self.DB_FILE):
-            os.remove(self.DB_FILE)
+
+        self._delete_db_files()
 
         # Traffic Records.
         self.traffic_records = queue.Queue(self.MAX_QUEUE_SIZE)
@@ -58,6 +58,14 @@ class TrafficAppTest(unittest.TestCase):
         self.db_pool = RecordManager(self.traffic_records, self.resource_records)
         # self.db_pool.start()
         self.monitor.start()
+
+    def _delete_db_files(self, del_config=False):
+        if os.path.exists(self.DB_FILE):
+            os.remove(self.DB_FILE)
+        if os.path.exists('./traffic.db'):
+            os.remove("./traffic.db")
+        if del_config and os.path.exists('./traffic.db'):
+            os.remove("./traffic.db")
 
     def _test_register_traffic(self):
         rules = [('TCP', 9465), ('UDP', 9465), ('HTTP', 9466)]
@@ -127,9 +135,22 @@ class TrafficAppTest(unittest.TestCase):
         # self._test_persistence()
 
     def tearDown(self):
-        self.controller.close()
-        self.db_pool.close()
+        log.info("Stopping Resource Monitor")
+        self.monitor.stop()
+
+        log.info("Stopping Rules")
         self.rulesApp.close()
-        os.remove(self.DB_FILE)
-        os.remove("./traffic.db")
-        os.remove("./params.db")
+
+        # Stop Traffic Recorder before Traffic Controller as
+        # otherwise recorder threads might be blocked on waiting
+        # for data to come in queue.
+        log.info("Stopping Recorder")
+        self.db_pool.close()
+
+        log.info("Stopping controller")
+        self.controller.close()
+
+
+
+        log.info("Deleting DB files")
+        self._delete_db_files(del_config=True)

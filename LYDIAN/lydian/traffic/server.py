@@ -11,7 +11,7 @@ import socket
 import threading
 import time
 
-from lydian.common import consts as consts
+from lydian.apps import config as config
 from lydian.traffic.connection import Connection
 
 log = logging.getLogger(__name__)
@@ -180,5 +180,5 @@ class HTTPServer(Server):
             self.httpd.shutdown()
             self.httpd.server_close()
         if self._thread:
-            self._thread.join(consts.THREADS_JOIN_TIMEOUT)
+            self._thread.join(config.get_param('THREADS_JOIN_TIMEOUT'))
         self._thread, self.httpd = None, None

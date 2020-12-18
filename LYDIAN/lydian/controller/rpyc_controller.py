@@ -124,8 +124,8 @@ class LydianController(object):
 
 
 def main():
-    logger.setup_logging(log_dir=config.LOG_DIR,
-                         log_file=config.LOG_FILE)
+    logger.setup_logging(log_dir=config.get_param('LOG_DIR'),
+                         log_file=config.get_param('LOG_FILE'))
     lydian_service = LydianController()
     lydian_service.start()
 

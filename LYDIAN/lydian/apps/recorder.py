@@ -146,11 +146,13 @@ class RecordManager(Subscribe, BaseApp):
         self._stopped.clear()
 
         # Traffic Records Handler
-        thandler = threading.Thread(target=self._traffic_record_handler)
+        thandler = threading.Thread(target=self._traffic_record_handler,
+                                    daemon=True)
         self._handlers.append(thandler)
 
         # Resource Record handler
-        rhandler = threading.Thread(target=self._resource_record_handler)
+        rhandler = threading.Thread(target=self._resource_record_handler,
+                                    daemon=True)
         self._handlers.append(rhandler)
 
         for handler in self._handlers:

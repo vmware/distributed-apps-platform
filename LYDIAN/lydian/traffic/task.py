@@ -9,7 +9,7 @@ import os
 import queue
 import threading
 
-from lydian.common import consts as consts
+from lydian.apps import config as config
 from lydian.traffic.core import TrafficRecord
 from lydian.traffic.client import TCPClient, UDPClient, HTTPClient
 from lydian.traffic.server import TCPServer, UDPServer, HTTPServer
@@ -75,12 +75,13 @@ class TrafficTask(object):
         if blocking:
             self._task.start()
         else:
-            self._task_thread = threading.Thread(target=self._task.start, daemon=True)
+            self._task_thread = threading.Thread(target=self._task.start,
+                                                 daemon=True)
             self._task_thread.start()
 
     def _join_thread(self):
         if self._task_thread:
-            self._task_thread.join(consts.THREADS_JOIN_TIMEOUT)
+            self._task_thread.join(config.get_param('THREADS_JOIN_TIMEOUT'))
             self._task_thread = None
 
     def stop(self):
