@@ -23,6 +23,7 @@ LINUX_OS = True if SYSTEM == 'Linux' else False
 MAC_OS = True if SYSTEM == 'Darwin' else False
 WIN_OS = True if SYSTEM == 'Windows' else False
 
+
 #### CONSTANTS ####
 class SystemConstants(Constants):
     _NAME = "System"
@@ -81,18 +82,19 @@ class RecorderConstants(Constants):
 
 class WavefrontConstants(Constants):
     _NAME = "Wavefront"
-    WAVEFRONT_PROXY_ADDRESS = os.environ.get('WAVEFRONT_PROXY_ADDRESS', None)
     WAVEFRONT_SERVER_ADDRESS = os.environ.get('WAVEFRONT_SERVER_ADDRESS', '')
     WAVEFRONT_SERVER_API_TOKEN = os.environ.get('WAVEFRONT_SERVER_API_TOKEN', '')
     WAVEFRONT_SOURCE_TAG = os.environ.get('WAVEFRONT_SOURCE', socket.gethostname())
+    WAVEFRONT_PROXY_ADDRESS = os.environ.get('WAVEFRONT_PROXY_ADDRESS', None)
+    WAVEFRONT_PROXY_METRICS_PORT = int(os.environ.get('WAVEFRONT_PROXY_METRICS_PORT', 2878))
+    WAVEFRONT_PROXY_DISTRIBUTION_PORT = int(os.environ.get('WAVEFRONT_PROXY_DISTRIBUTION_PORT', 2878))
+    WAVEFRONT_PROXY_TRACING_PORT = int(os.environ.get('WAVEFRONT_PROXY_TRACING_PORT', 30000))
 
 
 class ELSConstants(Constants):
     _NAME = "Elastic Search"
-    ELASTIC_SEARCH_SERVER_ADDRESS = os.environ.get('ELASTIC_SEARCH_SERVER_ADDRESS',
-                                               None)
-    ELASTIC_SEARCH_SERVER_PORT = os.environ.get('ELASTIC_SEARCH_SERVER_PORT',
-                                                9200)
+    ELASTIC_SEARCH_SERVER_ADDRESS = os.environ.get('ELASTIC_SEARCH_SERVER_ADDRESS', None)
+    ELASTIC_SEARCH_SERVER_PORT = int(os.environ.get('ELASTIC_SEARCH_SERVER_PORT', 9200))
 
 
 def get_categories():

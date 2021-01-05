@@ -36,8 +36,7 @@ def _get_wf_proxy_send():
         host=host,
         metrics_port=metrics_port,
         distribution_port=distribution_port,
-        tracing_port=tracing_port,
-        event_port=event_port)
+        tracing_port=tracing_port)
 
 def _get_wf_sender():
     """
