@@ -64,7 +64,7 @@ class WavefrontRecorder(core.Subscribe):
         super(WavefrontRecorder, self).__init__()
         self._client = _get_wf_sender()
         self._testbed = conf.get_param('TESTBED_NAME')
-        self._testid = conf.get_param('TEST_ID')
+        self._testid = str(conf.get_param('TEST_ID'))
 
     @property
     def enabled(self):
@@ -82,7 +82,7 @@ class WavefrontTrafficRecorder(WavefrontRecorder):
         prefix = 'lydian.traffic.' + record.protocol
         tags = {
             "datacenter": self._testbed,
-            "test_id": self._testbed,
+            "test_id": self._testid,
             "reqid": record.reqid,
             "ruleid": record.ruleid,
             "source": record.source,
