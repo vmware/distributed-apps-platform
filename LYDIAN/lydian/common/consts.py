@@ -48,8 +48,8 @@ class LydianServiceConstants(Constants):
     _NAME = "Lydian Service"
     LYDIAN_PORT = int(os.environ.get('LYDIAN_PORT', 5649))
     LYDIAN_CONFIG = os.environ.get('LYDIAN_CONFIG', '/etc/lydian/lydian.conf')
-    LYDIAN_EGG_PATH = os.environ.get('LYDIAN_EGG_PATH', None)
-    LYDIAN_HOSTPREP_CONFIG = os.environ.get('LYDIAN_HOSTPREP_CONFIG', None)
+    LYDIAN_EGG_PATH = os.environ.get('LYDIAN_EGG_PATH', '')
+    LYDIAN_HOSTPREP_CONFIG = os.environ.get('LYDIAN_HOSTPREP_CONFIG', '')
 
 
 class TestbedConstants(Constants):
@@ -85,7 +85,7 @@ class WavefrontConstants(Constants):
     WAVEFRONT_SERVER_ADDRESS = os.environ.get('WAVEFRONT_SERVER_ADDRESS', '')
     WAVEFRONT_SERVER_API_TOKEN = os.environ.get('WAVEFRONT_SERVER_API_TOKEN', '')
     WAVEFRONT_SOURCE_TAG = os.environ.get('WAVEFRONT_SOURCE', socket.gethostname())
-    WAVEFRONT_PROXY_ADDRESS = os.environ.get('WAVEFRONT_PROXY_ADDRESS', None)
+    WAVEFRONT_PROXY_ADDRESS = os.environ.get('WAVEFRONT_PROXY_ADDRESS', '')
     WAVEFRONT_PROXY_METRICS_PORT = int(os.environ.get('WAVEFRONT_PROXY_METRICS_PORT', 2878))
     WAVEFRONT_PROXY_DISTRIBUTION_PORT = int(os.environ.get('WAVEFRONT_PROXY_DISTRIBUTION_PORT', 2878))
     WAVEFRONT_PROXY_TRACING_PORT = int(os.environ.get('WAVEFRONT_PROXY_TRACING_PORT', 30000))
@@ -93,7 +93,7 @@ class WavefrontConstants(Constants):
 
 class ELSConstants(Constants):
     _NAME = "Elastic Search"
-    ELASTIC_SEARCH_SERVER_ADDRESS = os.environ.get('ELASTIC_SEARCH_SERVER_ADDRESS', None)
+    ELASTIC_SEARCH_SERVER_ADDRESS = os.environ.get('ELASTIC_SEARCH_SERVER_ADDRESS', '')
     ELASTIC_SEARCH_SERVER_PORT = int(os.environ.get('ELASTIC_SEARCH_SERVER_PORT', 9200))
 
 

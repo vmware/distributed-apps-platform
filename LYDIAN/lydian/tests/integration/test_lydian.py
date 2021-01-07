@@ -80,7 +80,7 @@ class TrafficAppTest(unittest.TestCase):
 
         self.reqid = self.DUMMY_RULE['reqid']
         self.controller.register_traffic(traffic_rules)
-        time.sleep(6)  # Wait for taffic to run for 10 seconds.
+        time.sleep(10)  # Run traffic for 10 seconds.
         self.traffic_rules = traffic_rules
 
     def _test_wf_client(self):
@@ -104,7 +104,7 @@ class TrafficAppTest(unittest.TestCase):
         # Check for Start / Stop Traffic
         ruleid = self.traffic_rules[0]['ruleid']
         self.controller.stop(ruleid)
-        time.sleep(10)
+        time.sleep(10)  # Stop traffic for 10 seconds
         # Ensure no traffic recorder in last 10 seconds.
         ts = int(time.time())
         records = self.results.traffic(reqid=self.reqid,
@@ -112,11 +112,16 @@ class TrafficAppTest(unittest.TestCase):
                                        timestamp=(ts-8, ts))
         assert not records, "Stop traffic not working..."
         self.controller.start(ruleid)
+        time.sleep(10)  # Stop traffic for 10 seconds
+        records = self.results.traffic(reqid=self.reqid,
+                                       ruleid=ruleid,
+                                       timestamp=(ts-8, ts))
+        assert records, "Stop traffic not working..."
 
     def _test_persistence(self):
         self.controller.close()
         self.db_pool.close()
-        time.sleep(5)
+        time.sleep(45)
         os.remove('./traffic.db')
         self.controller = TrafficControllerApp(self.traffic_records, self.rulesApp)
         self.db_pool = RecordManager(self.traffic_records, self.resource_records)

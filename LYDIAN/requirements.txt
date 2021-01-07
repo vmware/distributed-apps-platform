@@ -4,3 +4,4 @@ sql30>=0.1.6
 paramiko>=1.17.0
 wavefront-sdk-python>=1.1.1
 wavefront-api-client==2.33.15
+# psutil>=5.6.6

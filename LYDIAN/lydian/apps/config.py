@@ -332,7 +332,14 @@ class Config(ConfigDB, base.BaseApp):
                 fp.write("%s %s constants %s" % (marker,
                     category._NAME, marker))
                 for key, val in consts.get_constants([category]).items():
-                    fp.write('\n%s = %s' % (key, self.get_param(key)))
+                    if isinstance(val, str):
+                        fp.write("\n%s = '%s'" % (key, self.get_param(key)))
+                    elif isinstance(val, bool):
+                        val = 'True' if self.get_param(key) else 'False'
+                        fp.write("\n%s = '%s'" % (key, val))
+                    else:
+                        fp.write('\n%s = %s' % (key, self.get_param(key)))
+
             fp.write("\n\n### LYDIAN Service Config (END) ###\n")
 
 
