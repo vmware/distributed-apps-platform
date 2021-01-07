@@ -32,6 +32,7 @@ class SystemConstants(Constants):
     MAC_OS = MAC_OS     # True if running on MAC OS
     WIN_OS = WIN_OS     # True if running on Windows
 
+    NODE_PREP_MAX_THREAD = int(os.environ.get('NODE_PREP_MAX_THREAD', 32))
     # Wait for 5 seconds while joining the threads.
     THREADS_JOIN_TIMEOUT = 5
 

@@ -6,6 +6,7 @@
 
 import itertools
 import logging
+from multiprocessing.pool import ThreadPool
 from queue import Queue
 import threading
 import time
@@ -38,6 +39,7 @@ class Podium(BaseApp):
 
     HOST_WAIT_TIME = 4
     NAMESPACE_INTERFACE_NAME_PREFIXES = config.get_param('NAMESPACE_INTERFACE_NAME_PREFIXES')
+    NODE_PREP_MAX_THREAD = config.get_param('NODE_PREP_MAX_THREAD')
 
     def __init__(self, username=None, password=None, db_file=None):
         """
@@ -99,7 +101,29 @@ class Podium(BaseApp):
         except Exception as err:
             log.error("Error in adding endpoint %s - %r", hostip, err)
 
-    def add_hosts(self, hostip, username=None, password=None):
+    def _add_hosts(self, params):
+        host_ip, username, password = params[0], params[1], params[2]
+        self.add_host(host_ip, username=username, password=password)
+
+    def add_hosts(self, hostips, username=None, password=None):
+        """ Add remote hosts for installing and starting lydian service.
+        Args:
+            hostips(str or list):
+                a single hostname/IP or comma separated hostnames/IPs or list of hostnames/IPs
+            username: username
+            password: password
+        """
+        if isinstance(hostips, str):
+            hostips = hostips.split(',')
+
+        pool = ThreadPool(self.NODE_PREP_MAX_THREAD)
+        params = [(host, username, password) for host in hostips]
+        pool.map(self._add_hosts, params)
+        pool.close()
+        pool.join()
+
+
+    def add_host(self, hostip, username=None, password=None):
         username = username or self._ep_username
         password = password or self._ep_password
         try:
