@@ -1,6 +1,10 @@
 LYDIAN (Release Notes)
 ----------------------
 
+0.1.5 (Early access)
+---------------------
+- Early access release to next major release.
+
 0.1.4 (Early Beta)
 -----------------
 - Initial POC release with support for :
