@@ -4,6 +4,7 @@
 # The full license information can be found in LICENSE.txt
 # in the root directory of this project.
 
+import collections
 import itertools
 import logging
 from multiprocessing.pool import ThreadPool
@@ -51,7 +52,6 @@ class Podium(BaseApp):
         self._ep_username = username or self.TENNAT_VM_USERNAME
         self._ep_password = password or self.TENNAT_VM_PASSWORD
         self.rules_app = rules.RulesApp()
-        self.rules = self.rules_app.rules
 
         # Update config file based on default constants, config file
         # and any previously set configs (in .db file). In that order.
@@ -60,6 +60,10 @@ class Podium(BaseApp):
     @property
     def endpoints(self):
         return self._ep_hosts.keys()
+
+    @property
+    def rules(self):
+        return self.rules_app.rules
 
     def wait_on_host(self, hostip, wait_time=None):
         wait_time = wait_time or self.HOST_WAIT_TIME
@@ -192,8 +196,17 @@ class Podium(BaseApp):
         return reqid
 
     def register_traffic(self, intent):
-        # TODO : Optimization opportunities
-        # Club all requests to same host in one call.
+        """
+        Register Traffic at endpoints. Process rules upfront to register all
+        the rules at one endpoint in the single call.
+
+        Parameters
+        -----------
+        intent : collection (list)
+            List of rules to register.
+        """
+        servers = collections.defaultdict(list)
+        clients = collections.defaultdict(list)
         _trules = []
         for rule in intent:
             srchost = self.get_ep_host(rule['src'])
@@ -208,21 +221,32 @@ class Podium(BaseApp):
                           rule['dst'])
                 continue
 
-            # Start Server before the client.
-            with LydianClient(dsthost) as dclient:
-                dclient.controller.register_traffic([rule])
+            servers[dsthost].append(rule)
+            clients[srchost].append(rule)
 
-            with LydianClient(srchost) as sclient:
-                sclient.controller.register_traffic([rule])
-
-            # Create TrafficRule
             trule = self.create_traffic_rule(rule)
             _trules.append(trule)
-            ruleid = getattr(trule, 'ruleid')
-            if ruleid:
-                self.rules[ruleid] = trule
+
+        # Register at endpoint and create local representation.
+        if config.get_param('TRAFFIC_START_SERVERS_FIRST'):
+            # Start Servers first and then Clients.
+            host_rules_map = [servers, clients]
+        else:
+            # Start Servers / Clients in single call.
+            # May result in some cool off time required before the
+            # traffic settles.
+            for host, rules in clients.items():
+                servers[host].extend(rules)
+            host_rules_map = [servers]
+
+        for host_rules in host_rules_map:
+            for host, rules in host_rules.items():
+                # Start Server before the client.
+                with LydianClient(host) as dclient:
+                    dclient.controller.register_traffic(rules)
+
         # Persist rules to local db
-        self.rules_app.save_to_db(_trules)
+        self.rules_app.add_rules(_trules)
 
     def _traffic_op(self, reqid, op_type):
         trules = self.get_rules_by_reqid(reqid)

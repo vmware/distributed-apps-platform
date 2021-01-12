@@ -66,6 +66,13 @@ class NamespaceConstants(Constants):
     NAMESPACE_INTERFACE_NAME_PREFIXES = ["veth", "eth"]
 
 
+class TrafficConstants(Constants):
+    _NAME = "Traffic"
+    # Traffic Configs
+
+    TRAFFIC_START_SERVERS_FIRST = os.environ.get('TRAFFIC_START_SERVERS_FIRST', True)
+
+
 class RecorderConstants(Constants):
     _NAME = "Data Recording"
     WAVEFRONT_TRAFFIC_RECORDING = os.environ.get('WAVEFRONT_TRAFFIC_RECORDING',
@@ -108,6 +115,7 @@ def get_categories():
         LydianServiceConstants,
         TestbedConstants,
         NamespaceConstants,
+        TrafficConstants,
         RecorderConstants,
         WavefrontConstants,
         ELSConstants

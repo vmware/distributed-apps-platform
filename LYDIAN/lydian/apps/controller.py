@@ -130,10 +130,13 @@ class TrafficControllerApp(BaseApp):
             # if we cann't process it.
             pass    # unpickled data.
         log.info("Registering Traffic : %r", traffic_rules)
+        _trules = []
         for rule in traffic_rules:
             # create a rule and add it to database.
             trule = self._get_traffic_rule(rule)
-            self.rules.add(trule)
+            _trules.append(trule)
+
+        self.rules.add_rules(_trules)
         log.info("Registered Traffic Successfully: %r", traffic_rules)
 
     def register_rule(self, trule):

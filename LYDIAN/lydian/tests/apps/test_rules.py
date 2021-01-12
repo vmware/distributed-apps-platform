@@ -57,7 +57,7 @@ class RulesAppTest(unittest.TestCase):
         self.rulesApp.add(trule)
 
         trules = []
-        for x in range(5):
+        for x in range(5000):
             rule = {k: v for k, v in self.DUMMY_RULE.items()}
 
             rule['ruleid'] = '%s' % uuid.uuid4()
@@ -67,7 +67,6 @@ class RulesAppTest(unittest.TestCase):
         # TEST : Adding multiple rules.
         self.rulesApp.add_rules(trules)
 
-        self.rulesApp.save_to_db()
         self.rulesApp.close()
 
         # Get New instance of rulesApp()
