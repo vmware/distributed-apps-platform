@@ -13,6 +13,7 @@ from lydian.apps import config as config
 from lydian.traffic.core import TrafficRecord
 from lydian.traffic.client import TCPClient, UDPClient, HTTPClient
 from lydian.traffic.server import TCPServer, UDPServer, HTTPServer
+from lydian.utils.common import is_ipv6_address
 from lydian.utils.nsenter import Namespace
 
 
@@ -183,12 +184,13 @@ class TrafficServerTask(TrafficTask):
 
     def _get_server(self):
         port = self._trule.port
+        ipv6 = is_ipv6_address(self._trule.dst)
         if self._trule.is_TCP():
-            return TCPServer(port=port)
+            return TCPServer(port=port, ipv6=ipv6)
         elif self._trule.is_UDP():
-            return UDPServer(port=port)
+            return UDPServer(port=port, ipv6=ipv6)
         elif self._trule.is_HTTP():
-            return HTTPServer(port=port)
+            return HTTPServer(port=port, ipv6=ipv6)
         else:
             msg = "LYDIAN: Unsupported protocol on rule %s" % self._trule
             raise NotImplementedError(msg)

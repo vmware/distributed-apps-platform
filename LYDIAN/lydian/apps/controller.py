@@ -73,8 +73,9 @@ class TrafficControllerApp(BaseApp):
         for ifname in self._if_mgr.get_all_interfaces():
             if not any([ifname.startswith(x) for x in NAMESPACE_INTERFACE_NAME_PREFIXES]):
                 continue
-            interface = self._if_mgr.get_interface(ifname)
-            self._ep_map[interface['address']] = host_target
+            ips = self._if_mgr.get_ips_by_interface(ifname)
+            for ip in ips:
+                self._ep_map[ip] = host_target
 
         # Update Namespaces on this host.
         for ns_name, ns_interfaces in self._ns_mgr.get_namespace_interface_map().items():
