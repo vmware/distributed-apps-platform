@@ -121,10 +121,10 @@ class RulesApp(BaseApp, RulesDB):
             return
 
         self._rules[ruleid].state = self.INACTIVE
-
         where = {'ruleid': ruleid}
-        self.update(condition=where, state=self.INACTIVE)
-        self.commit()
+        with RulesDB() as db:
+            db.table = self.table
+            db.update(condition=where, state=self.INACTIVE)
 
     def enable(self, ruleid):
         """ Enables a rule """
@@ -133,10 +133,10 @@ class RulesApp(BaseApp, RulesDB):
             return
 
         self._rules[ruleid].state = self.ACTIVE
-
         where = {'ruleid': ruleid}
-        self.update(condition=where, state=self.ACTIVE)
-        self.commit()
+        with RulesDB() as db:
+            db.table = self.table
+            db.update(condition=where, state=self.ACTIVE)
 
     def is_enabled(self, ruleid):
         rule = self._rules.get(ruleid)
