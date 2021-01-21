@@ -7,6 +7,7 @@
 import collections
 import itertools
 import logging
+import pickle
 from multiprocessing.pool import ThreadPool
 from queue import Queue
 import threading
@@ -254,11 +255,11 @@ class Podium(BaseApp):
             ruleid = getattr(trule, 'ruleid')
             src_ip = getattr(trule, 'src')
             host_ip = self.get_ep_host(src_ip)
-            client = LydianClient(host_ip)
-            if op_type == 'start':
-                client.controller.start(ruleid)
-            elif op_type == 'stop':
-                client.controller.stop(ruleid)
+            with LydianClient(host_ip) as client:
+                if op_type == 'start':
+                    client.controller.start(ruleid)
+                elif op_type == 'stop':
+                    client.controller.stop(ruleid)
 
     def start_traffic(self, reqid):
         self._traffic_op(reqid, op_type='start')
@@ -272,22 +273,21 @@ class Podium(BaseApp):
 
     def get_host_result(self, src_ip, reqid, results_q=None, duration=None, **kwargs):
         host_ip = self.get_ep_host(src_ip)
-
-        # TODO: with contextmanager, getting EOFError: stream has been closed. Need to investigate.
-        # try:
-        #     with LydianClient(host_ip) as client:
-        #         return client.results.traffic(reqid)
-        # except Exception:
-        #     pass
-        client = LydianClient(host_ip)
-        current_time = time.time()
+        current_time = int(time.time())
         if duration is not None:
             # Creating a tuple of range for timestamp field
             kwargs['timestamp'] = (str(current_time - duration), str(current_time))
+
+        results = []
+
+        with LydianClient(host_ip) as client:
+            results = client.results.traffic(reqid, **kwargs)
+            results = pickle.loads(results)
+
         if results_q:
-            results_q.put(client.results.traffic(reqid, **kwargs))
-        else:
-            return client.results.traffic(reqid, **kwargs)
+            results_q.put(results)
+
+        return results
 
     def _get_results(self, trules, duration=None, **kwargs):
         threads = []
