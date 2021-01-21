@@ -5,6 +5,7 @@
 # in the root directory of this project.
 
 import logging
+import socket
 
 import lydian.apps.config as conf
 import lydian.common.core as core
@@ -65,6 +66,7 @@ class WavefrontRecorder(core.Subscribe):
         self._client = _get_wf_sender()
         self._testbed = conf.get_param('TESTBED_NAME')
         self._testid = str(conf.get_param('TEST_ID'))
+        self.node = socket.gethostname()
 
     @property
     def enabled(self):
@@ -86,7 +88,8 @@ class WavefrontTrafficRecorder(WavefrontRecorder):
             "reqid": record.reqid,
             "ruleid": record.ruleid,
             "source": record.source,
-            "destination": record.destination
+            "destination": record.destination,
+            "node": self.node
             }
 
         # Record Traffic Data
@@ -116,8 +119,11 @@ class WavefrontResourceRecorder(WavefrontRecorder):
             return
         # assert isinstance(trec, ResourceRecord)
         prefix = 'lydian.resources.'
-        tags = {"datacenter": self._testbed,
-                "test_id": self._testid}
+        tags = {
+            "datacenter": self._testbed,
+            "node": self.node,
+            "test_id": self._testid
+            }
         for key, val in record.as_dict().items():
             if key in ['_id', '_timestamp']:
                 continue
