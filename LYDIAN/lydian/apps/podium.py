@@ -8,6 +8,7 @@ import collections
 import itertools
 import logging
 import pickle
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing.pool import ThreadPool
 from queue import Queue
 import threading
@@ -271,48 +272,43 @@ class Podium(BaseApp):
         trules = [trule for rule_id, trule in self.rules.items() if getattr(trule, 'reqid') == reqid]
         return trules
 
-    def get_host_result(self, src_ip, reqid, results_q=None, duration=None, **kwargs):
-        host_ip = self.get_ep_host(src_ip)
-        current_time = int(time.time())
+    def get_host_result(self, host_ip, reqid, duration=None, **kwargs):
         if duration is not None:
             # Creating a tuple of range for timestamp field
+            latency = config.get_param('TRAFFIC_STATS_QUERY_LATENCY')
+            current_time = int(time.time()) - latency
             kwargs['timestamp'] = (str(current_time - duration), str(current_time))
 
         results = []
 
         with LydianClient(host_ip) as client:
-            results = client.results.traffic(reqid, **kwargs)
-            results = pickle.loads(results)
-
-        if results_q:
-            results_q.put(results)
+            results = pickle.loads(client.results.traffic(reqid, **kwargs))
 
         return results
 
-    def _get_results(self, trules, duration=None, **kwargs):
-        threads = []
-        results_q = Queue()
-        for trule in trules:
-            src_ip = getattr(trule, 'src')
-            req_id = getattr(trule, 'reqid')
-            if not src_ip or not req_id:
-                log.error("Unable to get src or reqid for rule:%r", trule)
-                continue
-            thread = threading.Thread(target=self.get_host_result,
-                                      args=(src_ip, req_id, results_q, duration),
-                                      kwargs=kwargs)
-            thread.start()
-            threads.append(thread)
-        for thread in threads:
-            thread.join()
+    def _get_results(self, hostips, reqid, duration=None, **kwargs):
+        results = []
+        workers = self.NODE_PREP_MAX_THREAD
 
-        results = [results_q.get() for _ in range(results_q.qsize())]
+        with ThreadPoolExecutor(max_workers=workers) as tpool:
+            futures = {
+                tpool.submit(self.get_host_result, host, reqid,
+                             duration, **kwargs): host for host in hostips
+                             }
 
+            for future in as_completed(futures):
+                host = futures[future]
+                try:
+                    results.extend(future.result())
+                except Exception as err:
+                    log.warn("Error in fetching results from %s - %s", host,
+                             err)
         return results
 
     def get_results(self, reqid, duration=None, **kwargs):
         trules = self.get_rules_by_reqid(reqid)
-        results = self._get_results(trules, duration=duration, **kwargs)
+        hostips = set([self.get_ep_host(rule.src) for rule in trules if rule.src])
+        results = self._get_results(hostips, reqid, duration=duration, **kwargs)
         return results
 
     def get_traffic_stats(self, reqid, duration=None):

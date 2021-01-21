@@ -72,6 +72,12 @@ class TrafficConstants(Constants):
 
     TRAFFIC_START_SERVERS_FIRST = os.environ.get('TRAFFIC_START_SERVERS_FIRST', True)
 
+    # Allows traffic queries to be backdated by these many seconds.
+    # e.g. if someone says get reuslts for last 20 seconds, it will
+    # backdate 20 seconds by 15 seconds. It's mainly done to allow
+    # offsetting of clock synchronization issue (to some extent).
+    TRAFFIC_STATS_QUERY_LATENCY = int(os.environ.get('TRAFFIC_STATS_QUERY_LATENCY', 15))
+
 
 class RecorderConstants(Constants):
     _NAME = "Data Recording"
