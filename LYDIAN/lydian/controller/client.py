@@ -4,6 +4,7 @@
 # The full license information can be found in LICENSE.txt
 # in the root directory of this project.
 import errno
+import logging
 import pickle
 import socket
 import time
@@ -13,7 +14,7 @@ import rpyc
 from lydian.apps import config
 
 rpyc.core.protocol.DEFAULT_CONFIG['allow_pickle'] = True
-
+log = logging.getLogger(__name__)
 
 class Manager(object):
     def __init__(self, client):
@@ -273,7 +274,7 @@ class LydianClient(object):
 
     def __init__(self, host, port=config.get_param('LYDIAN_PORT'),
                  proxy_host=None, request_timeout=180,
-                 retry_count=5, sleep_interval=.5):
+                 retry_count=5, sleep_interval=.5, init_connect=False):
         """ Initialization of Client object
 
         :param host: the host IP where lydian service is running
@@ -291,9 +292,15 @@ class LydianClient(object):
         self._host = host
         self._port = port
         self._proxy_host = proxy_host
-        self.rpc_client = None
-        self._connect(retry_count, sleep_interval, request_timeout)
+        self._request_timeout = request_timeout
+        self._retry_count = retry_count
+        self._sleep_interval = sleep_interval
 
+        self.rpc_client = None
+        if self.init_connect:
+            self.connect()
+
+    def _link_apps(self):
         # Interface / Namespaces
         self.namespace = NamespaceManager(self.rpc_client.root)
         self.interface = InterfaceManager(self.rpc_client.root)
@@ -317,11 +324,35 @@ class LydianClient(object):
         # Params / Configs
         self.configs = ConfigManager(self.rpc_client.root)
 
-    def _connect(self, retry_count, sleep_interval, request_timeout):
+    def close(self):
+        try:
+            self.rpc_client.close()
+        except Exception as err:
+            log.error("Error in closing RPC Client connection : %r", err)
 
+    def connect(self):
+        if self.connected:
+            return
+        try:
+            self._connect()
+            self._link_apps()
+        except Exception as err:
+            log.error("RPC Connection error at %s : %r", self._host, err)
+            raise err
+
+    @property
+    def connected(self):
+        return self.rpc_client and not self.rpc_client.closed
+
+    def _connect(self, retry_count=None, sleep_interval=None,
+                 request_timeout=None):
         # Client will wait for request_timeout seconds in case
         # server takes long time to response, default timeout
         # is 30 seconds which is small for few lydian APIs
+        retry_count = retry_count or self._retry_count
+        sleep_interval = sleep_interval or self._sleep_interval
+        request_timeout = request_timeout or self._request_timeout
+
         conf = {"sync_request_timeout": request_timeout}
         failure_count = 0
         last_exception = None
@@ -352,7 +383,8 @@ class LydianClient(object):
             raise last_exception
 
     def __enter__(self):
+        self.connect()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.rpc_client.close()
+        self.close()
