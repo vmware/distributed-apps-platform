@@ -297,7 +297,7 @@ class LydianClient(object):
         self._sleep_interval = sleep_interval
 
         self.rpc_client = None
-        if self.init_connect:
+        if init_connect:
             self.connect()
 
     def _link_apps(self):
