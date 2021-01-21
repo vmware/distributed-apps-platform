@@ -214,6 +214,9 @@ class ResultsManager(Manager):
     def traffic(self, reqid, **kwargs):
         return self._client.results.traffic(reqid, **kwargs)
 
+    def traffic_records_count(self, **kwargs):
+        return self._client.results.traffic_records_count(**kwargs)
+
     def get_latency_stat(self, reqid, method, **kwargs):
         return self._client.results.get_latency_stat(reqid=reqid, method=method, **kwargs)
 
