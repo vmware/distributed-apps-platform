@@ -36,6 +36,9 @@ class SystemConstants(Constants):
     # Wait for 5 seconds while joining the threads.
     THREADS_JOIN_TIMEOUT = 5
 
+    # Default parallelism for common operations.
+    DEFAULT_CONCURRENCY = 32
+
 class LoggingConstants(Constants):
     _NAME = "Logging"
     LINUX_LOG_DIR = os.environ.get('LINUX_LOG_DIR', "/var/log/lydian")
@@ -57,6 +60,9 @@ class TestbedConstants(Constants):
     _NAME = "Testbed"
     TEST_ID = os.environ.get('TEST_ID', '1234')
     TESTBED_NAME = os.environ.get('TESTBED_NAME', socket.gethostname())
+
+    ENDPOINT_USERNAME = 'root'
+    ENDPOINT_PASSWORD = 'FAKE_PASSWORD'
 
 
 class NamespaceConstants(Constants):

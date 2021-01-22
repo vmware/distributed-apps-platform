@@ -266,12 +266,12 @@ class Config(ConfigDB, base.BaseApp):
             for param, val in self._params.items():
                 self._persist_param(param, val, db)
 
-    def get_param(self, param):
+    def get_param(self, param, default=None):
         """
         Return the value of a config param. Param is always
         returned from local cache as it is simply a reflector of database file.
         """
-        return self._params.get(param, None)
+        return self._params.get(param, default)
 
     def set_param(self, param, val, write_to_db=True):
         self._params[param] = val
@@ -351,8 +351,8 @@ def get_configs():
     return configs
 
 
-def get_param(param):
-    return get_configs().get_param(param)
+def get_param(param, default=None):
+    return get_configs().get_param(param, default)
 
 
 def set_param(param, val):

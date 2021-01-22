@@ -20,7 +20,8 @@ from lydian.apps import config
 from lydian.apps.base import BaseApp, exposify
 from lydian.controller.client import LydianClient
 from lydian.traffic.core import TrafficRule
-from lydian.utils.prep import prep_node
+from lydian.utils.prep import prep_node, cleanup_node
+from lydian.utils.parallel import ThreadPool as TPool
 
 log = logging.getLogger(__name__)
 
@@ -36,10 +37,6 @@ def _get_host_ip(host, func_ip=None):
 @exposify
 class Podium(BaseApp):
     NAME = 'PODIUM'
-
-    TENNAT_VM_USERNAME = 'root'
-    TENNAT_VM_PASSWORD = '!cisco'
-
     HOST_WAIT_TIME = 4
     NAMESPACE_INTERFACE_NAME_PREFIXES = config.get_param('NAMESPACE_INTERFACE_NAME_PREFIXES')
     NODE_PREP_MAX_THREAD = config.get_param('NODE_PREP_MAX_THREAD')
@@ -51,8 +48,8 @@ class Podium(BaseApp):
         """
         self._primary = True
         self._ep_hosts = {}
-        self._ep_username = username or self.TENNAT_VM_USERNAME
-        self._ep_password = password or self.TENNAT_VM_PASSWORD
+        self._ep_username = username or config.get_param('ENDPOINT_USERNAME')
+        self._ep_password = password or config.get_param('ENDPOINT_PASSWORD')
         self.rules_app = rules.RulesApp()
 
         # Update config file based on default constants, config file
@@ -66,6 +63,14 @@ class Podium(BaseApp):
     @property
     def rules(self):
         return self.rules_app.rules
+
+    def is_host_up(self, hostip):
+        try:
+            with LydianClient(hostip) as client:
+                client.monitor.is_running()
+            return True
+        except Exception:
+            return False
 
     def wait_on_host(self, hostip, wait_time=None):
         wait_time = wait_time or self.HOST_WAIT_TIME
@@ -107,28 +112,6 @@ class Podium(BaseApp):
         except Exception as err:
             log.error("Error in adding endpoint %s - %r", hostip, err)
 
-    def _add_hosts(self, params):
-        host_ip, username, password = params[0], params[1], params[2]
-        self.add_host(host_ip, username=username, password=password)
-
-    def add_hosts(self, hostips, username=None, password=None):
-        """ Add remote hosts for installing and starting lydian service.
-        Args:
-            hostips(str or list):
-                a single hostname/IP or comma separated hostnames/IPs or list of hostnames/IPs
-            username: username
-            password: password
-        """
-        if isinstance(hostips, str):
-            hostips = hostips.split(',')
-
-        pool = ThreadPool(self.NODE_PREP_MAX_THREAD)
-        params = [(host, username, password) for host in hostips]
-        pool.map(self._add_hosts, params)
-        pool.close()
-        pool.join()
-
-
     def add_host(self, hostip, username=None, password=None):
         username = username or self._ep_username
         password = password or self._ep_password
@@ -140,13 +123,18 @@ class Podium(BaseApp):
         except Exception as err:
             log.error("Error in preparing host %s - %r", hostip, err)
 
-    def is_host_up(self, hostip):
-        try:
-            with LydianClient(hostip) as client:
-                client.monitor.is_running()
-            return True
-        except Exception:
-            return False
+    def add_hosts(self, hostips, username=None, password=None):
+        """ Add remote hosts for installing and starting lydian service.
+        Args:
+            hostips(str or list):
+                a single hostname/IP or comma separated hostnames/IPs or list of hostnames/IPs
+            username: username
+            password: password
+        """
+        if isinstance(hostips, str):
+            hostips = hostips.split(',')
+        args = [(host, username, password) for host in hostips]
+        TPool(self.add_host, args)
 
     def get_ep_host(self, epip):
         return self._ep_hosts.get(epip, None)
@@ -241,26 +229,46 @@ class Podium(BaseApp):
                 servers[host].extend(rules)
             host_rules_map = [servers]
 
+        def _register_traffic_rules(host, rules):
+            with LydianClient(host) as dclient:
+                dclient.controller.register_traffic(rules)
+
+        # Start Server before the client.
         for host_rules in host_rules_map:
-            for host, rules in host_rules.items():
-                # Start Server before the client.
-                with LydianClient(host) as dclient:
-                    dclient.controller.register_traffic(rules)
+            collection = [(host, rules) in host_rules.items()]
+            TPool(_register_traffic_rules, collection)
 
         # Persist rules to local db
         self.rules_app.add_rules(_trules)
 
     def _traffic_op(self, reqid, op_type):
+
+        def _start_traffic(hostip, rules):
+            with LydianClient(hostip) as client:
+                for ruleid in rules:
+                    client.controller.start(ruleid)
+
+        def _stop_traffic(hostip, rules):
+            with LydianClient(hostip) as client:
+                for ruleid in rules:
+                    client.controller.stop(ruleid)
+
         trules = self.get_rules_by_reqid(reqid)
+
+        host_rules  = collections.defaultdict(list)
         for trule in trules:
             ruleid = getattr(trule, 'ruleid')
             src_ip = getattr(trule, 'src')
-            host_ip = self.get_ep_host(src_ip)
-            with LydianClient(host_ip) as client:
-                if op_type == 'start':
-                    client.controller.start(ruleid)
-                elif op_type == 'stop':
-                    client.controller.stop(ruleid)
+            hostip = self.get_ep_host(src_ip)
+            host_rules[hostip].append(ruleid)
+        
+        hosts = set([x for x in hosts if x ])
+
+        args = [(host, rules) for host, rules in host_rules.items()]
+        if op_type == 'start':
+            TPool(_start_traffic, args)
+        elif op_type == 'stop':
+            TPool(_stop_traffic, args)
 
     def start_traffic(self, reqid):
         self._traffic_op(reqid, op_type='start')
@@ -490,3 +498,18 @@ def stop_resource_monitoring(host, func_ip=None):
     """
     with LydianClient(_get_host_ip(host, func_ip)) as client:
         client.monitor.stop()
+
+def stop_service(hosts, remove_db=True):
+    """
+    Stops service on hosts.
+
+    Parameters
+    ------------
+    hosts: collection
+        List of hosts
+    """
+    username = config.get_param('ENDPOINT_USERNAME')
+    password = config.get_param('ENDPOINT_PASSWORD')
+    args = [(host, username, password, remove_db) for host in hosts]
+
+    TPool(cleanup_node, args)
