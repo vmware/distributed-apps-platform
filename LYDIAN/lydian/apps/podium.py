@@ -9,7 +9,7 @@ import itertools
 import logging
 import pickle
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from multiprocessing.pool import ThreadPool
+
 from queue import Queue
 import threading
 import time
@@ -21,7 +21,7 @@ from lydian.apps.base import BaseApp, exposify
 from lydian.controller.client import LydianClient
 from lydian.traffic.core import TrafficRule
 from lydian.utils.prep import prep_node, cleanup_node
-from lydian.utils.parallel import ThreadPool as TPool
+from lydian.utils.parallel import ThreadPool
 
 log = logging.getLogger(__name__)
 
@@ -133,8 +133,8 @@ class Podium(BaseApp):
         """
         if isinstance(hostips, str):
             hostips = hostips.split(',')
-        args = [(host, username, password) for host in hostips]
-        TPool(self.add_host, args)
+        args = [(host, (host, username, password), {}) for host in hostips]
+        ThreadPool(self.add_host, args)
 
     def get_ep_host(self, epip):
         return self._ep_hosts.get(epip, None)
@@ -235,8 +235,9 @@ class Podium(BaseApp):
 
         # Start Server before the client.
         for host_rules in host_rules_map:
-            collection = [(host, rules) in host_rules.items()]
-            TPool(_register_traffic_rules, collection)
+            collection = [(host, (host, rules), {})
+                            for host, rules in host_rules.items()]
+            ThreadPool(_register_traffic_rules, collection)
 
         # Persist rules to local db
         self.rules_app.add_rules(_trules)
@@ -261,14 +262,12 @@ class Podium(BaseApp):
             src_ip = getattr(trule, 'src')
             hostip = self.get_ep_host(src_ip)
             host_rules[hostip].append(ruleid)
-        
-        hosts = set([x for x in hosts if x ])
 
-        args = [(host, rules) for host, rules in host_rules.items()]
+        args = [(host, (host, rules), {}) for host, rules in host_rules.items()]
         if op_type == 'start':
-            TPool(_start_traffic, args)
+            ThreadPool(_start_traffic, args)
         elif op_type == 'stop':
-            TPool(_stop_traffic, args)
+            ThreadPool(_stop_traffic, args)
 
     def start_traffic(self, reqid):
         self._traffic_op(reqid, op_type='start')
@@ -510,6 +509,6 @@ def stop_service(hosts, remove_db=True):
     """
     username = config.get_param('ENDPOINT_USERNAME')
     password = config.get_param('ENDPOINT_PASSWORD')
-    args = [(host, username, password, remove_db) for host in hosts]
+    args = [(host, (host, username, password, remove_db), {}) for host in hosts]
 
-    TPool(cleanup_node, args)
+    ThreadPool(cleanup_node, args)

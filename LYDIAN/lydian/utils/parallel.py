@@ -15,15 +15,15 @@ log = logging.getLogger(__name__)
 THREAD_COUNT = get_param('DEFAULT_CONCURRENCY', 32)
 
 
-def ThreadPool(func, args, timeout=None, blocking=True):
+def ThreadPool(func, params, timeout=None, blocking=True, workers=None):
     results = {}
-    workers = THREAD_COUNT
+    max_workers = workers or THREAD_COUNT
 
-    with ThreadPoolExecutor(max_workers=workers) as tpool:
+    with ThreadPoolExecutor(max_workers=max_workers) as tpool:
         futures = {}
-        for arg in args:
-            _tfunc = tpool.submit(func, *arg)
-            futures[_tfunc] = arg
+        for _ident, _args, _kwargs in params:
+            _tfunc = tpool.submit(func, *_args, **_kwargs)
+            futures[_tfunc] = _ident
 
         if not blocking:
             return None
