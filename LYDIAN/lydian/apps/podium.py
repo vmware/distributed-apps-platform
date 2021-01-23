@@ -353,49 +353,46 @@ class Podium(BaseApp):
         with LydianClient(host_ip) as client:
             client.configs.set_param(param, val)
 
-    def get_host_latency(self, src_ip, reqid, method, results_q=None, duration=None, **kwargs):
-        host_ip = self.get_ep_host(src_ip)
+    def get_host_latency(self, host_ip, reqid, method, duration=None, **kwargs):
 
+        result = 0
         with LydianClient(host_ip) as client:
             current_time = time.time()
             if duration is not None:
                 # Creating a tuple of range for timestamp field
                 kwargs['timestamp'] = (str(current_time - duration), str(current_time))
-            if results_q:
-                results_q.put(client.results.get_latency_stat(reqid=reqid, method=method, **kwargs))
-            else:
-                return client.results.get_latency_stat(reqid=reqid, method=method, **kwargs)
+            result = client.results.get_latency_stat(reqid=reqid, method=method, **kwargs)
+        return result
 
-    def _get_latencies(self, trules, method, duration=None, **kwargs):
-        threads = []
-        latencies_q = Queue()
+    def _get_latencies(self, trules, reqid, method, duration=None, **kwargs):
+
+        hosts = set()
         for trule in trules:
             src_ip = getattr(trule, 'src')
-            req_id = getattr(trule, 'reqid')
-            if not src_ip or not req_id:
-                log.error("Unable to get src or reqid for rule:%r", trule)
-                continue
-            thread = threading.Thread(target=self.get_host_latency,
-                                      args=(src_ip, req_id, method, latencies_q, duration),
-                                      kwargs=kwargs)
-            thread.start()
-            threads.append(thread)
-        for thread in threads:
-            thread.join()
+            hosts.add(self.get_ep_host(src_ip))
+        args = [(host, (host, reqid, method, duration), kwargs) for host in hosts]
 
-        latencies_q = [latencies_q.get() for _ in range(latencies_q.qsize())]
-
-        return latencies_q
+        results = ThreadPool(self.get_host_latency, args)
+        latencies = [latency for latency in results.values()]
+        return latencies
 
     def get_latency(self, reqid, method, duration=None, **kwargs):
         trules = self.get_rules_by_reqid(reqid)
-        latencies = self._get_latencies(trules, method, duration=duration, **kwargs)
+        latencies = self._get_latencies(trules, reqid, method, duration=duration, **kwargs)
+        result = 0
+        if not len(latencies):
+            return result
+
         if method == 'avg':
-            return round(sum(latencies) / len(latencies), 2)
+            result = round(sum(latencies) / len(latencies), 2)
         elif method == 'min':
-            return round(min(latencies), 2)
+            result = round(min(latencies), 2)
         elif method == 'max':
-            return round(max(latencies), 2)
+            result = round(max(latencies), 2)
+        else:
+            log.error('Invalid method: %s for get latency', method)
+
+        return result
 
     def get_avg_latency(self, reqid, duration=None, **kwargs):
         return self.get_latency(reqid, method='avg', duration=duration, **kwargs)
