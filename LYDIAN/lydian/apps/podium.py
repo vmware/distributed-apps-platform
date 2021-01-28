@@ -390,6 +390,7 @@ class Podium(BaseApp):
         trules = self.get_rules_by_reqid(reqid)
         latencies = self._get_latencies(trules, reqid, method, duration=duration, **kwargs)
         result = 0
+        latencies = [latency for latency in latencies if latency is not None]
         if not len(latencies):
             return result
 
