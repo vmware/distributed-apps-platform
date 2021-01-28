@@ -8,6 +8,7 @@ import collections
 import itertools
 import logging
 import pickle
+import queue
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from queue import Queue
@@ -18,6 +19,8 @@ import uuid
 from lydian.apps import rules
 from lydian.apps import config
 from lydian.apps.base import BaseApp, exposify
+from lydian.apps.monitor import ResourceMonitor
+from lydian.apps.recorder import RecordManager
 from lydian.controller.client import LydianClient
 from lydian.traffic.core import TrafficRule
 from lydian.utils.prep import prep_node, cleanup_node
@@ -40,6 +43,7 @@ class Podium(BaseApp):
     HOST_WAIT_TIME = config.get_param('LYDIAN_SERVICE_WAIT_TIME')
     NAMESPACE_INTERFACE_NAME_PREFIXES = config.get_param('NAMESPACE_INTERFACE_NAME_PREFIXES')
     NODE_PREP_MAX_THREAD = config.get_param('NODE_PREP_MAX_THREAD')
+    MAX_QUEUE_SIZE = 50000
 
     def __init__(self, username=None, password=None, db_file=None):
         """
@@ -52,6 +56,11 @@ class Podium(BaseApp):
         self._ep_password = password or config.get_param('ENDPOINT_PASSWORD')
         self.rules_app = rules.RulesApp()
 
+        self.traffic_records = queue.Queue(self.MAX_QUEUE_SIZE)
+        self.resource_records = queue.Queue(self.MAX_QUEUE_SIZE)
+        self.monitor = ResourceMonitor(self.resource_records)
+        self.db_pool = RecordManager(self.traffic_records, self.resource_records)
+
         # Update config file based on default constants, config file
         # and any previously set configs (in .db file). In that order.
         config.update_config()
@@ -63,6 +72,13 @@ class Podium(BaseApp):
     @property
     def rules(self):
         return self.rules_app.rules
+
+    def start_primary_monitor(self):
+        """
+        Start Monitoring on Primary node.
+        """
+        self.monitor.start()
+        self.db_pool.start()
 
     def is_host_up(self, hostip):
         try:
@@ -164,8 +180,10 @@ class Podium(BaseApp):
         trule.fill()
         return trule
 
-    def run_traffic(self, src_ip, dst_ip, dst_port, protocol, duration=-1):
-        _intent = self.create_traffic_intent(src_ip, dst_ip, dst_port, protocol)
+    def run_traffic(self, src_ip, dst_ip, dst_port, protocol,
+                    connected=True, duration=-1):
+        _intent = self.create_traffic_intent(src_ip, dst_ip, dst_port,
+                                             protocol, connected=connected)
         reqid = _intent.get('reqid')
         self.register_traffic([_intent])
         if duration > 0:
@@ -173,12 +191,14 @@ class Podium(BaseApp):
             self.stop_traffic(reqid)
         return reqid
 
-    def run_mesh_ping(self, hosts, dst_port, protocol, duration=-1):
+    def run_mesh_ping(self, hosts, dst_port, protocol, connected=True,
+                      duration=-1):
         reqid = '%s' % uuid.uuid4()
         host_pairs = list(itertools.permutations(hosts, 2))
         intents = []
         for src, dst in host_pairs:
-            intents.append(self.create_traffic_intent(src, dst, dst_port, protocol, reqid=reqid))
+            intents.append(self.create_traffic_intent(src, dst, dst_port, protocol,
+                                                      connected=connected, reqid=reqid))
         self.register_traffic(intents)
         if duration > 0:
             time.sleep(duration)

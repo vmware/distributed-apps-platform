@@ -93,7 +93,7 @@ def cleanup_node(hostip, username='root', password='FAKE_PASSWORD', remove_db=Tr
         _func('rm /etc/systemd/system/lydian.service')
         _func('rm /var/log/lydian/lydian.log')
         if remove_db:
-            _func('rm traffic.db params.db rules.db')
+            _func('rm traffic.db* params.db* rules.db*')
 
 
 def main():
