@@ -240,11 +240,11 @@ class TrafficControllerManager(Manager):
         trule = pickle.dumps(trule)
         return self._client.controller.register_rule(trule)
 
-    def start(self, ruleid):
-        self._client.controller.start(ruleid)
+    def start(self, rules):
+        self._client.controller.start(rules)
 
-    def stop(self, ruleid):
-        self._client.controller.stop(ruleid)
+    def stop(self, rules):
+        self._client.controller.stop(rules)
 
 
 class MockTrafficManager(Manager):

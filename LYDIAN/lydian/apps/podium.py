@@ -37,7 +37,7 @@ def _get_host_ip(host, func_ip=None):
 @exposify
 class Podium(BaseApp):
     NAME = 'PODIUM'
-    HOST_WAIT_TIME = 4
+    HOST_WAIT_TIME = config.get_param('LYDIAN_SERVICE_WAIT_TIME')
     NAMESPACE_INTERFACE_NAME_PREFIXES = config.get_param('NAMESPACE_INTERFACE_NAME_PREFIXES')
     NODE_PREP_MAX_THREAD = config.get_param('NODE_PREP_MAX_THREAD')
 
@@ -246,13 +246,11 @@ class Podium(BaseApp):
 
         def _start_traffic(hostip, rules):
             with LydianClient(hostip) as client:
-                for ruleid in rules:
-                    client.controller.start(ruleid)
+                client.controller.start(rules)
 
         def _stop_traffic(hostip, rules):
             with LydianClient(hostip) as client:
-                for ruleid in rules:
-                    client.controller.stop(ruleid)
+                client.controller.stop(rules)
 
         trules = self.get_rules_by_reqid(reqid)
 
@@ -297,19 +295,11 @@ class Podium(BaseApp):
         results = []
         workers = self.NODE_PREP_MAX_THREAD
 
-        with ThreadPoolExecutor(max_workers=workers) as tpool:
-            futures = {
-                tpool.submit(self.get_host_result, host, reqid,
-                             duration, **kwargs): host for host in hostips
-                             }
+        args = [(host, (host, reqid, duration), kwargs) for host in hostips]
+        _results = ThreadPool(self.get_host_result, args)
+        for _, val in _results.items():
+            results.extend(val)
 
-            for future in as_completed(futures):
-                host = futures[future]
-                try:
-                    results.extend(future.result())
-                except Exception as err:
-                    log.warn("Error in fetching results from %s - %s", host,
-                             err)
         return results
 
     def get_results(self, reqid, duration=None, **kwargs):

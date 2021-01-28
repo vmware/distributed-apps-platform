@@ -20,6 +20,7 @@ from lydian.utils.network_utils import NamespaceManager, InterfaceManager, \
         NAMESPACE_INTERFACE_NAME_PREFIXES
 
 from lydian.traffic.manager import ClientManager, ServerManager
+from lydian.utils import parallel
 from lydian.utils.common import get_mgmt_ifname, get_host_name
 
 
@@ -154,7 +155,7 @@ class TrafficControllerApp(BaseApp):
         log.info("Registered Traffic Successfully: %r", trule)
         return trule
 
-    def start(self, ruleid):
+    def _start(self, ruleid):
         """ Start a Traffic task (again). """
 
         trule = self.rules.rules.get(ruleid, None)
@@ -165,7 +166,7 @@ class TrafficControllerApp(BaseApp):
         else:
             log.error("Unable to find rule for id:%s", ruleid)
 
-    def stop(self, ruleid):
+    def _stop(self, ruleid):
 
         """ Stop a Traffic task. """
 
@@ -176,6 +177,18 @@ class TrafficControllerApp(BaseApp):
             self.rules.disable(ruleid)
         else:
             log.error("Unable to find rule for id:%s", ruleid)
+
+    def start(self, rules):
+        if not isinstance(rules, list):
+            rules = [rules]
+        args = [(ruleid, (ruleid,), {}) for ruleid in rules]
+        parallel.ThreadPool(self._start, args)
+
+    def stop(self, rules):
+        if not isinstance(rules, list):
+            rules = [rules]
+        args = [(ruleid, (ruleid,), {}) for ruleid in rules]
+        parallel.ThreadPool(self._stop, args)
 
     def _resume_active_rules(self):
         active_rules = [rule for ruleid, rule in self.rules.rules.items()

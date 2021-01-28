@@ -33,11 +33,13 @@ class SystemConstants(Constants):
     WIN_OS = WIN_OS     # True if running on Windows
 
     NODE_PREP_MAX_THREAD = int(os.environ.get('NODE_PREP_MAX_THREAD', 32))
+    LYDIAN_SERVICE_WAIT_TIME = int(os.environ.get('LYDIAN_SERVICE_WAIT_TIME', 4))
     # Wait for 5 seconds while joining the threads.
     THREADS_JOIN_TIMEOUT = 5
 
     # Default parallelism for common operations.
     DEFAULT_CONCURRENCY = 32
+
 
 class LoggingConstants(Constants):
     _NAME = "Logging"
