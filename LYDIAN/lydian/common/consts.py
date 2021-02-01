@@ -104,13 +104,19 @@ class RecorderConstants(Constants):
 
 class WavefrontConstants(Constants):
     _NAME = "Wavefront"
+    # Direct Client constants
     WAVEFRONT_SERVER_ADDRESS = os.environ.get('WAVEFRONT_SERVER_ADDRESS', '')
     WAVEFRONT_SERVER_API_TOKEN = os.environ.get('WAVEFRONT_SERVER_API_TOKEN', '')
-    WAVEFRONT_SOURCE_TAG = os.environ.get('WAVEFRONT_SOURCE', socket.gethostname())
+    WAVEFRONT_SOURCE_TAG = os.environ.get('WAVEFRONT_SOURCE', '')
+
+    # Wavefront Proxy client constants
     WAVEFRONT_PROXY_ADDRESS = os.environ.get('WAVEFRONT_PROXY_ADDRESS', '')
     WAVEFRONT_PROXY_METRICS_PORT = int(os.environ.get('WAVEFRONT_PROXY_METRICS_PORT', 2878))
     WAVEFRONT_PROXY_DISTRIBUTION_PORT = int(os.environ.get('WAVEFRONT_PROXY_DISTRIBUTION_PORT', 2878))
     WAVEFRONT_PROXY_TRACING_PORT = int(os.environ.get('WAVEFRONT_PROXY_TRACING_PORT', 30000))
+
+    # Wavefront Query releated constants
+    WAVEFRONT_USE_UNIQUE_METRIC = os.environ.get('WAVEFRONT_USE_UNIQUE_METRIC', False)
 
 
 class ELSConstants(Constants):

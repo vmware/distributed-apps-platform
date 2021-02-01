@@ -77,20 +77,29 @@ class WavefrontTrafficRecorder(WavefrontRecorder):
     CONFIG_PARAMS = ['WAVEFRONT_TRAFFIC_RECORDING']
     ENABLE_PARAM = 'WAVEFRONT_TRAFFIC_RECORDING'
 
+    @property
+    def prefix(self):
+        if conf.get_param('WAVEFRONT_USE_UNIQUE_METRIC'):
+            return 'lydian.traffic.%s.%s.' % (self._testbed, self._testid)
+        else:
+            return 'lydian.traffic.'
+
     def write(self, record):
         if not self.enabled:
             return
         # assert isinstance(trec, TrafficRecord)
-        prefix = 'lydian.traffic.' + record.protocol
+        prefix =  self.prefix + record.protocol
         tags = {
             "datacenter": self._testbed,
             "test_id": self._testid,
             "reqid": record.reqid,
             "ruleid": record.ruleid,
-            "source": record.source,
+            "origin": record.source,
             "destination": record.destination,
             "node": self.node
             }
+
+        source = conf.get_param('WAVEFRONT_SOURCE_TAG') or self._testbed
 
         # Record Traffic Data
         value = 1 if record.result else 0
@@ -98,7 +107,7 @@ class WavefrontTrafficRecorder(WavefrontRecorder):
         self._client.send_metric(
                     name=name, value=value,
                     timestamp=record.timestamp,
-                    source=conf.get_param('WAVEFRONT_SOURCE_TAG'),
+                    source=source,
                     tags=tags)
 
         # Record Latency data
@@ -106,7 +115,7 @@ class WavefrontTrafficRecorder(WavefrontRecorder):
         self._client.send_metric(
                     name=name, value=record.latency,
                     timestamp=record.timestamp,
-                    source=conf.get_param('WAVEFRONT_SOURCE_TAG'),
+                    source=source,
                     tags=tags)
 
 
@@ -114,11 +123,19 @@ class WavefrontResourceRecorder(WavefrontRecorder):
     CONFIG_PARAMS = ['WAVEFRONT_RESOURCE_RECORDING']
     ENABLE_PARAM = 'WAVEFRONT_RESOURCE_RECORDING'
 
+    @property
+    def prefix(self):
+        if conf.get_param('WAVEFRONT_USE_UNIQUE_METRIC'):
+            return 'lydian.resources.%s.%s.' % (self._testbed, self._testid)
+        else:
+            return 'lydian.resources.'
+
     def write(self, record):
         if not self.enabled:
             return
         # assert isinstance(trec, ResourceRecord)
-        prefix = 'lydian.resources.'
+        prefix = self.prefix
+        source = conf.get_param('WAVEFRONT_SOURCE_TAG') or self._testbed
         tags = {
             "datacenter": self._testbed,
             "node": self.node,
@@ -131,5 +148,5 @@ class WavefrontResourceRecorder(WavefrontRecorder):
             self._client.send_metric(
                     name=metric, value=val,
                     timestamp=record.timestamp,
-                    source=conf.get_param('WAVEFRONT_SOURCE_TAG'),
+                    source=source,
                     tags=tags)
