@@ -8,6 +8,8 @@ import logging
 import queue
 import threading
 
+import lydian.common.errors as errors
+
 from lydian.apps import config
 from lydian.apps.base import BaseApp, exposify
 from lydian.common.core import Subscribe
@@ -17,10 +19,11 @@ from sql30 import db
 
 log = logging.getLogger(__name__)
 
+
 try:
     from lydian.recorder.wf_client import WavefrontTrafficRecorder, \
         WavefrontResourceRecorder
-except ModuleNotFoundError:
+except errors.ModuleNotFoundError:
     log.warn("Wavefront package is not installed. Recording to it is disabled.")
     from lydian.utils.mock import WavefrontTrafficRecorder, \
         WavefrontResourceRecorder

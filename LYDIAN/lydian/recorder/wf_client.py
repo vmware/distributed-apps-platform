@@ -9,12 +9,13 @@ import socket
 
 import lydian.apps.config as conf
 import lydian.common.core as core
+import lydian.common.errors as errors
 
 log = logging.getLogger(__name__)
 
 try:
     from wavefront_sdk import WavefrontDirectClient, WavefrontProxyClient
-except ModuleNotFoundError:
+except errors.ModuleNotFoundError:
     log.warn("Wavefront package is not installed. "
              "Recording to it would be disabled.")
     from lydian.utils.mock import WavefrontDirectClient, \

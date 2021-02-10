@@ -7,11 +7,15 @@
 from collections import defaultdict
 import multiprocessing
 import platform
+
 if "Linux" in platform.uname():  # noqa
     from lydian.utils import nsenter
+
+import lydian.common.errors as errors
+
 try:
     import psutil
-except ModuleNotFoundError:
+except errors.ModuleNotFoundError:
     import lydian.utils.lpsutil as psutil
 
 import re

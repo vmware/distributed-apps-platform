@@ -13,9 +13,11 @@ import queue
 import threading
 import time
 
+import lydian.common.errors as errors
+
 try:
     import psutil
-except ModuleNotFoundError:
+except errors.ModuleNotFoundError:
     import lydian.utils.lpsutil as psutil
 
 from lydian.apps.base import BaseApp, exposify

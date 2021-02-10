@@ -30,6 +30,9 @@ class WavefrontDeadClient(DeadNode):
     def sender(self, *args, **kwargs):
         pass
 
+    def send_metric(self, *args, **kwargs):
+        pass
+
 WavefrontDirectClient = WavefrontDeadClient
 
 WavefrontProxyClient = WavefrontDeadClient
