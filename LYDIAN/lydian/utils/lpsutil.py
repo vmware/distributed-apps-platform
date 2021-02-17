@@ -8,12 +8,21 @@ Alternative / backup implementation of psutil methods consumed in lydian.
 '''
 import collections
 import fcntl
+import json
 import os
+import platform
 import socket
 import struct
-import subprocess
+
 
 from lydian.apps.console import Console
+
+if "Linux" in platform.uname():
+    OS_TYPE = 'LINUX'
+elif "VMkernel" in platform.uname():
+    OS_TYPE = 'ESX'
+else:
+    OS_TYPE = None
 
 
 def get_ipv4_address(ifname, ipv6=False):
@@ -57,7 +66,7 @@ class snicaddr(object):
         self.ptp = None
 
 
-def net_if_addrs():
+def _net_if_addrs_linux():
     result = collections.defaultdict(list)
     ifnames = os.listdir('/sys/class/net/')
 
@@ -70,6 +79,33 @@ def net_if_addrs():
 
     return result
 
+
+def _net_if_addrs_esx():
+    result = collections.defaultdict(list)
+    ipvs = ('ipv4', 'ipv6')
+
+    for ipv in ipvs:
+        cmnd = 'esxcli --debug --formatter=json  network ip interface %s address list' % ipv
+
+        status, output = Console().run_command(cmnd)
+        addrs = json.loads(output)
+        if not addrs:
+            continue
+        family = AddressFamily.AF_INET6 if ipv == 'ipv6' else AddressFamily.AF_INET
+        interface = "Interface" if ipv == 'ipv6' else "Name"
+        address = "Address" if ipv == 'ipv6' else "IPv4Address"
+        for addr in addrs:
+            result[addr[interface]].append(snicaddr(family=family, address=addr[address]))
+    return result
+
+
+def net_if_addrs():
+    if OS_TYPE == "LINUX":
+        return _net_if_addrs_linux()
+    elif OS_TYPE == "ESX":
+        return _net_if_addrs_esx()
+    else:
+        return None
 
 # TODO : Following need to be implemented.
 
