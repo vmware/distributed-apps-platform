@@ -44,6 +44,7 @@ class RulesDB(db.Model):
 
 @exposify
 class RulesApp(BaseApp, RulesDB):
+    TYPES_MAP = {'int': int, 'float': float, 'text': str}
 
     def __init__(self, db_file=None):
 
@@ -86,6 +87,14 @@ class RulesApp(BaseApp, RulesDB):
             trule = TrafficRule()
 
             for key, val in zip(fields, list(rule)):
+                if val is not None and val != '':
+                    try:
+                        ktype = TrafficRule.SCHEMA.get(key, None)
+                        if ktype in self.TYPES_MAP:
+                            val = self.TYPES_MAP[ktype](val)
+                    except (TypeError, ValueError) as err:
+                        log.warning('Converting type for %s resulted an error %s',
+                                    key, err)
                 setattr(trule, key, val)
 
             ruleid = getattr(trule, 'ruleid', None)

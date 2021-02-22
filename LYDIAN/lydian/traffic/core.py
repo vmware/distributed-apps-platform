@@ -74,12 +74,14 @@ class TrafficRule(object):
         'src': 'text',          # source endpoint
         'dst': 'text',          # destination endpoint
         'protocol': 'text',     # Protocol : TCP/UDP/HTTP
-        'port': 'text',         # port
+        'port': 'int',          # port
         'connected': 'text',    # Ping expected to PASS or FAIL
+        'sockettimeout': 'float',  # socket timeout
+        'interval': 'int',       # interval between ping
 
         'payload': 'text',      # Payload for rule or "Dinkirk!!"
         'packet': 'text',       # Packet size for traffic.
-        'tries': 'text',        # Number of tries/count of ping.
+        'tries': 'int',        # Number of tries/count of ping.
 
         'username': 'text',     # run traffic as. 'root' by default
         'state': 'text',        # ENABLED/DISABLED
