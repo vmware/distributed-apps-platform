@@ -129,6 +129,9 @@ class Podium(BaseApp):
             log.error("Error in adding endpoint %s - %r", hostip, err)
 
     def add_host(self, hostip, username=None, password=None):
+        """
+        Prepare node and return True on success else False.
+        """
         username = username or self._ep_username
         password = password or self._ep_password
         try:
@@ -136,21 +139,29 @@ class Podium(BaseApp):
             if not self.wait_on_host(hostip):
                 log.error("Could not start service on %s", hostip)
             self.add_endpoints(hostip, username, password)
+            return True
         except Exception as err:
             log.error("Error in preparing host %s - %r", hostip, err)
+            return False
 
     def add_hosts(self, hostips, username=None, password=None):
-        """ Add remote hosts for installing and starting lydian service.
-        Args:
-            hostips(str or list):
-                a single hostname/IP or comma separated hostnames/IPs or list of hostnames/IPs
-            username: username
-            password: password
+        """
+        Prepare Hosts with Lydian service and fetches interface information.
+        Returns a dictionary of <key:val> as <hostip:True/False>. True/False
+        signify success/failure of operation.
+        Parameters
+        ------------
+        hostips: list
+            Collection of (SSH-able) IP addresses.
+        username: str
+            Username for preparation.
+        password: str
+            Password for preparation.
         """
         if isinstance(hostips, str):
             hostips = hostips.split(',')
         args = [(host, (host, username, password), {}) for host in hostips]
-        ThreadPool(self.add_host, args)
+        return ThreadPool(self.add_host, args)
 
     def get_ep_host(self, epip):
         return self._ep_hosts.get(epip, None)
