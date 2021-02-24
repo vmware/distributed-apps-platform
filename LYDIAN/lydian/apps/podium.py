@@ -163,6 +163,8 @@ class Podium(BaseApp):
         args = [(host, (host, username, password), {}) for host in hostips]
         return ThreadPool(self.add_host, args)
 
+
+
     def get_ep_host(self, epip):
         return self._ep_hosts.get(epip, None)
 
@@ -434,8 +436,8 @@ def get_podium():
     return _podium
 
 
-def run_iperf3(src, dst, duration=10, udp=False, bandwidth=None,
-               client_args='', server_args='', func_ip=None):
+def run_iperf(src, dst, duration=10, udp=False, bandwidth=None,
+               client_args='', server_args='', func_ip=None, iperf_bin='iperf3'):
     """
     Run iperf between <src> and <dst> over TCP/UDP for <duration> seconds
 
@@ -466,10 +468,13 @@ def run_iperf3(src, dst, duration=10, udp=False, bandwidth=None,
     with LydianClient(dst_host) as server:
         with LydianClient(src_host) as client:
             try:
-                port = server.iperf.start_iperf_server(args=server_args)
+                port = server.iperf.start_iperf_server(args=server_args, iperf_bin=iperf_bin)
                 log.info('iperf server: %s is running on port %s', dst_host, port)
-                job_id = client.iperf.start_iperf_client(dst_host, port, duration, udp, bandwidth,
-                                                         args=client_args)
+                job_id = client.iperf.start_iperf_client(dst_host, port,
+                                                         duration=duration, udp=udp,
+                                                         bandwidth=bandwidth,
+                                                         args=client_args,
+                                                         iperf_bin=iperf_bin)
                 job_info = client.iperf.get_client_job_info(job_id)
                 log.info('cmd: %s on iperf client running with job id: %d', job_info['cmd'],
                          job_id)
@@ -484,6 +489,10 @@ def run_iperf3(src, dst, duration=10, udp=False, bandwidth=None,
                     server.iperf.stop_iperf_server(port)
                     if job_id:
                         client.iperf.stop_iperf_client(job_id)
+
+
+# Keeping run_iperf3 for backward compatibility
+run_iperf3 = run_iperf
 
 
 def start_pcap(host, pcap_file_name, interface, pcap_args='', func_ip=None):

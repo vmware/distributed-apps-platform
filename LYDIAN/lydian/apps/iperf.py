@@ -38,23 +38,32 @@ class Iperf(console.Console):
         self._gen_rand_port = self._gen_rand_port(self._START_RAND_PORT,
                                                   self._END_RAND_PORT)
 
-    def start_iperf_server(self, port=None, args=''):
+    def start_iperf_server(self, port=None, args='', iperf_bin=None):
         """
         Start iperf server on given port. If port is not
         provided, random port will be used.
 
-        :param port: (int) TCP port number (default: None)
-        :param args: (str) Additional iperf supported args
-        :return:
-        port: (int) TCP port number being used for iperf server
+        Parameters:
+        ----------
+            port: int
+                Port number (default: None)
+            args: str
+                Additional iperf supported args
+            iperf_bin: str
+                iperf bin file path (e.g. iperf, iperf3, /usr/bin/iperf)
+        Returns:
+            port: int
+                Port number being used for iperf server
         """
+
+        iperf_bin = iperf_bin or self.IPERF_BIN
         if not port:
             port = next(self._gen_rand_port)
         if self.is_running(port):
             log.info("Server is already running on port: %d"
                      "Skip starting server." % port)
             return port
-        cmd = self.IPERF_BIN + ' ' + '-s -p %s' % str(port)
+        cmd = iperf_bin + ' ' + '-s -p %s' % str(port)
         if args:
             cmd += ' ' + args
         p = self._start_subprocess(cmd)
@@ -110,24 +119,35 @@ class Iperf(console.Console):
             self._client_handles.pop(job_id)
 
     def start_iperf_client(self, dst_ip, dst_port, duration=10, udp=False,
-                           bandwidth=None, args=''):
+                           bandwidth=None, args='', iperf_bin=None):
         """
         Start iperf client to given dst_ip and port.
 
-        :param dst_ip: (str) IP address of iperf server
-        :param dst_port: (int) iperf server port to connect to
-        :param dst_port: (int) iperf server port to connect to
-        :param duration: (int) test duration
-        :param udp: (bool) enable udp
-        :param bandwidth: (int)  limit traffic to as much Mbits/second
-        :return:
-        job_id: (int)
+        Parameters:
+        -----------
+            dst_ip: str
+                IP address of iperf server
+            dst_port: int
+                iperf server port to connect to
+            duration: int
+                test duration
+            udp: bool
+                enable udp
+            bandwidth: int
+                limit traffic to as much Mbits/second
+            args: str
+                additional args supported by iperf client command
+            iperf_bin: str
+                iperf bin file path (e.g. iperf, iperf3, /usr/bin/iperf)
+        Returns:
+            job_id: int
         """
-
-        cmd = self.IPERF_BIN + ' ' + '-c %s -p %s -t %s' % (str(dst_ip),
-                                                            str(dst_port),
-                                                            str(duration))
-        cmd += ' ' + '--json'
+        iperf_bin = iperf_bin or self.IPERF_BIN
+        cmd = iperf_bin + ' ' + '-c %s -p %s -t %s' % (str(dst_ip),
+                                                       str(dst_port),
+                                                       str(duration))
+        if 'iperf3' in iperf_bin:
+            cmd += ' ' + '--json'  # JSON output only in iperf3
         if udp:
             cmd += " --udp"
             # iperf3 udp default is 1 Mbit/s, this sets it to unlimited / 10Gb/s
@@ -204,4 +224,4 @@ class Iperf(console.Console):
         grep = self._start_subprocess('grep :%s' % port, stdin=netstat.stdout)
         netstat.stdout.close()  # Allow netstat to receive a SIGPIPE if grep exits.
         output = grep.communicate()[0].decode('utf-8')
-        return self.IPERF_BIN in output
+        return 'iperf' in output

@@ -160,17 +160,19 @@ class TCPDumpManager(Manager):
 
 class IperfManager(Manager):
 
-    def start_iperf_server(self, port=None, args=''):
-        return self._client.iperf.start_iperf_server(port, args)
+    def start_iperf_server(self, port=None, args='', iperf_bin='iperf3'):
+        return self._client.iperf.start_iperf_server(port=port, args=args,
+                                                     iperf_bin=iperf_bin)
 
     def stop_iperf_server(self, port):
         self._client.iperf.stop_iperf_server(port)
 
-    def start_iperf_client(self, dst_ip, dst_port, duration=10,
-                           udp=False, bandwidth=None, args=''):
+    def start_iperf_client(self, dst_ip, dst_port, duration=10, udp=False,
+                           bandwidth=None, args='', iperf_bin='iperf3'):
         return self._client.iperf.start_iperf_client(dst_ip, dst_port,
-                                                     duration, udp,
-                                                     bandwidth, args)
+                                                     duration=duration, udp=udp,
+                                                     bandwidth=bandwidth, args=args,
+                                                     iperf_bin=iperf_bin)
 
     def stop_iperf_client(self, job_id):
         self._client.iperf.stop_iperf_client(job_id)
