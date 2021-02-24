@@ -96,6 +96,10 @@ class Client(Connection):
             raise PingValidationError()
 
     def start(self, payload=None, tries=None):
+        if not self.stopped():
+            log.info("Traffic client alredy running for server - %s:%s",
+                     self.server, self.port)
+            return
         self.clear_event()
         payload = payload or self.payload
         tries = tries or self.tries

@@ -159,6 +159,9 @@ class TrafficControllerApp(BaseApp):
         """ Start a Traffic task (again). """
 
         trule = self.rules.rules.get(ruleid, None)
+        if trule.enabled:
+            log.info("Traffic task for %s already started.", trule.ruleid)
+            return
         if trule:
             # Enable the trule
             self.rules.enable(ruleid)
@@ -169,12 +172,16 @@ class TrafficControllerApp(BaseApp):
     def _stop(self, ruleid):
 
         """ Stop a Traffic task. """
-
         trule = self.rules.rules.get(ruleid, None)
+        if not trule.enabled:
+            log.info("Traffic task for %s already stopped.", trule.ruleid)
+            return
         if trule:
             self._client_mgr.stop(trule)
             # Disable the trule
             self.rules.disable(ruleid)
+            # Servers are not stopped as other traffic rules still might
+            # need them. TODO : Do reference counting.
         else:
             log.error("Unable to find rule for id:%s", ruleid)
 
