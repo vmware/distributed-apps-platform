@@ -81,19 +81,24 @@ def cleanup_node(hostip, username='root', password='FAKE_PASSWORD', remove_db=Tr
     """
 
     with Host(host=hostip, user=username, passwd=password) as host:
+        result = True
 
         def _func(cmnd):
             try:
                 host.req_call(cmnd)
+                return True
             except ValueError as err:
                 log.warn("cmnd: %s, error: %s", cmnd, err)
-        _func('systemctl stop lydian')
-        _func('sudo systemctl disable lydian.service')
-        _func('rm /etc/lydian/lydian.conf')
-        _func('rm /etc/systemd/system/lydian.service')
-        _func('rm /var/log/lydian/lydian.log')
+                return False
+
+        result &= _func('systemctl stop lydian')
+        result &= _func('sudo systemctl disable lydian.service')
+        result &= _func('rm /etc/lydian/lydian.conf')
+        result &= _func('rm /etc/systemd/system/lydian.service')
+        result &= _func('rm /var/log/lydian/lydian.log')
         if remove_db:
-            _func('rm traffic.db* params.db* rules.db*')
+            result &= _func('rm traffic.db* params.db* rules.db*')
+        return result
 
 
 def main():

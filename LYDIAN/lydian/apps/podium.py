@@ -32,9 +32,16 @@ _podium = None
 
 
 def _get_host_ip(host, func_ip=None):
-    func = lambda vm: vm.ip
-    func_ip = func if func_ip is None else func_ip
-    return func_ip(host)
+
+    if func_ip and callable(func_ip):
+        return func_ip(host)
+
+    if getattr(host, 'ip', None):
+        func = lambda vm: vm.ip
+    else:
+        p = get_podium()
+        func = p.get_ep_host
+    return func(host)
 
 
 @exposify
@@ -163,7 +170,33 @@ class Podium(BaseApp):
         args = [(host, (host, username, password), {}) for host in hostips]
         return ThreadPool(self.add_host, args)
 
+    def cleanup_hosts(self, hostips, username=None, password=None,
+                      remove_db=True):
+        """
+        Uninstall Lydian service and optionally remove corresponding dbs on
+        remote hosts. Returns a dictionary of <key:val> as <hostip:True/False>. True/False
+        signify success/failure of operation.
 
+        Parameters:
+        ----------
+            hostips: list
+                list of (SSH-able) IP addresses
+            username: str
+            password: str
+            remove_db: bool
+                remove or retain lydian dbs.
+        """
+        if isinstance(hostips, str):
+            hostips = hostips.split(',')
+        args = [(host, (host, username, password), {'remove_db': remove_db}) for host in hostips]
+        results = ThreadPool(cleanup_node, args)
+
+        # Remove all IPs cached in self._ep_hosts for hosts that have successfully cleaned up
+        for host_ip, result in results.items():
+            if result:
+                data_ips = [data_ip for data_ip, mgmt_ip in self._ep_hosts.items() if mgmt_ip == host_ip]
+                [self._ep_hosts.pop(data_ip) for data_ip in data_ips]
+        return results
 
     def get_ep_host(self, epip):
         return self._ep_hosts.get(epip, None)
@@ -462,9 +495,9 @@ def run_iperf(src, dst, duration=10, udp=False, bandwidth=None,
     server_args: str
         Additional cli options supported by iperf server
     """
-    _podium = get_podium()
-    src_host = _podium.get_ep_host(src)
-    dst_host = _podium.get_ep_host(dst)
+
+    src_host = _get_host_ip(src, func_ip)
+    dst_host = _get_host_ip(dst, func_ip)
     with LydianClient(dst_host) as server:
         with LydianClient(src_host) as client:
             try:
@@ -525,6 +558,7 @@ def stop_resource_monitoring(host, func_ip=None):
     """
     with LydianClient(_get_host_ip(host, func_ip)) as client:
         client.monitor.stop()
+
 
 def stop_service(hosts, remove_db=True):
     """
