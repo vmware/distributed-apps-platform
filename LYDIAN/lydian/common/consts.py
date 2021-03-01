@@ -93,6 +93,9 @@ class RecorderConstants(Constants):
                                                  True)
     WAVEFRONT_RESOURCE_RECORDING = os.environ.get('WAVEFRONT_RESOURCE_RECORDING',
                                                  True)
+    ELASTICSEARCH_TRAFFIC_RECORDING = os.environ.get('ELASTICSEARCH_TRAFFIC_RECORDING',
+                                                              True)
+
     # SQLITE recording configs
     SQLITE_TRAFFIC_RECORDING = os.environ.get('SQLITE_TRAFFIC_RECORDING', True)
     SQLITE_RESOURCE_RECORDING = os.environ.get('SQLITE_RESOURCE_RECORDING', True)
@@ -123,7 +126,9 @@ class ELSConstants(Constants):
     _NAME = "Elastic Search"
     ELASTIC_SEARCH_SERVER_ADDRESS = os.environ.get('ELASTIC_SEARCH_SERVER_ADDRESS', '')
     ELASTIC_SEARCH_SERVER_PORT = int(os.environ.get('ELASTIC_SEARCH_SERVER_PORT', 9200))
-
+    ELASTIC_SEARCH_SERVER_INDEX = os.environ.get('ELASTIC_SEARCH_SERVER_INDEX', '')
+    ELASTIC_SEARCH_SOURCE_TAG = os.environ.get('ELASTIC_SEARCH_SOURCE', '')
+    LYDIAN_ES_NS_NAME = os.environ.get('LYDIAN_ES_NS_NAME', '')
 
 def get_categories():
     """

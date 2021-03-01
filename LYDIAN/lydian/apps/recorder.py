@@ -28,6 +28,12 @@ except errors.ModuleNotFoundError:
     from lydian.utils.mock import WavefrontTrafficRecorder, \
         WavefrontResourceRecorder
 
+try:
+    from lydian.recorder.es_client import ElasticSearchTrafficRecorder
+except errors.ModuleNotFoundError:
+    log.warn("Failed to import elasticsearch. Recording to it is disabled")
+    from lydian.utils.mock import ElasticSearchTrafficRecorder
+
 
 class TrafficRecordDB(db.Model):
     DB_NAME = './traffic.db'
@@ -103,7 +109,8 @@ class RecordManager(Subscribe, BaseApp):
         BaseApp.__init__(self)
         self._traffic_recorders = [
             TrafficRecorder(),
-            WavefrontTrafficRecorder()
+            WavefrontTrafficRecorder(),
+            ElasticSearchTrafficRecorder()
             ]
         self._resource_recorders = [
             WavefrontResourceRecorder()

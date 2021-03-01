@@ -36,3 +36,20 @@ class WavefrontDeadClient(DeadNode):
 WavefrontDirectClient = WavefrontDeadClient
 
 WavefrontProxyClient = WavefrontDeadClient
+
+class DummyElasticSearchWriter(DeadNode):
+    def send(self, data):
+        pass
+
+    def write(self, rec):
+        pass
+
+ElasticSearchTrafficRecorder = DummyElasticSearchWriter
+
+class ElasticsearchDeadClient(DeadNode):
+
+    def index(self, *args, **kwargs):
+        pass
+
+
+Elasticsearch = ElasticsearchDeadClient
