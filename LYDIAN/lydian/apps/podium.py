@@ -374,12 +374,15 @@ class Podium(BaseApp):
         results = self._get_results(hostips, reqid, duration=duration, **kwargs)
         return results
 
-    def get_traffic_stats(self, reqid, duration=None):
+    def get_traffic_stats(self, reqid, duration=None, **kwargs):
         stats = {'success': 0,
                  'failure': 0}
 
-        pass_records = self.get_results(reqid, duration=duration, result='1')
-        fail_records = self.get_results(reqid, duration=duration, result='0')
+        _ = kwargs.pop('result', None)
+        pass_records = self.get_results(reqid, duration=duration, result='1',
+                                        **kwargs)
+        fail_records = self.get_results(reqid, duration=duration, result='0',
+                                        **kwargs)
 
         for host_pass_record in pass_records:
             stats['success'] += len(host_pass_record)
@@ -389,13 +392,13 @@ class Podium(BaseApp):
 
         return stats
 
-    def get_traffic_pass_percent(self, reqid, duration=None):
-        stats = self.get_traffic_stats(reqid, duration=duration)
+    def get_traffic_pass_percent(self, reqid, duration=None, **kwargs):
+        stats = self.get_traffic_stats(reqid, duration=duration, **kwargs)
         total = stats['success'] + stats['failure']
         return round(stats['success'] * 100 / total, 2) if total else 0
 
-    def get_traffic_fail_percent(self, reqid, duration=None):
-        stats = self.get_traffic_stats(reqid, duration=duration)
+    def get_traffic_fail_percent(self, reqid, duration=None, **kwargs):
+        stats = self.get_traffic_stats(reqid, duration=duration, **kwargs)
         total = stats['success'] + stats['failure']
         return round(stats['failure'] * 100 / total, 2) if total else 100
 
