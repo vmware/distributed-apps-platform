@@ -497,7 +497,8 @@ def get_podium():
 
 
 def run_iperf(src, dst, duration=10, udp=False, bandwidth=None,
-               client_args='', server_args='', func_ip=None, iperf_bin='iperf3'):
+              client_args='', server_args='', func_ip=None, iperf_bin='iperf3',
+              dst_port=None):
     """
     Run iperf between <src> and <dst> over TCP/UDP for <duration> seconds
 
@@ -521,16 +522,23 @@ def run_iperf(src, dst, duration=10, udp=False, bandwidth=None,
         Additional cli options supported by iperf client
     server_args: str
         Additional cli options supported by iperf server
+    func_ip: func
+        function to resolve endpoint mgmt IP
+    iperf_bin: str
+        iperf binary path
+    dst_port: int
+        iperf server port
     """
 
     src_host = _get_host_ip(src, func_ip)
     dst_host = _get_host_ip(dst, func_ip)
     with LydianClient(dst_host) as server:
         with LydianClient(src_host) as client:
+            port, job_id = None, None
             try:
-                port = server.iperf.start_iperf_server(args=server_args, iperf_bin=iperf_bin)
-                log.info('iperf server: %s is running on port %s', dst_host, port)
-                job_id = client.iperf.start_iperf_client(dst_host, port,
+                port = server.iperf.start_iperf_server(port=dst_port, args=server_args, iperf_bin=iperf_bin)
+                log.info('iperf server: %s is running on port %s', dst, port)
+                job_id = client.iperf.start_iperf_client(dst, port,
                                                          duration=duration, udp=udp,
                                                          bandwidth=bandwidth,
                                                          args=client_args,
