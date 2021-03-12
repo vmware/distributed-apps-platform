@@ -73,6 +73,9 @@ class TrafficRecorder(TrafficRecordDB, Subscribe):
     def enabled(self):
         return self.get_config('SQLITE_TRAFFIC_RECORDING')
 
+    def stop(self):
+        pass
+
     def write(self, trec):
         if not self.enabled:
             return
@@ -118,6 +121,11 @@ class RecordManager(Subscribe, BaseApp):
 
     def stop(self):
         self._stopped.set()
+        # Stop Recorder clients
+        for recorder in self._traffic_recorders:
+            recorder.stop()
+        for recorder in self._resource_recorders:
+            recorder.stop()
 
     def _traffic_record_handler(self):
         while not self._stopped.is_set():

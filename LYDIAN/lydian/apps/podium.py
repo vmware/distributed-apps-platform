@@ -63,10 +63,10 @@ class Podium(BaseApp):
         self._ep_password = password or config.get_param('ENDPOINT_PASSWORD')
         self.rules_app = rules.RulesApp()
 
-        self.traffic_records = queue.Queue(self.MAX_QUEUE_SIZE)
-        self.resource_records = queue.Queue(self.MAX_QUEUE_SIZE)
-        self.monitor = ResourceMonitor(self.resource_records)
-        self.db_pool = RecordManager(self.traffic_records, self.resource_records)
+        self.traffic_records = None
+        self.resource_records = None
+        self.monitor = None
+        self.db_pool = None
 
         # Update config file based on default constants, config file
         # and any previously set configs (in .db file). In that order.
@@ -80,12 +80,28 @@ class Podium(BaseApp):
     def rules(self):
         return self.rules_app.rules
 
+    def close(self):
+        if self.monitor:
+            self.monitor.stop()
+        if self.db_pool:
+            self.db_pool.stop()
+
     def start_primary_monitor(self):
         """
         Start Monitoring on Primary node.
         """
-        self.monitor.start()
-        self.db_pool.start()
+        if not self.traffic_records:
+            self.traffic_records = queue.Queue(self.MAX_QUEUE_SIZE)
+        if not self.resource_records:
+            self.resource_records = queue.Queue(self.MAX_QUEUE_SIZE)
+        if not self.monitor:
+            self.monitor = ResourceMonitor(self.resource_records)
+        if not self.db_pool:
+            self.db_pool = RecordManager(self.traffic_records, self.resource_records)
+        if self.monitor.stopped():
+            self.monitor.start()
+        if self.db_pool.stopped():
+            self.db_pool.start()
 
     def is_host_up(self, hostip):
         try:

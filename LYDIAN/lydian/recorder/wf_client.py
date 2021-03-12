@@ -73,6 +73,12 @@ class WavefrontRecorder(core.Subscribe):
     def enabled(self):
         return self.get_config(self.ENABLE_PARAM)
 
+    def stop(self):
+        if self._client:
+            if isinstance(self._client, WavefrontDirectClient):
+                self._client.flush_now()
+            self._client.close()
+
 
 class WavefrontTrafficRecorder(WavefrontRecorder):
     CONFIG_PARAMS = ['WAVEFRONT_TRAFFIC_RECORDING']

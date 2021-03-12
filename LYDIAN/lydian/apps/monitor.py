@@ -42,6 +42,9 @@ class ResourceMonitor(BaseApp):
         self._proc_name = proc_name
         self._thread = None
 
+    def stopped(self):
+        return self._stop_switch.is_set()
+
     def _run(self):
         p = psutil.Process(os.getpid())
         while not self._stop_switch.is_set():
