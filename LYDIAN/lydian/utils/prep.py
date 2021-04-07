@@ -7,112 +7,376 @@
 import argparse
 import logging
 import os
+import re
 import tempfile
 
-from lydian.apps.config import get_configs
+from lydian.apps.config import get_param
 from lydian.utils.ssh_host import Host
 from lydian.utils.install import install_egg
 
 log = logging.getLogger(__name__)
 
+UBUNTU = 'UBUNTU'
+ESX = 'ESX'
+WINDOWS = 'WINDOWS'
 
-def prep_node(hostip, username='root', password='FAKE_PASSWORD',
-              egg_file_src=None, cfg_path=None):
-
-    config = get_configs()
-
+def get_host_type(hostip, username, password):
     with Host(host=hostip, user=username, passwd=password) as host:
-        try:
-            host.req_call('systemctl stop lydian')
-        except ValueError:
-            pass    # preparing for first time.
+        result = host.req_call('uname -a')
 
-        data_dir = os.path.dirname(os.path.realpath(__file__))
+        if 'VMkernel' in result:
+            return ESX
+        elif 'Ubuntu' in result:
+            # TODO : CentoS, RHEL, SUSE
+            return UBUNTU
+        elif 'windows' in result:
+            return WINDOWS
 
-        # Copy service file
-        python3_path = host.req_call('which python3').strip()
 
-        # Read Service file contents
-        service_file_lines = []
-        with open(os.path.join(data_dir, '../data/lydian.service')) as fp:
-            service_file_lines = fp.readlines()
+class NodePrep(object):
+    START_SERVICE = None
+    STOP_SERVICE = None
+    RESTART_SERVICE = None
+    UNINSTALL_SERVICE = None
 
-        service_file_lines = [x if not x.startswith('ExecStart=') else
-                              x % python3_path for x in service_file_lines]
+    # File path constants for local/source files.
+    EGG_FILE = 'lydian.egg'
+    SERVICE_FILE = 'lydian.service'
+    CONFIG_FILE = 'lydian.conf'
 
-        # Modify service file with python path.
-        with tempfile.NamedTemporaryFile(mode='w', dir='/tmp',
-                                         prefix='lydian_service_') as sfile:
-            sfile.writelines(service_file_lines)
-            sfile.flush()
-            host.put_file(sfile.name, '/etc/systemd/system/lydian.service')
+    # File path constants for endpoints.
+    EGG_DEST_PATH = '/root/lydian.egg'
+    CONFIG_DEST_PATH = '/etc/lydian/lydian.conf'
+    SERVICE_DEST_PATH = '/etc/systemd/system/lydian.service'
 
-        # Copy Egg file
-        egg_file = config.get_param('LYDIAN_EGG_PATH') or egg_file_src
+    def __init__(self, hostip, username, password):
+        """
+        Prepares the endpoint.
+        """
+        self.hostip = hostip
+        self.username = username
+        self.password = password
+
+        self.data_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                     '../data')
+
+    def prep_node(self, egg_file_src=None, cfg_path=None):
+        raise NotImplementedError("'prep_node' not implemented")
+
+    def cleanup_node(self, remove_db=False):
+        raise NotImplementedError("'cleanup_node' not implemented")
+
+    def copy_egg(self, host, egg_file_src):
+        """
+        Sets up Egg file at endpoint.
+
+        Parameters
+        ------------
+        host: ssh_host
+            SSH Host object handle.
+
+        egg_file_src: str
+            User preferred Egg file path.
+        """
+        egg_file = get_param('LYDIAN_EGG_PATH') or egg_file_src
         if not egg_file:
-            egg_file = os.path.join(data_dir, '../data/lydian.egg')
+            egg_file = os.path.join(self.data_dir, self.EGG_FILE)
             if not os.path.exists(egg_file):
                 # Running first time, install egg
                 install_egg()
         assert os.path.exists(egg_file), "Egg file not present."
-        host.put_file(egg_file, '/root/lydian.egg')
+        host.put_file(egg_file, self.EGG_DEST_PATH)
 
-        # Copy Config File.
-        config_file = config.get_param('LYDIAN_HOSTPREP_CONFIG') or cfg_path
+    def copy_config(self, host, cfg_path):
+        """
+        Sets up Config file at endpoint.
+
+        Parameters
+        ------------
+        host: ssh_host
+            SSH Host object handle.
+
+        cfg_path: str
+            User preferred Egg file path.
+        """
+        config_file = get_param('LYDIAN_HOSTPREP_CONFIG') or cfg_path
         if not config_file:
-            config_file = os.path.join(data_dir, '../data/lydian.conf')
+            config_file = os.path.join(self.data_dir, self.CONFIG_FILE)
 
         host.req_call('mkdir -p /etc/lydian')
-        host.put_file(config_file, '/etc/lydian/lydian.conf')
+        host.put_file(config_file, self.CONFIG_DEST_PATH)
 
-        try:
-            host.req_call('sudo systemctl enable lydian.service')
-            host.req_call('sudo systemctl daemon-reload')
-            host.req_call('systemctl start lydian')
-        except Exception as err:
-            log.error("Error in starting service at %s : %r", hostip, err)
-            return False
-    return True
+    def copy_service(self, host):
+        """
+        Copy Daemon service file at endpoint.
 
+        Parameters
+        ------------
+        host: ssh_host
+            SSH Host object handle.
+        """
+        service_src = os.path.join(self.data_dir, self.SERVICE_FILE)
+        host.put_file(service_src, self.SERVICE_DEST_PATH)
 
-def cleanup_node(hostip, username='root', password='FAKE_PASSWORD', remove_db=True):
-    """
-    Cleans up Lydian service from the endpoints.
-    """
+class UbuntuNodePrep(NodePrep):
 
-    with Host(host=hostip, user=username, passwd=password) as host:
-        result = True
+    def setup_service(self, host):
+        """
+        Setup service at endpoint.
+        """
+        python3_path = host.req_call('which python3').strip()
 
-        def _func(cmnd):
+        # Read Service file contents
+        service_file_lines = []
+        with open(os.path.join(self.data_dir, self.SERVICE_FILE)) as fp:
+            service_file_lines = fp.readlines()
+
+        service_file_lines = [x if not x.startswith('ExecStart=') else
+                            x % python3_path for x in service_file_lines]
+
+        # Modify service file with python path.
+        with tempfile.NamedTemporaryFile(mode='w', dir='/tmp',
+                                        prefix='lydian_service_') as sfile:
+            sfile.writelines(service_file_lines)
+            sfile.flush()
+            host.put_file(sfile.name, self.SERVICE_DEST_PATH)
+
+    def prep_node(self, egg_file_src=None, cfg_path=None):
+
+        with Host(host=self.hostip, user=self.username,
+                  passwd=self.password) as host:
             try:
-                host.req_call(cmnd)
-                return True
-            except ValueError as err:
-                log.warn("cmnd: %s, error: %s", cmnd, err)
+                host.req_call('systemctl stop lydian')
+            except ValueError:
+                pass    # preparing for first time.
+
+            # Copy Egg file
+            self.copy_egg(host, egg_file_src)
+
+            # Copy Config File.
+            self.copy_config(host, cfg_path)
+
+            # Setup daemon service.
+            self.setup_service(host)
+
+            # Start Lydian Service.
+            try:
+                host.req_call('sudo systemctl enable lydian.service')
+                host.req_call('sudo systemctl daemon-reload')
+                host.req_call('systemctl start lydian')
+            except Exception as err:
+                log.error("Error in starting service at %s : %r", self.hostip, err)
+                return False
+        return True
+
+    def cleanup_node(self, remove_db=True):
+        """
+        Cleans up Lydian service from the endpoints.
+        """
+        with Host(host=self.hostip, user=self.username,
+                  passwd=self.password) as host:
+            result = True
+
+            def _func(cmnd):
+                try:
+                    host.req_call(cmnd)
+                    return True
+                except ValueError as err:
+                    log.warn("cmnd: %s, error: %s", cmnd, err)
+                    return False
+
+            result &= _func('systemctl stop lydian')
+            result &= _func('sudo systemctl disable lydian.service')
+            result &= _func('rm /etc/lydian/lydian.conf')
+            result &= _func('rm /etc/systemd/system/lydian.service')
+            result &= _func('rm /var/log/lydian/lydian.log')
+            if remove_db:
+                result &= _func('rm traffic.db* params.db* rules.db*')
+            return result
+
+
+class ESXNodePrep(NodePrep):
+    START_SERVICE = '/etc/init.d/lydian start'
+    STOP_SERVICE = '/etc/init.d/lydian stop'
+    RESTART_SERVICE = '/etc/init.d/lydian restart'
+    UNINSTALL_SERVICE = '/etc/init.d/lydian uninstall'
+
+    SERVICE_FILE = 'lydian_esx.service'
+    ESX_fw_cfg = 'esx_firewall.xml'
+    START_SCRIPT = 'lydian_esx.sh'
+
+    EGG_DEST_PATH = '/lydian/lydian.egg'
+    SERVICE_DEST_PATH = '/etc/init.d/lydian'
+    FIREWALL_XML = '/lydian/esx_fw.xml'
+    FIREWALL_XML_BAK = '/lydian/esx_fw.xml.bak'
+
+    def config_firewall(self, host):
+        """
+        Configures Firewall to allow connections to Lydian service from outside.
+        Source : https://kb.vmware.com/s/article/2008226
+        """
+        import pdb ; pdb.set_trace()
+        xml_content = host.req_call('cat /etc/vmware/firewall/service.xml')
+        if 'lydian' in xml_content:
+            log.info("Firewall rule already configured on %s", self.hostip)
+            return
+        try:
+            service_nums = set()
+            result = host.req_call('grep "service id=" /etc/vmware/firewall/service.xml')
+            result = result.splitlines()
+            for line in result:
+                try:
+                    m = re.search("service id=(.+?)[ >].*", line)
+                    service_nums.add(int(m.group(1)[1:-1]))
+                except Exception:
+                    # Hope that later higher service won't fail
+                    # and we will get our service number.
+                    pass
+            service_num = '%s' % (max(service_nums) + 1)
+        except Exception as err:
+            log.error("Error in determining ESX service number for host"
+                      " %s - Error: %r", self.hostip, err)
+            return
+
+        host.req_call('cp /etc/vmware/firewall/service.xml %s' % self.FIREWALL_XML_BAK)
+        host.req_call('chmod 644 /etc/vmware/firewall/service.xml')
+        host.req_call('chmod +t /etc/vmware/firewall/service.xml')
+
+        # Read Firewall rule XML file contents
+        fw_cfg = []
+        with open(os.path.join(self.data_dir, self.ESX_fw_cfg)) as fp:
+            fw_cfg = fp.readlines()
+
+        # Update Service number
+        fw_cfg = [x if not x.startswith('<service id') else
+                  x % service_num.zfill(4) for x in fw_cfg]
+
+        port_num = int(get_param('LYDIAN_PORT'))
+        # Update port number
+        fw_cfg = [x if '<port>' not in x else x % port_num for x in fw_cfg]
+
+        xml_content = xml_content.splitlines()
+        idx = xml_content.index("</ConfigRoot>")
+        xml_content = xml_content[:idx] + fw_cfg + xml_content[idx:]
+
+        # Modify service file with python path.
+        with tempfile.NamedTemporaryFile(mode='w', dir='/tmp',
+                                        prefix='lydian_esx_firewall_') as sfile:
+            for line in xml_content:
+                sfile.write('%s\n' % line.rstrip())
+            sfile.flush()
+            host.put_file(sfile.name, self.FIREWALL_XML)
+            host.req_call('cp %s /etc/vmware/firewall/service.xml' % self.FIREWALL_XML)
+
+        host.req_call('chmod 444 /etc/vmware/firewall/service.xml')
+        host.req_call('chmod +t /etc/vmware/firewall/service.xml')
+        host.req_call('esxcli network firewall refresh')
+        # host.req_call('esxcli network firewall ruleset list') # Lydian should come in this list
+
+    def prep_node(self, egg_file_src=None, cfg_path=None):
+        with Host(host=self.hostip, user=self.username,
+                  passwd=self.password) as host:
+            try:
+                host.req_call(self.STOP_SERVICE)
+            except ValueError:
+                pass    # preparing for first time.
+
+            host.req_call('mkdir -p /lydian')
+
+            # Copy Egg file
+            self.copy_egg(host, egg_file_src)
+
+            # Copy Config File.
+            self.copy_config(host, cfg_path)
+
+            # Copy Daemon service file.
+            self.copy_service(host)
+
+            # ESX specific steps
+            host.req_call('chmod 555 %s' % self.SERVICE_DEST_PATH)
+
+            host.put_file(os.path.join(self.data_dir, self.START_SCRIPT),
+                          '/lydian/lydian.sh')
+            host.req_call('chmod 555 %s' % '/lydian/lydian.sh')
+
+            self.config_firewall(host)
+
+            # Start Lydian Service.
+            try:
+                host.req_call(self.START_SERVICE)
+            except Exception as err:
+                log.error("Error in starting service at %s : %r", self.hostip, err)
                 return False
 
-        result &= _func('systemctl stop lydian')
-        result &= _func('sudo systemctl disable lydian.service')
-        result &= _func('rm /etc/lydian/lydian.conf')
-        result &= _func('rm /etc/systemd/system/lydian.service')
-        result &= _func('rm /var/log/lydian/lydian.log')
-        if remove_db:
-            result &= _func('rm traffic.db* params.db* rules.db*')
-        return result
+        return True
+
+    def cleanup_node(self, remove_db=True):
+        with Host(host=self.hostip, user=self.username,
+                  passwd=self.password) as host:
+            # Start Lydian Service.
+            try:
+                host.req_call(self.UNINSTALL_SERVICE)
+            except Exception as err:
+                log.error("Error in stopping service at %s : %r", self.hostip, err)
+                return False
+
+        return True
+
+
+class WinNodePrep(NodePrep):
+    pass
+
+
+def get_prep_node(hostip, username, password):
+    """
+    Returns apporpriate node prep object based on platform type.
+    """
+    host_type = get_host_type(hostip, username, password)
+
+    if host_type == UBUNTU:
+        return UbuntuNodePrep(hostip, username, password)
+    elif host_type == ESX:
+        return ESXNodePrep(hostip, username, password)
+    elif host_type == WINDOWS:
+        return WinNodePrep(hostip, username, password)
+
+    return None
+
+
+def prep_node(hostip, username='root', password='FAKE_PASSWORD',
+              egg_file_src=None, cfg_path=None):
+    prep_obj = get_prep_node(hostip, username, password)
+    prep_obj.prep_node(egg_file_src, cfg_path)
+
+
+def cleanup_node(hostip, username='root', password='FAKE_PASSWORD',
+                 remove_db=True):
+    prep_obj = get_prep_node(hostip, username, password)
+    prep_obj.cleanup_node(remove_db)
 
 
 def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
+        '-b', '--boot', taction="store_true", help='Perform Prep (boot) operation.')
+    parser.add_argument(
+        '-c', '--cleanup', taction="store_true", help='Perform Cleanup operation.')
+    parser.add_argument(
         '-i', '--hostip', action="store_true", help="IP of host to be prepared.")
     parser.add_argument(
         '-u', '--username', action="store_true", help="Username of host.")
     parser.add_argument(
-        '-p', '--password', taction="store_true", help='Password of host.')
+        '-p', '--password', action="store_true", help='Password of host.')
+
 
     args = parser.parse_args()
-    prep_node(args.hostip, args.username, args.password)
+
+    # TODO : Allow to pass remove db , cfg file etc.
+    if args.boot:
+        prep_node(args.hostip, args.username, args.password)
+    elif args.cleanup:
+        cleanup_node(args.hostip, args.username, args.password)
 
 
 if __name__ == '__main__':

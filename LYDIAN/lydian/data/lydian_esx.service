@@ -1,0 +1,65 @@
+#!/bin/sh
+# Copyright (c) 2020 VMware, Inc. All Rights Reserved.
+# SPDX-License-Identifier: BSD-2 License
+# The full license information can be found in LICENSE.txt
+# in the root directory of this project.
+#
+# lydian:
+#   Enable/Disable lydian service
+#
+# description: Lydian service.
+#
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+export PATH
+
+PIDNAME="lydian.pid"
+PIDFILE="/var/run/lydian.pid"
+SCRIPT="/lydian/lydian.sh"
+LOGFILE="/var/log/lydian.log"
+RUNAS="root"
+
+start() {
+  if [ -f $PIDFILE ] && kill -0 $(cat "$PIDFILE"); then
+    echo 'Service already running' >&2
+    return 1
+  fi
+  echo 'Starting Lydian service ...' >&2
+  $SCRIPT &
+  echo 'Lydian Service started' >&2
+}
+
+stop() {
+  if [ ! -f "$PIDFILE" ] || ! kill -0 $(cat "$PIDFILE"); then
+    echo 'Lydian Service not running' >&2
+    return 1
+  fi
+  echo 'Stopping Lydian service…' >&2
+  kill -15 $(cat "$PIDFILE") && rm -f "$PIDFILE"
+  echo 'Lydian Service stopped' >&2
+}
+
+uninstall() {
+  echo -n "Uninstalling Lydian "
+  stop
+  rm -f "$PIDFILE"
+  rm -f /lydian
+}
+
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  uninstall)
+    uninstall
+    ;;
+  retart)
+    stop
+    start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|uninstall}"
+esac

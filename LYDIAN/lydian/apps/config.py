@@ -291,7 +291,7 @@ class Config(ConfigDB, base.BaseApp):
 
     def unsubscribe_notification(self, params, subscriber, callback):
         for param in params:
-            if param in self._subscriber:
+            if param in self._subscribers:
                 self._subscribers[param].discard((subscriber, callback))
 
     def _notify_subscriber(self, param):

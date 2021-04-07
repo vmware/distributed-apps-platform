@@ -1,0 +1,11 @@
+<service id="%s">
+ <id>lydian</id>
+ <rule id='0000'>
+   <direction>inbound</direction>
+   <protocol>tcp</protocol>
+   <porttype>dst</porttype>
+   <port>%s</port>
+ </rule>
+<enabled>true</enabled>
+<required>false</required>
+</service>

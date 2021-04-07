@@ -386,7 +386,7 @@ class Podium(BaseApp):
         workers = self.NODE_PREP_MAX_THREAD
 
         args = [(host, (host, reqid, duration), kwargs) for host in hostips]
-        _results = ThreadPool(self.get_host_result, args)
+        _results = ThreadPool(self.get_host_result, args, workers=workers)
         for _, val in _results.items():
             results.extend(val)
 

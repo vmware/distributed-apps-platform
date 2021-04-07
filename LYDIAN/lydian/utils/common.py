@@ -43,6 +43,8 @@ def get_mgmt_ifname():
         return 'eth0'
     elif system == 'Darwin':
         return 'en0'
+    elif system == 'VMkernel':
+        return 'vmk0'
 
 
 def get_host_name():
