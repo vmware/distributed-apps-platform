@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: BSD-2 License
 # The full license information can be found in LICENSE.txt
 # in the root directory of this project.
+
+# Run this test using following command.
+#    python -m unittest discover -p test_lydian.py lydian/tests/integration
 '''
 A simple test case for sending traffic.
 '''
@@ -15,11 +18,11 @@ import time
 import unittest
 import uuid
 
-from lydian.apps.rules import RulesApp
-from lydian.apps.controller import TrafficControllerApp
-from lydian.apps.results import Results
-from lydian.apps.recorder import RecordManager
 from lydian.apps.monitor import ResourceMonitor
+from lydian.apps.rules import RulesApp
+from lydian.apps.recorder import RecordManager
+from lydian.apps.results import Results
+from lydian.apps.traffic_controller import TrafficControllerApp
 from lydian.recorder.wf_client import WavefrontTrafficRecorder, WavefrontResourceRecorder
 from lydian.utils.network_utils import NamespaceManager, InterfaceManager
 from lydian.utils.logger import setup_logging
@@ -47,12 +50,17 @@ class TrafficAppTest(unittest.TestCase):
         self._delete_db_files()
 
         # Traffic Records.
-        self.traffic_records = queue.Queue(self.MAX_QUEUE_SIZE)
+        self.traffic_records = getattr(self, 'traffic_records',
+                                       queue.Queue(self.MAX_QUEUE_SIZE))
         # Resource records.
-        self.resource_records = queue.Queue(self.MAX_QUEUE_SIZE)
+        self.resource_records = getattr(self, 'resource_records',
+                                        queue.Queue(self.MAX_QUEUE_SIZE))
 
         self.rulesApp = RulesApp(db_file=self.DB_FILE)
-        self.controller = TrafficControllerApp(self.traffic_records, self.rulesApp)
+        traffic_tools = getattr(self, 'traffic_tools', {})
+        self.controller = TrafficControllerApp(self.traffic_records,
+                                               self.rulesApp,
+                                               traffic_tools)
         self.monitor = ResourceMonitor(self.resource_records)
         self.results = Results()
 
@@ -114,17 +122,20 @@ class TrafficAppTest(unittest.TestCase):
         assert not pickle.loads(records), "Stop traffic not working..."
         self.controller.start(ruleid)
         time.sleep(10)  # Stop traffic for 10 seconds
+        ts = int(time.time())
         records = self.results.traffic(reqid=self.reqid,
                                        ruleid=ruleid,
                                        timestamp=(ts-8, ts))
-        assert pickle.loads(records), "Stop traffic not working..."
+        assert pickle.loads(records), "Start traffic not working..."
 
     def _test_persistence(self):
         self.controller.close()
         self.db_pool.close()
         time.sleep(45)
         os.remove('./traffic.db')
-        self.controller = TrafficControllerApp(self.traffic_records, self.rulesApp)
+        traffic_tools = getattr(self, 'traffic_tools', {})
+        self.controller = TrafficControllerApp(self.traffic_records, self.rulesApp,
+                                               traffic_tools)
         self.db_pool = RecordManager(self.traffic_records, self.resource_records)
         self.db_pool.start()
         ts = int(time.time())

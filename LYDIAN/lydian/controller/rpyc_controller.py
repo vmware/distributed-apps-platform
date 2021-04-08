@@ -12,15 +12,16 @@ import rpyc
 from rpyc.utils.server import ThreadPoolServer
 
 from lydian.apps import config
-from lydian.apps.controller import TrafficControllerApp
 from lydian.apps.interface import InterfaceApp
 from lydian.apps.iperf import Iperf
+from lydian.apps.mocktraffic import MockTraffic
 from lydian.apps.monitor import ResourceMonitor
 from lydian.apps.namespace import NamespaceApp
 from lydian.apps.recorder import RecordManager
 from lydian.apps.results import Results
 from lydian.apps.rules import RulesApp
 from lydian.apps.tcpdump import TCPDump
+from lydian.apps.traffic_controller import TrafficControllerApp
 from lydian.utils import logger
 
 
@@ -68,8 +69,17 @@ class LydianService(LydianServiceBase):
         self.namespace = NamespaceApp()
         self.interface = InterfaceApp()
         self.rules = RulesApp()
+
+        # Third party traffic generators.
+        self.mocktraffic = MockTraffic(self._traffic_records)
+
+        self._traffic_tools = {
+            'mock' : self.mocktraffic
+        }
+
+        # Traffic Controller
         self.controller = TrafficControllerApp(self._traffic_records,
-                                               self.rules)
+                                               self.rules, self._traffic_tools)
         self.monitor = ResourceMonitor(self._resource_records)
         self.tcpdump = TCPDump()
         self.iperf = Iperf()

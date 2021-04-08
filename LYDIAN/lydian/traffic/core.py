@@ -67,6 +67,8 @@ class TrafficRule(object):
     ACTIVE = 'ACTIVE'
     INACTIVE = 'INACTIVE'
 
+    INTERNAL = 'internal'       # used as tool type for internal tool
+
     SCHEMA = {
         'ruleid': 'text',       # Unique id of rule.
         'reqid': 'text',        # Request id (non unique e.g. in mesh ping)
@@ -93,6 +95,9 @@ class TrafficRule(object):
 
         'purpose':  'text',     # context : CLIENT/SERVER/PERSIST
         'target': 'text',       # Host / Namespace / Container
+
+        'tool': 'text'          # Tool from which to run traffic.
+                                # When None (default), internal tool is used.
         }
 
     DEFAULTS = {
@@ -130,6 +135,11 @@ class TrafficRule(object):
     @property
     def enabled(self):
         return self.state == 'ACTIVE'
+
+    @property
+    def external(self):
+        """ returns true if to be handled by external tool """
+        return getattr(self, 'tool', self.INTERNAL) != self.INTERNAL
 
     def as_dict(self):
         return {k: v for k, v in self.__dict__.items() if k in self.SCHEMA}

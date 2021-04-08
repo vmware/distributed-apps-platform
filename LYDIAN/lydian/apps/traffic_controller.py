@@ -29,11 +29,12 @@ log = logging.getLogger(__name__)
 @exposify
 class TrafficControllerApp(BaseApp):
 
-    def __init__(self, record_queue, rulesApp):
+    def __init__(self, record_queue, rulesApp, traffic_tools):
         super(TrafficControllerApp, self).__init__()
 
         self._recore_queue = record_queue
         self.rules = rulesApp
+        self.traffic_tools = traffic_tools
 
         # TODO : Following should be consumed through Global Apps actually.
         # Namespace Manager handles all namespace information fetching.
@@ -59,6 +60,12 @@ class TrafficControllerApp(BaseApp):
     @property
     def host(self):
         return self._host
+
+    def _get_traffic_tool(self, trule):
+        if trule.tool not in self.traffic_tools:
+            log.error("Unrecognized tool - %s for rule %r", trule.tool, trule)
+            return None
+        return self.traffic_tools[trule.tool]
 
     def _update_endpoints_map(self):
         self._ep_map = {}
@@ -104,13 +111,20 @@ class TrafficControllerApp(BaseApp):
         # Set Active/Inactive State
         trule.state = getattr(trule, 'state', core.TrafficRule.ACTIVE)
 
-        # Add server on this host if needed. Start server before the client.
-        if trule.dst_host:
-            self._server_mgr.add_task(trule)
+        if trule.external:
+            # Handle traffic rule through 3rd party tool.
+            traffic_tool = self._get_traffic_tool(trule)
+            if traffic_tool:
+                traffic_tool.register_traffic([trule])
+        else:
+            # Handle rule by internal traffic handlers.
+            # Add server on this host if needed. Start server before the client.
+            if trule.dst_host:
+                self._server_mgr.add_task(trule)
 
-        # Add client on this host if needed.
-        if trule.src_host:
-            self._client_mgr.add_task(trule)
+            # Add client on this host if needed.
+            if trule.src_host:
+                self._client_mgr.add_task(trule)
 
     def _get_traffic_rule(self, rule):
         """ Rule config. """
@@ -157,33 +171,39 @@ class TrafficControllerApp(BaseApp):
 
     def _start(self, ruleid):
         """ Start a Traffic task (again). """
-
         trule = self.rules.rules.get(ruleid, None)
-        if trule.enabled:
+        if not trule:
+            log.error("Unable to find rule for id:%s", ruleid)
+        elif trule.enabled:
             log.info("Traffic task for %s already started.", trule.ruleid)
-            return
-        if trule:
+        elif trule.external:
+            traffic_tool = self._get_traffic_tool(trule)
+            if traffic_tool:
+                traffic_tool.start_traffic(trule)
+                self.rules.enable(ruleid)
+        else:
             # Enable the trule
             self.rules.enable(ruleid)
             self._client_mgr.start(trule)
-        else:
-            log.error("Unable to find rule for id:%s", ruleid)
 
     def _stop(self, ruleid):
-
         """ Stop a Traffic task. """
         trule = self.rules.rules.get(ruleid, None)
-        if not trule.enabled:
+        if not trule:
+            log.error("Unable to find rule for id:%s", ruleid)
+        elif not trule.enabled:
             log.info("Traffic task for %s already stopped.", trule.ruleid)
-            return
-        if trule:
+        elif trule.external:
+            traffic_tool = self._get_traffic_tool(trule)
+            if traffic_tool:
+                traffic_tool.stop_traffic(trule)
+                self.rules.disable(ruleid)
+        else:
             self._client_mgr.stop(trule)
             # Disable the trule
             self.rules.disable(ruleid)
             # Servers are not stopped as other traffic rules still might
             # need them. TODO : Do reference counting.
-        else:
-            log.error("Unable to find rule for id:%s", ruleid)
 
     def start(self, rules):
         if not isinstance(rules, list):
