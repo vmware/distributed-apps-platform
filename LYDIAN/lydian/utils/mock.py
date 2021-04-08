@@ -17,6 +17,12 @@ class DeadNode(object):
         """
         pass
 
+    def stop(self):
+        """
+        A noop for stopping dummy client/writers.
+        """
+        pass
+
 class DummyWaveFrontWriter(DeadNode):
     def write(self, rec):
         pass

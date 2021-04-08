@@ -24,6 +24,7 @@ def _get_es_sender():
         client = Elasticsearch(host=host, port=int(port))
         return client
 
+
 class ElasticSearchRecorder(core.Subscribe):
     ENABLE_PARAM = 'ELASTICSEARCH_RECORDING'
 
@@ -46,8 +47,6 @@ class ElasticSearchRecorder(core.Subscribe):
 class ElasticSearchTrafficRecorder(ElasticSearchRecorder):
     CONFIG_PARAMS = ['ELASTICSEARCH_TRAFFIC_RECORDING']
     ENABLE_PARAM = 'ELASTICSEARCH_TRAFFIC_RECORDING'
-
-
 
     def send(self, body):
         try:
@@ -75,7 +74,6 @@ class ElasticSearchTrafficRecorder(ElasticSearchRecorder):
         body['result'] = 1 if traffic_record.result else 0
         self.send(body)
 
-
         body1 = {"datacenter": self._testbed,
                 "test_id": self._testid, "type": "latency",
                 'timestamp': time.time()}
@@ -90,6 +88,4 @@ class ElasticSearchTrafficRecorder(ElasticSearchRecorder):
         body1['ns_name'] =  conf.get_param('LYDIAN_ES_NS_NAME')
         body1['source'] = conf.get_param('ELASTIC_SEARCH_SOURCE_TAG') or self._testbed
         self.send(body1)
-
-
 
