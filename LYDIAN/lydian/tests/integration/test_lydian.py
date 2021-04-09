@@ -9,6 +9,7 @@ A simple test case for sending traffic.
 
 import logging
 import os
+import pickle
 import queue
 import time
 import unittest
@@ -110,13 +111,13 @@ class TrafficAppTest(unittest.TestCase):
         records = self.results.traffic(reqid=self.reqid,
                                        ruleid=ruleid,
                                        timestamp=(ts-8, ts))
-        assert not records, "Stop traffic not working..."
+        assert not pickle.loads(records), "Stop traffic not working..."
         self.controller.start(ruleid)
         time.sleep(10)  # Stop traffic for 10 seconds
         records = self.results.traffic(reqid=self.reqid,
                                        ruleid=ruleid,
                                        timestamp=(ts-8, ts))
-        assert records, "Stop traffic not working..."
+        assert pickle.loads(records), "Stop traffic not working..."
 
     def _test_persistence(self):
         self.controller.close()

@@ -13,7 +13,7 @@ logging.getLogger('elasticsearch').setLevel(logging.WARNING)
 try:
     from elasticsearch import Elasticsearch
 except errors.ModuleNotFoundError:
-    log.warn("Elasticsearch package is not installed."
+    log.warn("Elasticsearch package is not installed. "
              "Recording to it would be disabled.")
     from lydian.utils.mock import Elasticsearch
 
