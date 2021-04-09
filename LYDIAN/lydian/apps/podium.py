@@ -121,6 +121,15 @@ class Podium(BaseApp):
 
         return False
 
+    def remove_endpoints(self, hostip):
+        """
+        Removes endpoints for the hostip, without disabling the service
+        at the host.
+        """
+        eps = [k for k, v in self._ep_hosts.items() if v == hostip]
+        for ep in eps:
+            self._ep_hosts.pop(ep)
+
     def add_endpoints(self, hostip, username=None, password=None):
         """
         Add endpoints from the host, reachable by hostip.
@@ -210,8 +219,7 @@ class Podium(BaseApp):
         # Remove all IPs cached in self._ep_hosts for hosts that have successfully cleaned up
         for host_ip, result in results.items():
             if result:
-                data_ips = [data_ip for data_ip, mgmt_ip in self._ep_hosts.items() if mgmt_ip == host_ip]
-                [self._ep_hosts.pop(data_ip) for data_ip in data_ips]
+                self.remove_endpoints(host_ip)
         return results
 
     def get_ep_host(self, epip):
