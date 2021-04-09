@@ -5,6 +5,7 @@ import uuid
 
 import lydian.apps.config as conf
 import lydian.common.core as core
+import lydian.common.errors as errors
 
 log = logging.getLogger(__name__)
 logging.getLogger('elasticsearch').setLevel(logging.WARNING)

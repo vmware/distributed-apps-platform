@@ -54,6 +54,15 @@ ElasticSearchTrafficRecorder = DummyElasticSearchWriter
 
 class ElasticsearchDeadClient(DeadNode):
 
+    def __init__(self, *args, **kwargs):
+        super(ElasticsearchDeadClient, self).__init__(*args, *kwargs)
+
+        class Dummy(object):
+            def close(self):
+                pass
+
+        self.transport = Dummy()
+
     def index(self, *args, **kwargs):
         pass
 
