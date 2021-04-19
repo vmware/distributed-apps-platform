@@ -18,11 +18,14 @@ try:
 except errors.ModuleNotFoundError:
     import lydian.utils.lpsutil as psutil
 
+import logging
 import re
 import subprocess
 
 INTERFACE_FAMILY = (2, 10)
 NAMESPACE_INTERFACE_NAME_PREFIXES = ["veth", "eth"]
+
+log = logging.getLogger(__name__)
 
 
 def get_interfaces_in_namespace(return_dict):
@@ -98,7 +101,7 @@ class NamespaceManager(object):
                     ns_name = ns[:lindex]
                     ns_id = re.findall('[0-9]+', ns[lindex:])[0]
                 except Exception as err:
-                    log.error("Cannot parse Namespace info for : %s", ns)
+                    log.error("Cannot parse Namespace info for %s - %r", ns, err)
                     continue
 
                 _ns = Namespace(ns_name, ns_id)

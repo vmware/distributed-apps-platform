@@ -84,7 +84,6 @@ class LydianService(LydianServiceBase):
         self.tcpdump = TCPDump()
         self.iperf = Iperf()
         self.results = Results()
-        self.configs = config.get_configs()
 
         self.expose()
 
