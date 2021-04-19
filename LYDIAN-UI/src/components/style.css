@@ -1,0 +1,66 @@
+.tabulator {
+    box-sizing: border-box;
+    width: calc(100% + 20px);
+    margin: -5px -10px 5px -10px;
+    text-align: left;
+    background: #0f0f0f;
+    border-bottom: 1px solid rgb(31, 28, 28);
+    border-top: 1px solid rgb(5, 5, 5);
+    overflow: hidden;
+  }
+  
+  .tabulator .tabulator-footer .tabulator-calcs-holder .tabulator-row {
+    background: #070606 !important;
+  }
+  
+  .tabulator .tabulator-footer .tabulator-calcs-holder .tabulator-row .tabulator-col-resize-handle {
+    display: none;
+  }
+  
+  .tabulator .tabulator-footer .tabulator-calcs-holder:only-child {
+    margin-bottom: -5px;
+    border-bottom: none;
+  }
+  
+  .tabulator .tabulator-footer .tabulator-paginator {
+    color: #555;
+    font-family: inherit;
+    font-weight: inherit;
+    font-size: inherit;
+  }
+  
+  .tabulator .tabulator-footer .tabulator-page-size {
+    display: inline-block;
+    margin: 0 5px;
+    padding: 2px 5px;
+    border: 1px solid #aaa;
+    border-radius: 3px;
+  }
+  
+  .tabulator .tabulator-footer .tabulator-pages {
+    margin: 0 7px;
+  }
+  
+  .tabulator .tabulator-footer .tabulator-page {
+    display: inline-block;
+    margin: 0 2px;
+    padding: 2px 5px;
+    border: 1px solid #aaa;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  .tabulator .tabulator-footer .tabulator-page.active {
+    color: #d00;
+  }
+  
+  .tabulator .tabulator-footer .tabulator-page:disabled {
+    opacity: .5;
+  }
+  
+  .tabulator .tabulator-footer .tabulator-page:not(.disabled):hover {
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+  }
+  
