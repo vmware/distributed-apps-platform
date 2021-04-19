@@ -4,7 +4,11 @@ import { baseUrl } from '../../config';
 import axios from 'axios';
 import "react-tabulator/lib/styles.css"; // default theme
 import "react-tabulator/css/bootstrap/tabulator_bootstrap4.min.css"; // use Theme(s)
+<<<<<<< HEAD
 import { ReactTabulator } from 'react-tabulator'
+=======
+import { ReactTabulator, reactFormatter } from 'react-tabulator'
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
 import {Container, Row, Col} from 'react-bootstrap'
 
 
@@ -37,9 +41,13 @@ export class Threats extends Component {
           ];
           const options = {
             movableRows: true,
+<<<<<<< HEAD
             movableColumns: true,
             paginationSize:10,
             pagination:"local"
+=======
+            movableColumns: true
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
           };
 
         return (

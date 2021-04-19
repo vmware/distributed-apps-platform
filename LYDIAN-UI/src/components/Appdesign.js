@@ -8,8 +8,13 @@ import {
   Switch,
   Link,
 } from "react-router-dom";
+<<<<<<< HEAD
 import { Layout, Menu} from 'antd';
 import { LaptopOutlined, NotificationOutlined, AlertOutlined, CodeOutlined } from '@ant-design/icons';
+=======
+import { Layout, Menu, Breadcrumb } from 'antd';
+import { UserOutlined, LaptopOutlined, NotificationOutlined, AlertOutlined, CodeOutlined } from '@ant-design/icons';
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
 
 import Threats from './Threats/Threats';
 import Setup from './Setup/Setup';
@@ -17,6 +22,10 @@ import Vulnerabilites from './Vulnerabilities/Vulnerabilities'
 import Endpoint from './Endpoints/Endpoint'
 
 
+<<<<<<< HEAD
+=======
+const { SubMenu } = Menu;
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
 const { Header, Content, Sider } = Layout;
 
 
@@ -33,7 +42,11 @@ class Appdesign extends Component {
             <Header className="header">
               <div className="logo" />
               <Menu theme="dark" mode="horizontal">
+<<<<<<< HEAD
                 <Menu.Item key="1" icon={<LaptopOutlined style={{ fontSize: 25 }} />} style={{ fontSize: 25 }}>LYDIAN</Menu.Item>
+=======
+                <Menu.Item key="1" icon={<LaptopOutlined style={{ fontSize: 25 }} />} style={{ fontSize: 25 }}>BORATHON</Menu.Item>
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
               </Menu>
             </Header>
             <Layout>
@@ -87,4 +100,8 @@ class Appdesign extends Component {
   }
 }
 
+<<<<<<< HEAD
 export default Appdesign;
+=======
+export default Appdesign;
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021

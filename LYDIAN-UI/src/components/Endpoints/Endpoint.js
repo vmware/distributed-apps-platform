@@ -5,7 +5,11 @@ import { Link } from "react-router-dom";
 import { baseUrl } from '../../config';
 import "react-tabulator/lib/styles.css"; // default theme
 import "react-tabulator/css/bootstrap/tabulator_bootstrap.min.css"; // use Theme(s)
+<<<<<<< HEAD
 import { ReactTabulator } from 'react-tabulator'
+=======
+import { ReactTabulator, reactFormatter } from 'react-tabulator'
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
 import { Container, Row, Col } from 'react-bootstrap'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -73,6 +77,7 @@ export class Endpoint extends Component {
             { title: "Severity", field: "severity" },
             { title: "Message", field: "message" },
         ];
+<<<<<<< HEAD
         const riskcolumns = [
             { title: "Host", field: "host"},
             { title: "Tool", field: "tool"},
@@ -80,6 +85,8 @@ export class Endpoint extends Component {
             { title: "Severity", field: "severity"},
             { title: "Message", field: "message"},
         ]
+=======
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
         const interfacecolumns = [
             { title: "Host", field: "host" },
             { title: "If Name", field: "ifname" },
@@ -88,16 +95,25 @@ export class Endpoint extends Component {
         ];
         const servicecolumns = [
             { title: "Host", field: "host" },
+<<<<<<< HEAD
             { title: "Svc Name", field: "service" },
             { title: "Status", field: "status" },
             { title: "Description", field: "description" },
+=======
+            { title: "Svc Name", field: "svcname" },
+            { title: "Status", field: "status" },
+            { title: "Description", field: "desc" },
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
         ];
         const options = {
             movableRows: true,
             movableColumns: true,
             layout: "fitColumns",
+<<<<<<< HEAD
             pagination: "local",
             paginationSize:10
+=======
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
         };
         
         return (
@@ -153,7 +169,11 @@ export class Endpoint extends Component {
                                 <h1 style={{ marginLeft: '350px', fontSize: 26, fontWeight: 'bold', marginBottom: '20px' }}>Vulnerabilites Data</h1>
                                 <ReactTabulator
                                     data={this.state.vulnerabilitiesData}
+<<<<<<< HEAD
                                     columns={riskcolumns}
+=======
+                                    columns={threatcolumns}
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
                                     tooltips={true}
                                     options={options}
                                     style={{border: "2px solid rgb(0, 0, 0)"}}

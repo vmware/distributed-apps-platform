@@ -1,13 +1,20 @@
 import React, { Component } from 'react'
+<<<<<<< HEAD
 import { Col, Row} from 'antd';
+=======
+import { Card, Col, Row} from 'antd';
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
 import axios from 'axios';
 import { Redirect } from 'react-router-dom';
 import { baseUrl } from '../../config';
 
+<<<<<<< HEAD
 import { useContext, useState, useEffect, useRef } from 'react';
 import { Table, Input, Form } from 'antd';
 
 
+=======
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
 import "react-tabulator/lib/styles.css"; // default theme
 import "react-tabulator/css/bootstrap/tabulator_bootstrap4.min.css"; // use Theme(s)
 import { ReactTabulator, reactFormatter } from 'react-tabulator'
@@ -15,11 +22,15 @@ import { ReactTabulator, reactFormatter } from 'react-tabulator'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {faApple, faWindows, faUbuntu} from "@fortawesome/free-brands-svg-icons"
+<<<<<<< HEAD
 import {faPencilAlt} from "@fortawesome/free-solid-svg-icons"
+=======
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
 
 library.add(faWindows);
 library.add(faUbuntu);
 library.add(faApple);
+<<<<<<< HEAD
 library.add(faPencilAlt)
 
 const EditableContext = React.createContext(null);
@@ -105,6 +116,10 @@ const EditableCell = ({
 
     return <td {...restProps}>{childNode}</td>;
   };
+=======
+
+
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
 
 export class Setup extends Component {
     constructor(props) {
@@ -114,7 +129,10 @@ export class Setup extends Component {
             primarydata: [],
             endpointsdata: [],
             selectedendpoint: '',
+<<<<<<< HEAD
             dataSource: '',
+=======
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
         }
     }
 
@@ -122,7 +140,10 @@ export class Setup extends Component {
     componentDidMount() {
         axios.get(baseUrl + 'api/v1/tables/runner')
             .then(response => {
+<<<<<<< HEAD
                 console.log(response.data)
+=======
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
                 this.setState({
                     primarydata : response.data
                 });
@@ -140,6 +161,7 @@ export class Setup extends Component {
                 console.log(error);
             })
         }
+<<<<<<< HEAD
 
     ChangeData = (data) => {
         axios.post(baseUrl + 'tables/runner',{ crossdomain: true }, data)
@@ -150,11 +172,14 @@ export class Setup extends Component {
                 console.log(error);
             })
     }
+=======
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
     
     ref: any = null;
 
     rowClick = (e: any, row: any) => {
             console.log('ref table: ', this.ref.table); // this is the Tabulator table instance
+<<<<<<< HEAD
             this.setState({ selectedendpoint: row.getData().endpoint });
           };
 
@@ -170,19 +195,35 @@ export class Setup extends Component {
     };
 
 
+=======
+            console.log('rowClick id: ${row.getData().id}', row, e);
+            this.setState({ selectedendpoint: row.getData().endpoint });
+          };
+    
+  
+        
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
     render() {
         const IconFormatter = (e) => {
             const rowData = e.cell._cell.row.data;
             return(
                 <div>
+<<<<<<< HEAD
                 {rowData.host_type === 'MAC' ?
+=======
+                {rowData.host_type == 'MAC' ? 
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
                 (
                     <FontAwesomeIcon
                     icon={faApple}
                     size='2x'
                     />
                 ) :
+<<<<<<< HEAD
                 ((rowData.host_type === 'UBUNTU' ?
+=======
+                ((rowData.host_type == 'LINUX' ? 
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
                 (
                     <FontAwesomeIcon
                     icon={faUbuntu}
@@ -205,19 +246,30 @@ export class Setup extends Component {
         const endpointcolumns = [
             { title: "Endpoint", field: "endpoint", headerFilter:true},
             { title: "Hostname", field: "hostname"},
+<<<<<<< HEAD
             { title: "Host Type", field: "host_type", formatter: reactFormatter(<IconFormatter />)},
             { title: "Mgmt Ifname", field: "mgmt_ifname"},
+=======
+            { title: "Host Type", field: "host_type", align: "center", formatter: reactFormatter(<IconFormatter />)},
+            { title: "Mgmt IP", field: "mgmt_ip"},
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
             { title: "Mgmt Mac", field: "mgmt_mac"}
         ];
         const options = {
             movableRows: true,
+<<<<<<< HEAD
             paginationSize:10,
             responsiveLayout:"hide",
+=======
+            paginationSize:5,
+            layout:"fitColumns",
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
             pagination:"local",
             movableColumns: true
           };
 
         const primaryColumns = [
+<<<<<<< HEAD
             { title: "Key", key: "key", dataIndex: "key"},
             { title: "Value", key: "value", dataIndex: "value", editable: true,
               render: (value, record) => (
@@ -263,11 +315,26 @@ export class Setup extends Component {
 
         return (
 
+=======
+            { title: "Primary IP", field: "ip"},
+            { title: "Hostname", field: "hostname"},
+            { title: "VIF", field: "vif"},
+        ];
+        const primaryoptions = {
+            movableRows: true,
+            movableColumns: true,
+            layout: "fitColumns"
+        }
+        
+        
+        return (
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
             <div>
             <Row style={{paddingBottom: 30}}>
             <Col style={{marginLeft: '220px'}} md={{ span: 10, offset:  1}}>
                 <div>
                 <h1 style={{textAlign:'center', fontSize: 22, fontWeight: 'bold', marginBottom: '20px'}}>Primary Node Info</h1>
+<<<<<<< HEAD
                 <Table
                     components={components}
                     columns={editablecolumns}
@@ -275,6 +342,16 @@ export class Setup extends Component {
                     bordered
                     rowClassName={() => 'editable-row'}
                     pagination={false}
+=======
+                <ReactTabulator 
+                    data={this.state.primarydata}
+                    columns={primaryColumns}
+                    tooltips={true}
+                    options={primaryoptions}
+                    style={{border: "2px solid rgb(0, 0, 0)"}}
+                    data-custom-attr="test-custom-attribute"
+                    className="table-active table-light thead-dark table-striped table-primary table-bordered"                 
+>>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
                 />
                 </div>
                 </Col>
