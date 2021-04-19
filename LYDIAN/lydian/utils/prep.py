@@ -215,7 +215,6 @@ class ESXNodePrep(NodePrep):
         Configures Firewall to allow connections to Lydian service from outside.
         Source : https://kb.vmware.com/s/article/2008226
         """
-        import pdb ; pdb.set_trace()
         xml_content = host.req_call('cat /etc/vmware/firewall/service.xml')
         if 'lydian' in xml_content:
             log.info("Firewall rule already configured on %s", self.hostip)
@@ -266,8 +265,8 @@ class ESXNodePrep(NodePrep):
                 sfile.write('%s\n' % line.rstrip())
             sfile.flush()
             host.put_file(sfile.name, self.FIREWALL_XML)
-            host.req_call('cp %s /etc/vmware/firewall/service.xml' % self.FIREWALL_XML)
 
+        host.req_call('cp %s /etc/vmware/firewall/service.xml' % self.FIREWALL_XML)
         host.req_call('chmod 444 /etc/vmware/firewall/service.xml')
         host.req_call('chmod +t /etc/vmware/firewall/service.xml')
         host.req_call('esxcli network firewall refresh')
@@ -321,6 +320,22 @@ class ESXNodePrep(NodePrep):
                 return False
 
         return True
+
+    def get_running_processes(self, grep_args=None):
+        """
+        USAGE:
+        ESXNodePrep(ip, uname, passwd).get_running_processes()
+        """
+        try:
+            with Host(host=self.hostip, user=self.username,
+                      passwd=self.password) as host:
+                cmnd = "ps -Tcjstv"
+                if grep_args:
+                    cmnd += ' | grep %s' % grep_args
+                return host.req_call(cmnd)
+        except Exception as err:
+            log.error("Error in running command %s at %s", cmnd, hostip)
+            log.error("%r", err)
 
 
 class WinNodePrep(NodePrep):
