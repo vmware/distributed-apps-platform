@@ -19,6 +19,7 @@ import uuid
 from lydian.apps import rules
 from lydian.apps import config
 from lydian.apps.base import BaseApp, exposify
+from lydian.apps.internal.setup import SetupInfo
 from lydian.apps.monitor import ResourceMonitor
 from lydian.apps.recorder import RecordManager
 from lydian.controller.client import LydianClient
@@ -67,6 +68,7 @@ class Podium(BaseApp):
         self.resource_records = None
         self.monitor = None
         self.db_pool = None
+        self.nodes = set()
 
         # Update config file based on default constants, config file
         # and any previously set configs (in .db file). In that order.
@@ -171,6 +173,7 @@ class Podium(BaseApp):
             if not self.wait_on_host(hostip):
                 log.error("Could not start service on %s", hostip)
             self.add_endpoints(hostip, username, password)
+            self.nodes.add(hostip)
             return True
         except Exception as err:
             log.error("Error in preparing host %s - %r", hostip, err)
@@ -220,6 +223,7 @@ class Podium(BaseApp):
         for host_ip, result in results.items():
             if result:
                 self.remove_endpoints(host_ip)
+                self.nodes.remove(host_ip)
         return results
 
     def get_ep_host(self, epip):
@@ -486,6 +490,12 @@ class Podium(BaseApp):
 
     def get_max_latency(self, reqid, duration=None, **kwargs):
         return self.get_latency(reqid, method='max', duration=duration, **kwargs)
+
+    def start_api_server(self):
+        self.setup = SetupInfo()
+        self.setup.add_primary_node()
+        for hostip in self.nodes:
+            self.setup.save_endpoint(hostip)
 
 
 def get_podium():

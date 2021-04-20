@@ -336,7 +336,7 @@ class ESXNodePrep(NodePrep):
                     cmnd += ' | grep %s' % grep_args
                 return host.req_call(cmnd)
         except Exception as err:
-            log.error("Error in running command %s at %s", cmnd, hostip)
+            log.error("Error in running command %s at %s", cmnd, self.hostip)
             log.error("%r", err)
 
 

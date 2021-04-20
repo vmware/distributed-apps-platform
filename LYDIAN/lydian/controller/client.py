@@ -268,8 +268,29 @@ class MockTrafficManager(Manager):
     def start(self):
         self._client.controller.start()
 
-    def stop_traffic(self, ruleid):
+    def stop(self):
         self._client.controller.stop()
+
+
+class HostInfoManager(Manager):
+
+    def hostname(self):
+        return self._client.hostinfo.hostname()
+
+    def mgmt_ifname(self):
+        return self._client.hostinfo.mgmt_ifname()
+
+    def mgmt_ip(self):
+        return self._client.hostinfo.mgmt_ip()
+
+    def host_type(self):
+        return self._client.hostinfo.host_type()
+
+    def interfaces(self):
+        return self._client.hostinfo.interfaces()
+
+    def iface_info(self, ifname):
+        return self._client.hostinfo.iface_info(ifname)
 
 
 class LydianClient(object):
@@ -306,6 +327,9 @@ class LydianClient(object):
             self.connect()
 
     def _link_apps(self):
+        # Hostinfo App
+        self.hostinfo = HostInfoManager(self.rpc_client.root)
+
         # Interface / Namespaces
         self.namespace = NamespaceManager(self.rpc_client.root)
         self.interface = InterfaceManager(self.rpc_client.root)

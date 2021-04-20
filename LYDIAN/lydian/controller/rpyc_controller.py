@@ -13,6 +13,7 @@ from rpyc.utils.server import ThreadPoolServer
 
 from lydian.apps import config
 from lydian.apps.interface import InterfaceApp
+from lydian.apps.internal.hostinfo import HostInfo
 from lydian.apps.iperf import Iperf
 from lydian.apps.mocktraffic import MockTraffic
 from lydian.apps.monitor import ResourceMonitor
@@ -46,15 +47,16 @@ class LydianService(LydianServiceBase):
     RECORD_QUEUE_SIZE = 50000
 
     EXPOSED = [
+        'configs',
+        'controller',
+        'hostinfo',
+        'interface',
+        'iperf',
         'monitor',
         'namespace',
         'rules',
-        'interface',
-        'iperf',
-        'tcpdump',
         'results',
-        'controller',
-        'configs'
+        'tcpdump'
     ]
 
     def __init__(self):
@@ -66,6 +68,7 @@ class LydianService(LydianServiceBase):
         self.recorder = RecordManager(self._traffic_records,
                                       self._resource_records)
 
+        self.hostinfo = HostInfo()
         self.namespace = NamespaceApp()
         self.interface = InterfaceApp()
         self.rules = RulesApp()
