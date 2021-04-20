@@ -16,8 +16,8 @@ from lydian.utils.install import install_egg
 
 log = logging.getLogger(__name__)
 
-UBUNTU = 'UBUNTU'
 ESX = 'ESX'
+UBUNTU = 'UBUNTU'
 WINDOWS = 'WINDOWS'
 
 def get_host_type(hostip, username, password):
@@ -28,6 +28,8 @@ def get_host_type(hostip, username, password):
             return ESX
         elif 'Ubuntu' in result:
             # TODO : CentoS, RHEL, SUSE
+            return UBUNTU
+        elif 'kali' in result:
             return UBUNTU
         elif 'windows' in result:
             return WINDOWS
