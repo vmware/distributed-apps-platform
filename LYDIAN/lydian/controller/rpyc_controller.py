@@ -18,6 +18,7 @@ from lydian.apps.iperf import Iperf
 from lydian.apps.mocktraffic import MockTraffic
 from lydian.apps.monitor import ResourceMonitor
 from lydian.apps.namespace import NamespaceApp
+from lydian.apps.pentest.lynis import Lynis
 from lydian.apps.recorder import RecordManager
 from lydian.apps.results import Results
 from lydian.apps.rules import RulesApp
@@ -52,6 +53,7 @@ class LydianService(LydianServiceBase):
         'hostinfo',
         'interface',
         'iperf',
+        'lynis',
         'monitor',
         'namespace',
         'rules',
@@ -77,7 +79,7 @@ class LydianService(LydianServiceBase):
         self.mocktraffic = MockTraffic(self._traffic_records)
 
         self._traffic_tools = {
-            'mock' : self.mocktraffic
+            'mock': self.mocktraffic
         }
 
         # Traffic Controller
@@ -88,6 +90,8 @@ class LydianService(LydianServiceBase):
         self.iperf = Iperf()
         self.results = Results()
         self.configs = config.get_configs()
+
+        self.lynis = Lynis()
 
         self.expose()
 

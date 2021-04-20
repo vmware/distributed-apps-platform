@@ -16,6 +16,7 @@ from lydian.apps import config
 rpyc.core.protocol.DEFAULT_CONFIG['allow_pickle'] = True
 log = logging.getLogger(__name__)
 
+
 class Manager(object):
     def __init__(self, client):
         self._client = client
@@ -291,6 +292,24 @@ class HostInfoManager(Manager):
 
     def iface_info(self, ifname):
         return self._client.hostinfo.iface_info(ifname)
+
+
+class LynisManager(Manager):
+
+    def start_scan(self, reqid=None):
+        return self._client.lynis.start_scan(reqid)
+
+    def stop_scan(self, reqid):
+        return self._client.lynis.stop_scan(reqid)
+
+    def is_scan_complete(self, reqid):
+        return self._client.lynis.is_scan_complete(reqid)
+
+    def install(self, runnerip, username, password, filepath):
+        return self._client.lynis.install(runnerip, username, password, filepath)
+
+    def get_result(self, reqid):
+        return self._client.lynis.get_result(reqid)
 
 
 class LydianClient(object):

@@ -72,6 +72,8 @@ class SetupDB(LydianDB):
                 'name': RISKS,
                 'fields': {
                     'host': 'text',
+                    'tool': 'text',
+                    'reqid': 'text',
                     'severity': 'text',
                     'message': 'text',
                     },
@@ -90,8 +92,8 @@ class SetupDB(LydianDB):
 
 
 class SetupInfo(SetupDB, BaseApp):
-    NAME = "PodiumSetup"
-    
+    NAME = "SetupInfo"
+
     def add_primary_node(self):
         with SetupDB() as db:
             db.table = self.PRIMARY
@@ -112,10 +114,10 @@ class SetupInfo(SetupDB, BaseApp):
 
             with LydianClient(hostip) as host:
                 db.write(
-                    endpoint = hostip,
-                    hostname = host.hostinfo.hostname(),
-                    host_type = host.hostinfo.host_type(),
-                    mgmt_ifname = host.hostinfo.mgmt_ip()
+                    endpoint=hostip,
+                    hostname=host.hostinfo.hostname(),
+                    host_type=host.hostinfo.host_type(),
+                    mgmt_ifname=host.hostinfo.mgmt_ip()
                 )
 
                 db.table = self.INTERFACES
@@ -130,8 +132,8 @@ class SetupInfo(SetupDB, BaseApp):
                     ip = info['address'] if 'address' in info else 'UNKNOWN'
                     db.write(
                         host=hostip,
-                        ifname = ifname,
-                        ip = ip
+                        ifname=ifname,
+                        ip=ip
                     )
 
                 db.table = self.SERVICES
