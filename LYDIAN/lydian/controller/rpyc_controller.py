@@ -24,6 +24,7 @@ from lydian.apps.results import Results
 from lydian.apps.rules import RulesApp
 from lydian.apps.tcpdump import TCPDump
 from lydian.apps.traffic_controller import TrafficControllerApp
+from lydian.apps.watch.threat import ThreatMonitor
 from lydian.utils import logger
 
 
@@ -58,7 +59,8 @@ class LydianService(LydianServiceBase):
         'namespace',
         'rules',
         'results',
-        'tcpdump'
+        'tcpdump',
+        'threatmonitor'
     ]
 
     def __init__(self):
@@ -92,6 +94,7 @@ class LydianService(LydianServiceBase):
         self.configs = config.get_configs()
 
         self.lynis = Lynis()
+        self.threatmonitor = ThreatMonitor()
 
         self.expose()
 

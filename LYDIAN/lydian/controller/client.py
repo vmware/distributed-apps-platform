@@ -312,6 +312,15 @@ class LynisManager(Manager):
         return self._client.lynis.get_result(reqid)
 
 
+class ThreatMonitorManager(Manager):
+
+    def start(self):
+        return self._client.threatmonitor.start()
+
+    def stop(self):
+        return self._client.threatmonitor.stop()
+
+
 class LydianClient(object):
     """
     Top level object to access Lydian API
@@ -371,6 +380,10 @@ class LydianClient(object):
         self.scapy = ScapyManager(self.rpc_client.root)
         # Params / Configs
         self.configs = ConfigManager(self.rpc_client.root)
+
+        # Penetration testing apps.
+        self.lynis = LynisManager(self.rpc_client.root)
+        self.threatmonitor = ThreatMonitorManager(self.rpc_client.root)
 
     def close(self):
         try:
