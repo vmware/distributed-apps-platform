@@ -10,6 +10,7 @@ import json
 import re
 
 from sys import argv
+from urllib import parse
 try:
     from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 except (ModuleNotFoundError, ImportError):
@@ -25,6 +26,31 @@ from sql30.api import SQL30Handler
 DBPATH = None
 
 class LydianApiHandler(SQL30Handler):
+
+    def do_POST(self):
+        self._set_headers()
+        content_length = int(self.headers['Content-Length'])
+        data = self.rfile.read(content_length).decode('utf-8')
+        d = dict(parse.parse_qs(data))
+        new_data = {key: value[0] for key, value in d.items()}
+
+        if not self.path or self.path == '/':
+            print("doing nothing")
+        else:
+            self._write_record(new_data)
+
+    def _write_record(self, data):
+        class DummyDB(db.Model):
+            pass
+        
+        with DummyDB(db_name=DBPATH) as dummydb:
+            dummydb.fetch_schema()
+            path = self.path.split('/')
+            tidx = path.index('tables')
+            dummydb.table = path[tidx+1]
+            dummydb.write(**data)
+
+
     # GET sends back a Hello world message
     def do_GET(self):
         self._set_headers()
