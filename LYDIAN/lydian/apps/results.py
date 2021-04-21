@@ -72,3 +72,7 @@ class Results(BaseApp):
 
     def get_max_latency(self, reqid, **kwargs):
         return self.get_latency_stat(reqid, method='max', **kwargs)
+
+    def delete_record(self, reqid, **kwargs):
+        with TrafficRecordDB() as db:
+            db.delete(tbl=db.TABLE, reqid=reqid, **kwargs)

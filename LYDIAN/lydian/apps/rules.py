@@ -77,6 +77,15 @@ class RulesApp(BaseApp, RulesDB):
             self.add(trule, save_to_db=False)
         self.save_to_db(trules)
 
+    def delete_rules(self, ruleids):
+        """ Delete rules """
+        with RulesDB() as db:
+            db.table = self.table
+            for ruleid in ruleids:
+                db.delete(ruleid=ruleid)
+                if ruleid in self._rules:
+                    self._rules.pop(ruleid)
+
     def load_from_db(self):
         """ Loads rules from DB to local file."""
         records = self.read(include_header=True)

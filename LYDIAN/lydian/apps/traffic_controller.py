@@ -217,6 +217,13 @@ class TrafficControllerApp(BaseApp):
         args = [(ruleid, (ruleid,), {}) for ruleid in rules]
         parallel.ThreadPool(self._stop, args)
 
+    def unregister_traffic(self, rules):
+        """ Stop traffic and delete rules from db"""
+        if not isinstance(rules, list):
+            rules = [rules]
+        self.stop(rules)
+        self.rules.delete_rules(rules)
+
     def _resume_active_rules(self):
         active_rules = [rule for ruleid, rule in self.rules.rules.items()
                         if rule.state == self.rules.ACTIVE]

@@ -346,9 +346,17 @@ class Podium(BaseApp):
             with LydianClient(hostip) as client:
                 client.controller.stop(rules)
 
+        def _unregister_traffic(hostip, rules):
+            with LydianClient(hostip) as client:
+                client.controller.unregister_traffic(rules)
+                client.results.delete_record(reqid)
+
+            # Delete rules from local runner rules db
+            self.rules_app.delete_rules(rules)
+
         trules = self.get_rules_by_reqid(reqid)
 
-        host_rules  = collections.defaultdict(list)
+        host_rules = collections.defaultdict(list)
         for trule in trules:
             ruleid = getattr(trule, 'ruleid')
             src_ip = getattr(trule, 'src')
@@ -360,12 +368,18 @@ class Podium(BaseApp):
             ThreadPool(_start_traffic, args)
         elif op_type == 'stop':
             ThreadPool(_stop_traffic, args)
+        elif op_type == 'unregister':
+            ThreadPool(_unregister_traffic, args)
 
     def start_traffic(self, reqid):
         self._traffic_op(reqid, op_type='start')
 
     def stop_traffic(self, reqid):
         self._traffic_op(reqid, op_type='stop')
+
+    def unregister_traffic(self, reqid):
+        """ Stop traffic, delete rules and result records"""
+        self._traffic_op(reqid, op_type='unregister')
 
     def get_rules_by_reqid(self, reqid):
         trules = [trule for rule_id, trule in self.rules.items() if getattr(trule, 'reqid') == reqid]

@@ -232,6 +232,9 @@ class ResultsManager(Manager):
     def get_max_latency(self, reqid, **kwargs):
         return self._client.results.get_max_latency(reqid, **kwargs)
 
+    def delete_record(self, reqid, **kwargs):
+        return self._client.results.delete_record(reqid, **kwargs)
+
 
 class TrafficControllerManager(Manager):
 
@@ -248,6 +251,9 @@ class TrafficControllerManager(Manager):
 
     def stop(self, rules):
         self._client.controller.stop(rules)
+
+    def unregister_traffic(self, rules):
+        self._client.controller.unregister_traffic(rules)
 
 
 class MockTrafficManager(Manager):
