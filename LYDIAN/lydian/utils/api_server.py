@@ -10,7 +10,14 @@ import json
 import re
 
 from sys import argv
-from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
+try:
+    from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
+except (ModuleNotFoundError, ImportError):
+    # python 3.6 and before.
+    import socketserver
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+    class ThreadingHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
+        pass
 
 from sql30 import db
 from sql30.api import SQL30Handler
@@ -23,7 +30,7 @@ class LydianApiHandler(SQL30Handler):
         self._set_headers()
         if not self.path or self.path == '/':
             response = json.dumps({'hello': 'world', 'received': 'ok'})
-        elif re.match(r"/api/v1/endpoints/*/*", self.path): 
+        elif re.match(r"/api/v1/endpoints/*/*", self.path):
             response = self._get_data()
         elif self.path == '/tables':
             response = self._get_tables()
@@ -50,8 +57,6 @@ class LydianApiHandler(SQL30Handler):
             for row in data:
                 data_json.append(dict(zip(header, row)))
             return json.dumps(data_json)
-
-            
 
     def _get_tables(self):
         class DummyDB(db.Model):
