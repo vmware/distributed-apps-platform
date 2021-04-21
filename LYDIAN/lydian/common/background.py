@@ -29,15 +29,19 @@ class BackgroundMixin(object):
     def on(self):
         if not self.stopped:
             log.warn('Task, %s, is already running.', self._task_name)
+            return False
 
         self._stop_switch.clear()
         self._task_thread = threading.Thread(target=self._run, daemon=True)
         self._task_thread.start()
+        return True
 
     def off(self):
         if self.stopped:
             log.warn('Task, %s, is already stopped.', self._task_name)
+            return False
 
         self._stop_switch.set()
         self._task_thread.join()
         self._task_thread = None
+        return True
