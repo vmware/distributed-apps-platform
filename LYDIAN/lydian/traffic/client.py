@@ -24,7 +24,7 @@ class PingValidationError(Exception):
 class Client(Connection):
     PAYLOAD = 'Rampur!!'
     CONNECTION_TIMEOUT = 1.8
-    FREQUECY = 30       # 30 pings per minute.
+    FREQUENCY = 30       # 30 pings per minute.
     PING_INTERVAL = 2   # default request rate is 30ppm
 
     def __init__(self, server, port, verbose=False, handler=None,
@@ -37,7 +37,7 @@ class Client(Connection):
         self.port = int(port)
 
         self._handler = handler or self.echo_validator
-        self._ipv6 = ipv6 or is_ipv6_address(self.server)
+        self.ipv6 = ipv6 or is_ipv6_address(self.server)
 
         self._payload = payload or self.PAYLOAD
         self._tries = tries or None
@@ -135,7 +135,7 @@ class TCPClient(Client):
         """
         Returns a simple TCP server socket.
         """
-        sock_type = socket.AF_INET6 if self._ipv6 else socket.AF_INET
+        sock_type = socket.AF_INET6 if self.ipv6 else socket.AF_INET
         self.socket = socket.socket(sock_type, socket.SOCK_STREAM)
         self.socket.settimeout(self.sockettimeout)
 
@@ -175,7 +175,7 @@ class UDPClient(Client):
         """
         Returns a simple TCP server socket.
         """
-        sock_type = socket.AF_INET6 if self._ipv6 else socket.AF_INET
+        sock_type = socket.AF_INET6 if self.ipv6 else socket.AF_INET
         self.socket = socket.socket(sock_type, socket.SOCK_DGRAM)
         self.socket.settimeout(self.sockettimeout)
 

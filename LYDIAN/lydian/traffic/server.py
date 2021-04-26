@@ -34,7 +34,7 @@ class Server(Connection):
 
         # Don't create a socket until we are ready to bind.
         self.socket = None
-        self._ipv6 = ipv6
+        self.ipv6 = ipv6
 
     def echo_handler(self, payload):
         raise NotImplementedError("Handler not implemented in %s" % self.__class__.__name__)
@@ -46,7 +46,7 @@ class TCPServer(Server):
         """
         Returns a simple TCP server socket.
         """
-        sock_type = socket.AF_INET6 if self._ipv6 else socket.AF_INET
+        sock_type = socket.AF_INET6 if self.ipv6 else socket.AF_INET
         self.socket = socket.socket(sock_type, socket.SOCK_STREAM)
 
     def start(self):
@@ -96,7 +96,7 @@ class UDPServer(Server):
         """
         Returns a simple TCP server socket.
         """
-        sock_type = socket.AF_INET6 if self._ipv6 else socket.AF_INET
+        sock_type = socket.AF_INET6 if self.ipv6 else socket.AF_INET
         self.socket = socket.socket(sock_type, socket.SOCK_DGRAM)
 
     def start(self):
@@ -141,6 +141,10 @@ except AttributeError:
         pass
 
 
+class _HTTPServerV6(_HTTPServer):
+    address_family = socket.AF_INET6
+
+
 class HTTPServer(Server):
     """
     Basic HTTP Server
@@ -158,13 +162,15 @@ class HTTPServer(Server):
             self.handler = hserver.SimpleHTTPRequestHandler
         else:
             self.handler =  self._HTTPRequestHandler
+
+        self._Server = _HTTPServerV6 if self.ipv6 else _HTTPServer
         self.httpd = None
         self._thread = None
         self.clear_event()
 
     def start(self, blocking=True):
         """ Starts HTTP Server. """
-        self.httpd = _HTTPServer(("", self.port), self.handler)
+        self.httpd = self._Server(("", self.port), self.handler)
         self._thread = threading.Thread(target=self.httpd.serve_forever,
                                         daemon=True)
         self._thread.start()
