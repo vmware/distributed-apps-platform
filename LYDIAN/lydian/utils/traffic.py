@@ -22,7 +22,7 @@ import sys
 
 from lydian.traffic import client as hclient
 from lydian.traffic import server as hserver
-from lydian.utils.common import is_py3
+from lydian.utils.common import is_py3, is_ipv6_address
 
 
 def _print(msg):
@@ -119,7 +119,7 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
 
     if args.server:
-        ipv6 = args.ipv6
+        ipv6 = args.ipv6 or (host and is_ipv6_address(host))
         _server = Server(port=port, verbose=verbose, ipv6=ipv6)
         _server.start()
     else:

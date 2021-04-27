@@ -4,6 +4,7 @@
 # The full license information can be found in LICENSE.txt
 # in the root directory of this project.
 
+import json
 import logging
 import socket
 import time
@@ -22,9 +23,11 @@ class PingValidationError(Exception):
 
 
 class Client(Connection):
-    PAYLOAD = 'Rampur!!'
+
     CONNECTION_TIMEOUT = 1.8
     FREQUENCY = 30       # 30 pings per minute.
+    MSG_BUFF_SIZE = 4096
+    PAYLOAD = 'Rampur!!'
     PING_INTERVAL = 2   # default request rate is 30ppm
 
     def __init__(self, server, port, verbose=False, handler=None,
@@ -94,6 +97,15 @@ class Client(Connection):
         except AssertionError as err:
             _ = err
             raise PingValidationError()
+
+    def recv_all(self):
+        fragments = []
+        while True:
+            chunk = self.socket.recv(self.MSG_BUFF_SIZE)
+            if not chunk:
+                break
+            fragments.append(chunk)
+        return b''.join(fragments)
 
     def start(self, payload=None, tries=None):
         if not self.stopped():
@@ -210,17 +222,36 @@ class UDPClient(Client):
             self._handler(payload, data, latency)
 
 
-class HTTPClient(Client):
+class HTTPClient(TCPClient):
+
+    def _prepare_payload(self, payload):
+        payload = "GET /%s HTTP/1.1\r\n\r\n\r\n" % payload
+        return payload.encode('utf-8') if is_py3() else payload
 
     def ping(self, payload):
-        latency = 0
+        latency, data = 0, ''
+        start_time = time.time()
+
         try:
-            start_time = time.time()
-            data = ''.encode('utf-8')
-            url = 'http://%s:%s' % (self.server, self.port)
-            status = urlopen(url).code
-            data = payload if status == 200 else data
-            # latency in milliseconds
+            # TODO : If moving to Python 3.9 and beyon, simply
+            # run it through following. urlparse on Python 3.6
+            # doesn't work on IPv6 address based servers.
+            # url = 'http://%s:%s' % (self.server, self.port)
+            # status = urlopen(url).code
+            # data = payload if status == 200 else data
+
+            self._create_socket()
+
+            self.socket.connect((self.server, self.port))
+
+            self.socket.send(self._prepare_payload(payload))
+
+            _data = self.recv_all()
+            _data = _data.decode().splitlines()
+            if '200 OK' in str(_data[0]):
+                data = json.loads(_data[-1])['payload']
+            else:
+                data = None
             latency = round((time.time() - start_time) * LATENCY_RESOLUTION, 2)
         except Exception as err:
             if self.verbose:

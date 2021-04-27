@@ -6,6 +6,7 @@
 
 
 import http.server as hserver
+import json
 import logging
 import socket
 import threading
@@ -152,8 +153,27 @@ class HTTPServer(Server):
     BLOCKING_WAIT_TIME = 3
 
     class _HTTPRequestHandler(hserver.SimpleHTTPRequestHandler):
+
         def log_message(self, format, *args):
             pass  # Log disabled.
+
+        def _set_headers(self):
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+
+        def do_HEAD(self):
+            self._set_headers()
+
+        def do_GET(self):
+            self.send_response(200)
+            self._set_headers()
+            response = json.dumps({
+                'status': 200,
+                'payload': self.path[1:]    # Return the path as response.
+                })
+
+            self.wfile.write(bytes(response, 'utf-8'))
 
     def __init__(self, *args, **kwargs):
         super(HTTPServer, self).__init__(*args, **kwargs)
