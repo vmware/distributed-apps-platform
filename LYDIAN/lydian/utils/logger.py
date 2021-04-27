@@ -3,8 +3,8 @@ import os
 
 from lydian.apps import config
 
-LOG_DIR = config.get_param('LOG_DIR')
-LOG_FILE = config.get_param('LOG_FILE')
+LOG_DIR = config.get_param('LYDIAN_LOG_DIR')
+LOG_FILE = config.get_param('LYDIAN_LOG_FILE')
 
 
 def create_log_dir(log_dir):
@@ -36,7 +36,7 @@ def setup_logging(log_dir=None, log_file=None):
     # if root_logger.handlers:
     #    return
     root_logger.setLevel(logging.INFO)
-    file_handler = logging.FileHandler(log_file_name)
+    file_handler = logging.FileHandler(log_file_name, mode='w')
     file_handler.setFormatter(log_formatter)
     root_logger.addHandler(file_handler)
     return root_logger

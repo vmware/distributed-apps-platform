@@ -45,8 +45,8 @@ class LoggingConstants(Constants):
     _NAME = "Logging"
     LINUX_LOG_DIR = os.environ.get('LINUX_LOG_DIR', "/var/log/lydian")
     WIN_LOG_DIR = os.environ.get('WIN_LOG_DIR', "C:\\lydian\\log")
-    LOG_DIR = LINUX_LOG_DIR if LINUX_OS or MAC_OS else None
-    LOG_DIR = LOG_DIR or (WIN_LOG_DIR if WIN_OS else "./")
+    LYDIAN_LOG_DIR = LINUX_LOG_DIR if LINUX_OS or MAC_OS else None
+    LYDIAN_LOG_DIR = LYDIAN_LOG_DIR or (WIN_LOG_DIR if WIN_OS else "./")
     LOG_FILE = "lydian.log"
 
 
