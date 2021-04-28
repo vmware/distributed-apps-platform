@@ -24,6 +24,7 @@ from lydian.apps.recorder import RecordManager
 from lydian.apps.results import Results
 from lydian.apps.rules import RulesApp
 from lydian.apps.tcpdump import TCPDump
+from lydian.apps.pentest.rapidscan import Rapidscan
 from lydian.apps.traffic_controller import TrafficControllerApp
 from lydian.apps.watch.threat import ThreatMonitor
 from lydian.utils import logger, common
@@ -58,8 +59,9 @@ class LydianService(LydianServiceBase):
         'lynis',
         'monitor',
         'namespace',
-        'rules',
+        'rapidscan',
         'results',
+        'rules',
         'tcpdump',
         'threatmonitor'
     ]
@@ -96,6 +98,7 @@ class LydianService(LydianServiceBase):
 
         self.lynis = Lynis()
         self.threatmonitor = ThreatMonitor()
+        self.rapidscan = Rapidscan()
 
         self.expose()
 

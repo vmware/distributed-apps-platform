@@ -327,6 +327,30 @@ class ThreatMonitorManager(Manager):
         return self._client.threatmonitor.stop()
 
 
+class RapidscanManager(Manager):
+
+    def start_run(self, target, reqid=None):
+        return self._client.rapidscan.start_run(target, reqid=reqid)
+
+    def stop_run(self, reqid):
+        return self._client.rapidscan.stop_run(reqid)
+
+    def is_running(self):
+        return self._client.rapidscan.is_running()
+
+    def show_running_processes(self):
+        return self._client.rapidscan.show_running_processes()
+
+    def is_run_complete(self, reqid):
+        return self._client.rapidscan.is_run_complete(reqid)
+
+    def save_results_to_db(self, reqid):
+        return self._client.rapidscan.save_results_to_db(reqid)
+
+    def get_result(self, reqid):
+        return self._client.rapidscan.get_result(reqid)
+
+
 class LydianClient(object):
     """
     Top level object to access Lydian API
@@ -390,6 +414,7 @@ class LydianClient(object):
         # Penetration testing apps.
         self.lynis = LynisManager(self.rpc_client.root)
         self.threatmonitor = ThreatMonitorManager(self.rpc_client.root)
+        self.rapidscan = RapidscanManager(self.rpc_client.root)
 
     def close(self):
         try:

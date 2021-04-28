@@ -26,6 +26,7 @@ class SetupDB(LydianDB):
     THREATS = 'threats'
     INTERFACES = 'interfaces'
     SERVICES = 'services'
+    RAPIDSCAN = 'rapidscan'
 
     DB_SCHEMA = {
         'db_name': 'setup.db',
@@ -82,6 +83,16 @@ class SetupDB(LydianDB):
                 'name': THREATS,
                 'fields': {
                     'host': 'text',
+                    'severity': 'text',
+                    'message': 'text',
+                    },
+            },
+            {
+                'name': RAPIDSCAN,
+                'fields': {
+                    'host': 'text',
+                    'tool': 'text',
+                    'reqid': 'text',
                     'severity': 'text',
                     'message': 'text',
                     },
