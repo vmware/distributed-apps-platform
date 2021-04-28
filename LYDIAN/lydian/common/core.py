@@ -27,3 +27,6 @@ class Subscribe(object):
 
     def get_config(self, param):
         return self._config_params[param]
+
+    def set_config(self, param, val):
+        self._config_params[param] = val

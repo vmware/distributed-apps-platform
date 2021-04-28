@@ -18,12 +18,14 @@ except errors.ModuleNotFoundError:
     from lydian.utils.mock import Elasticsearch
 
 def _get_es_sender():
+    try:
         host = conf.get_param('ELASTIC_SEARCH_SERVER_ADDRESS')
-        port = conf.get_param('ELASTIC_SEARCH_SERVER_PORT')
-        if host is None or port is None:
-            raise ValueError("Elasticsearch host or port can not be none")
-        client = Elasticsearch(host=host, port=int(port))
-        return client
+        port = int(conf.get_param('ELASTIC_SEARCH_SERVER_PORT'))
+        assert host and port, "No host and port specified for ElasticSearch"
+        return Elasticsearch(host=host, port=port)
+    except Exception as err:
+        log.error('Error in creating Elastic Search client %r', err)
+        return None
 
 
 class ElasticSearchRecorder(core.Subscribe):
@@ -35,6 +37,10 @@ class ElasticSearchRecorder(core.Subscribe):
         self._index = conf.get_param('ELASTIC_SEARCH_SERVER_INDEX')
         self._testbed = conf.get_param('TESTBED_NAME')
         self._testid = str(conf.get_param('TEST_ID'))
+
+        if not self._client:
+            # If client not instantiated properly, disable the recorder.
+            self.set_config(self.ENABLE_PARAM, False)
 
     @property
     def enabled(self):
@@ -54,8 +60,7 @@ class ElasticSearchTrafficRecorder(ElasticSearchRecorder):
             self._client.index(
                 index=self._index, id=str(uuid.uuid4()), body=body)
         except Exception as e:
-            self.log.error(
-                "Failed to send data to elasticsearch due to %s" % e)
+            log.error("Failed to send data to elasticsearch due to %s" % e)
 
     def write(self, traffic_record):
         if not self.enabled:
@@ -89,4 +94,3 @@ class ElasticSearchTrafficRecorder(ElasticSearchRecorder):
         body1['ns_name'] =  conf.get_param('LYDIAN_ES_NS_NAME')
         body1['source'] = conf.get_param('ELASTIC_SEARCH_SOURCE_TAG') or self._testbed
         self.send(body1)
-
