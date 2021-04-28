@@ -83,7 +83,8 @@ class TrafficRule(object):
 
         'payload': 'text',      # Payload for rule or "Dinkirk!!"
         'packet': 'text',       # Packet size for traffic.
-        'tries': 'int',        # Number of tries/count of ping.
+        'tries': 'int',         # Number of tries/count of ping.
+        'attempts': 'int',      # Number of attempts to fetch data from Server.
 
         'username': 'text',     # run traffic as. 'root' by default
         'state': 'text',        # ENABLED/DISABLED

@@ -26,13 +26,12 @@ class Client(Connection):
 
     CONNECTION_TIMEOUT = 1.8
     FREQUENCY = 30       # 30 pings per minute.
-    MSG_BUFF_SIZE = 4096
     PAYLOAD = 'Rampur!!'
     PING_INTERVAL = 2   # default request rate is 30ppm
 
     def __init__(self, server, port, verbose=False, handler=None,
                  interval=None, ipv6=None, payload=None, tries=None,
-                 sockettimeout=None, frequency=30):
+                 sockettimeout=None, frequency=30, attempts=None):
         """
         A simple TCP client which binds to a specified host and port.
         """
@@ -45,6 +44,7 @@ class Client(Connection):
         self._payload = payload or self.PAYLOAD
         self._tries = tries or None
         self._sockettimeout = sockettimeout or self.CONNECTION_TIMEOUT
+        self.attempts = attempts or 1
 
         # Set frequency
         try:
@@ -101,7 +101,7 @@ class Client(Connection):
     def recv_all(self):
         fragments = []
         while True:
-            chunk = self.socket.recv(self.MSG_BUFF_SIZE)
+            chunk = self.socket.recv(self.MAX_PAYLOAD_SIZE)
             if not chunk:
                 break
             fragments.append(chunk)
@@ -161,23 +161,25 @@ class TCPClient(Client):
             self.socket.connect((self.server, self.port))
             payload = self._prepare_payload(payload)
             self.socket.send(payload)
-            data = self.socket.recv(self.MAX_PAYLOAD_SIZE)
+            data = self.recv_all()
             # latency in milliseconds
             latency = round((time.time() - start_time) * LATENCY_RESOLUTION, 2)
-            # close socket connection
-            self.socket_close()
 
             if self.verbose:
                 msg = "ping to %s:%s pass. data - %r" % (
                     self.server, self.port, data)
-                # self.log.info(msg)
-            return data  # TODO : is is needed ?
+                log.info(msg)
         except Exception as err:
             msg = "ping to %s:%s failed. Error - %r" % (
                 self.server, self.port, err)
             if self.verbose:
                 log.error(msg)
         finally:
+            # latency in milliseconds
+            latency = round((time.time() - start_time) * LATENCY_RESOLUTION, 2)
+            # close socket connection
+            self.socket_close()
+            # Process the result.
             self._handler(payload, data, latency)
 
 
@@ -191,34 +193,43 @@ class UDPClient(Client):
         self.socket = socket.socket(sock_type, socket.SOCK_DGRAM)
         self.socket.settimeout(self.sockettimeout)
 
+    def send_and_recv(self, payload):
+        attempts = self.attempts
+        data = None
+        while attempts:
+            try:
+                attempts -= 1
+                self.socket.sendto(payload, (self.server, self.port))
+                data, _ = self.socket.recvfrom(self.MAX_PAYLOAD_SIZE)
+                break
+            except Exception as err:
+                if self.verbose:
+                    if attempts:
+                        log.debug('Retrying on Error %r', err)
+                    else:
+                        log.debug('Error %r in fetching data.', err)
+        return data
+
     def ping(self, payload):
         latency = 0
         try:
             start_time = time.time()
-            # create socket
+
             self._create_socket()
-            addr = (self.server, self.port)
+
             payload = self._prepare_payload(payload)
-            self.socket.sendto(payload, addr)
-            try:
-                data, server = self.socket.recvfrom(self.MAX_PAYLOAD_SIZE)
-            except Exception:
-                data, server = None, None
-            _ = server
-            # latency in milliseconds
-            latency = round((time.time() - start_time) * LATENCY_RESOLUTION, 2)
-            # close socket connection
-            self.socket_close()
-            if self.verbose:
-                msg = "ping to %s:%s pass. data - %r" % (
-                    self.server, self.port, data)
-                self.log.info(msg)
-            return data
+
+            data = self.send_and_recv(payload)
         except Exception as err:
             if self.verbose:
                 log.error("ping to %s:%s failed. Error - %r",
                           self.server, self.port, err)
         finally:
+            # latency in milliseconds
+            latency = round((time.time() - start_time) * LATENCY_RESOLUTION, 2)
+            # close socket connection
+            self.socket_close()
+            # Process the result.
             self._handler(payload, data, latency)
 
 
@@ -228,10 +239,18 @@ class HTTPClient(TCPClient):
         payload = "GET /%s HTTP/1.1\r\n\r\n\r\n" % payload
         return payload.encode('utf-8') if is_py3() else payload
 
+    def fetch(self):
+        _data = self.recv_all()
+        _data = _data.decode().splitlines()
+        if '200 OK' in str(_data[0]):
+            data = json.loads(_data[-1])['payload']
+        else:
+            data = None
+        return data
+
     def ping(self, payload):
         latency, data = 0, ''
         start_time = time.time()
-
         try:
             # TODO : If moving to Python 3.9 and beyon, simply
             # run it through following. urlparse on Python 3.6
@@ -246,16 +265,15 @@ class HTTPClient(TCPClient):
 
             self.socket.send(self._prepare_payload(payload))
 
-            _data = self.recv_all()
-            _data = _data.decode().splitlines()
-            if '200 OK' in str(_data[0]):
-                data = json.loads(_data[-1])['payload']
-            else:
-                data = None
-            latency = round((time.time() - start_time) * LATENCY_RESOLUTION, 2)
+            data = self.fetch()
         except Exception as err:
             if self.verbose:
                 log.error("ping to %s:%s failed. Error - %r",
                           self.server, self.port, err)
         finally:
+            # latency in milliseconds
+            latency = round((time.time() - start_time) * LATENCY_RESOLUTION, 2)
+            # close socket connection
+            self.socket_close()
+            # Process the result.
             self._handler(payload, data, latency)

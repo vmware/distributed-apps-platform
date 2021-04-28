@@ -134,6 +134,7 @@ class TrafficClientTask(TrafficTask):
             kwargs['frequency'] = frequency
         kwargs['interval'] = getattr(self.traffic_rule, 'interval', None)
         kwargs['verbose'] = getattr(self.traffic_rule, 'verbose', None)
+        kwargs['attempts'] = getattr(self.traffic_rule, 'attempts', None)
 
         if self.traffic_rule.is_TCP():
             return TCPClient(**kwargs)
