@@ -13,8 +13,9 @@ from lydian.apps import config as config
 from lydian.traffic.core import TrafficRecord
 from lydian.traffic.client import TCPClient, UDPClient, HTTPClient
 from lydian.traffic.server import TCPServer, UDPServer, HTTPServer
-from lydian.utils.common import is_ipv6_address
-from lydian.utils.nsenter import Namespace
+from lydian.utils.common import is_ipv6_address, is_linux
+if is_linux():
+    from lydian.utils.nsenter import Namespace
 
 
 log = logging.getLogger(__name__)

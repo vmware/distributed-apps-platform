@@ -4,7 +4,6 @@
 # The full license information can be found in LICENSE.txt
 # in the root directory of this project.
 
-import fcntl
 import ipaddress
 import logging
 import platform
@@ -13,6 +12,11 @@ import struct
 
 log = logging.getLogger(__name__)
 
+system = platform.system()
+is_windows = lambda: True if system == 'Windows' else False
+is_linux = lambda: True if system == 'Linux' else False
+is_esx = lambda: True if system == 'VMkernel' else False
+is_mac = lambda: True if system == 'Darwin' else False
 
 def is_ipv6_address(address):
     try:
@@ -36,14 +40,13 @@ def is_py3():
 
 def get_mgmt_ifname():
     """" Management Interface name for current platform """
-    system = platform.system()
-    if system == 'Linux':
+    if is_linux():
         return 'eth0'
-    elif system == 'Windows':
-        return 'eth0'
-    elif system == 'Darwin':
+    elif is_windows():
+        return 'Ethernet0'
+    elif is_mac():
         return 'en0'
-    elif system == 'VMkernel':
+    elif is_esx():
         return 'vmk0'
 
 

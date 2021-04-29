@@ -32,9 +32,8 @@ class HostInfo(BaseApp):
             self._host_type = UBUNTU
         elif 'kali' in result:
             self._host_type = KALI
-        elif 'windows' in result:
+        elif 'windows' in result or 'CYGWIN_NT' in result:
             self._host_type = WINDOWS
-
     def hostname(self):
         return self._hostname
 

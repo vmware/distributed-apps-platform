@@ -23,6 +23,7 @@ import subprocess
 import time
 
 from lydian.apps.base import BaseApp
+from lydian.utils import common
 
 log = logging.getLogger(__name__)
 
@@ -85,11 +86,15 @@ class Console(BaseApp):
         stderr = subprocess.STDOUT if not stderr else stderr
 
         cmnd = shlex.split(cmnd)
-
-        return subprocess.Popen(cmnd, shell=False, cwd=cwd, env=env,
-                                stdin=stdin, stdout=stdout, stderr=stderr,
-                                close_fds=True, preexec_fn=os.setsid,
-                                bufsize=-1)
+        if common.is_windows():
+            return subprocess.Popen(cmnd, shell=False, cwd=cwd, env=env,
+                                    stdin=stdin, stdout=stdout, stderr=stderr,
+                                    close_fds=False, start_new_session=True)
+        else:
+            return subprocess.Popen(cmnd, shell=False, cwd=cwd, env=env,
+                                    stdin=stdin, stdout=stdout, stderr=stderr,
+                                    close_fds=True, preexec_fn=os.setsid,
+                                    bufsize=-1)
 
     def _ctrl_c(self, proc, timeout=1):
         """

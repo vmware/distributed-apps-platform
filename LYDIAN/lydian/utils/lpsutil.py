@@ -7,22 +7,28 @@
 Alternative / backup implementation of psutil methods consumed in lydian.
 '''
 import collections
-import fcntl
 import json
 import os
-import platform
 import socket
 import struct
 
 
 from lydian.apps.console import Console
+from lydian.utils import common
 
-if "Linux" in platform.uname():
+POSIX = ('LINUX', 'ESX')
+
+if common.is_linux():
     OS_TYPE = 'LINUX'
-elif "VMkernel" in platform.uname():
+elif common.is_esx():
     OS_TYPE = 'ESX'
+elif common.is_windows():
+    OS_TYPE = 'WINDOWS'
 else:
     OS_TYPE = None
+
+if OS_TYPE in POSIX:
+    import fcntl
 
 
 def get_ipv4_address(ifname, ipv6=False):
@@ -31,6 +37,8 @@ def get_ipv4_address(ifname, ipv6=False):
     impl below as it doesn't fork process but it doesn't work for IPv6 yet.
     """
     # _socket = socket.AF_INET6 if ipv6 else socket.AF_INET
+    if OS_TYPE == 'WINDOWS':
+        return _get_ip_addresses_windows(ifname, ipv6=ipv6)
     _socket = socket.AF_INET
     s = socket.socket(_socket, socket.SOCK_DGRAM)
     return socket.inet_ntoa(fcntl.ioctl(
@@ -40,7 +48,7 @@ def get_ipv4_address(ifname, ipv6=False):
     )[20:24])
 
 
-def get_ip_address(ifname, ipv6=False):
+def _get_ip_addresses_linux(ifname, ipv6=False):
     cmnd = 'ip addr show %s' % ifname
     prefix = 'inet6 ' if ipv6 else 'inet '
     try:
@@ -49,6 +57,32 @@ def get_ip_address(ifname, ipv6=False):
     except Exception:
         addr = None
     return addr
+
+
+def _get_ip_addresses_windows(ifname, ipv6=False):
+
+    if ipv6:
+        cmnd = 'netsh interface ipv6 show addresses interface=%s' % ifname
+    else:
+        cmnd = 'netsh interface ipv4 show addresses name=%s' % ifname
+    try:
+        status, output = Console().run_command(cmnd)
+        if ipv6:
+            addr = output.split('Address')[1].split()[0].strip()
+        else:
+            addr = output.split("Address:")[1].split('\n')[0].strip()
+    except Exception:
+        addr = None
+    return addr
+
+
+def get_ip_address(ifname, ipv6=False):
+    if OS_TYPE == "LINUX":
+        return _get_ip_addresses_linux(ifname, ipv6=ipv6)
+    elif OS_TYPE == "WINDOWS":
+        return _get_ip_addresses_windows(ifname, ipv6=ipv6)
+    else:
+        return None
 
 
 class AddressFamily(object):
@@ -99,15 +133,33 @@ def _net_if_addrs_esx():
     return result
 
 
+def _net_if_addrs_windows():
+    result = collections.defaultdict(list)
+    status, output = Console().run_command('netsh interface show interface')
+    interfaces = [iface for iface in output.split() if "Ethernet" in iface]
+
+    for ifname in interfaces:
+        for family, ipv6 in [(AddressFamily.AF_INET, False),
+                             (AddressFamily.AF_INET6, True)]:
+            addr = get_ip_address(ifname, ipv6)
+            if addr:
+                result[ifname].append(snicaddr(family=family, address=addr))
+
+    return result
+
+
 def net_if_addrs():
     if OS_TYPE == "LINUX":
         return _net_if_addrs_linux()
     elif OS_TYPE == "ESX":
         return _net_if_addrs_esx()
+    elif OS_TYPE == "WINDOWS":
+        return _net_if_addrs_windows()
     else:
         return None
 
 # TODO : Following need to be implemented.
+
 
 class Dummy(object):
     percent = 0
