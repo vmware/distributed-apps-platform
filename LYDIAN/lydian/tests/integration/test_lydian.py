@@ -41,6 +41,7 @@ class TrafficAppTest(unittest.TestCase):
         'dst': '127.0.0.1',
         'protocol': 'TCP',
         'port': 9465,
+        'attempts': 2,
         'connected': True
     }
 

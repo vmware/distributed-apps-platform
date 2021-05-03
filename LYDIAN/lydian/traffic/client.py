@@ -151,36 +151,46 @@ class TCPClient(Client):
         self.socket = socket.socket(sock_type, socket.SOCK_STREAM)
         self.socket.settimeout(self.sockettimeout)
 
-    def ping(self, payload):
-        data = None
-        latency = 0
-        try:
-            start_time = time.time()
-            # create socket
-            self._create_socket()
-            self.socket.connect((self.server, self.port))
-            payload = self._prepare_payload(payload)
-            self.socket.send(payload)
-            data = self.recv_all()
-            # latency in milliseconds
-            latency = round((time.time() - start_time) * LATENCY_RESOLUTION, 2)
+    def send_and_recv(self, payload, recv_method):
+        attempts = self.attempts
+        data, latency = None, 0
+        while attempts:
+            try:
+                attempts -= 1
+                self._create_socket()
+                start_time = time.time()
+                self.socket.connect((self.server, self.port))
+                self.socket.send(payload)
+                data = recv_method()
+                latency = round((time.time() - start_time) * LATENCY_RESOLUTION, 2)
+                if self.verbose:
+                    msg = "Ping to %s:%s PASS. Payload / data - %s/%s" % (
+                           self.server, self.port, payload, data)
+                    log.info(msg)
+                break   # finally is still executed.
+            except Exception as err:
+                if self.verbose:
+                    msg = ("Ping to %s:%s FAIL. Payload / data - %s/%s ."
+                           " ERROR - %r") % (
+                           self.server, self.port, payload, data, err)
+                    log.info(msg)
+                    if attempts:
+                        count = self.attempts - attempts + 1
+                        log.debug('Retrying attempt %s/%s', count, self.attempts)
+            finally:
+                # close socket connection
+                self.socket_close()
 
-            if self.verbose:
-                msg = "ping to %s:%s pass. data - %r" % (
-                    self.server, self.port, data)
-                log.info(msg)
-        except Exception as err:
-            msg = "ping to %s:%s failed. Error - %r" % (
-                self.server, self.port, err)
-            if self.verbose:
-                log.error(msg)
-        finally:
-            # latency in milliseconds
-            latency = round((time.time() - start_time) * LATENCY_RESOLUTION, 2)
-            # close socket connection
-            self.socket_close()
-            # Process the result.
+        return data, latency
+
+    def ping(self, payload):
+        try:
+            payload = self._prepare_payload(payload)
+            data, latency = self.send_and_recv(payload, recv_method=self.recv_all)
             self._handler(payload, data, latency)
+        except Exception as err:
+            if self.verbose:
+                log.info('Ping Error - %r', err)
 
 
 class UDPClient(Client):
@@ -195,42 +205,43 @@ class UDPClient(Client):
 
     def send_and_recv(self, payload):
         attempts = self.attempts
-        data = None
+        data, latency = None, 0
         while attempts:
             try:
                 attempts -= 1
+                self._create_socket()
+                start_time = time.time()
                 self.socket.sendto(payload, (self.server, self.port))
                 data, _ = self.socket.recvfrom(self.MAX_PAYLOAD_SIZE)
-                break
+                latency = round((time.time() - start_time) * LATENCY_RESOLUTION, 2)
+                if self.verbose:
+                    msg = "Ping to %s:%s PASS. Payload / data - %s/%s" % (
+                           self.server, self.port, payload, data)
+                    log.info(msg)
+                break   # finally is still executed.
             except Exception as err:
                 if self.verbose:
+                    msg = ("Ping to %s:%s FAIL. Payload / data - %s/%s ."
+                           " ERROR - %r") % (
+                           self.server, self.port, payload, data, err)
+                    log.info(msg)
                     if attempts:
-                        log.debug('Retrying on Error %r', err)
-                    else:
-                        log.debug('Error %r in fetching data.', err)
-        return data
+                        count = self.attempts - attempts + 1
+                        log.debug('Retrying attempt %s/%s', count, self.attempts)
+            finally:
+                self.socket_close()
+
+        return data, latency
 
     def ping(self, payload):
         latency = 0
         try:
-            start_time = time.time()
-
-            self._create_socket()
-
             payload = self._prepare_payload(payload)
-
-            data = self.send_and_recv(payload)
+            data, latency = self.send_and_recv(payload)
+            self._handler(payload, data, latency)
         except Exception as err:
             if self.verbose:
-                log.error("ping to %s:%s failed. Error - %r",
-                          self.server, self.port, err)
-        finally:
-            # latency in milliseconds
-            latency = round((time.time() - start_time) * LATENCY_RESOLUTION, 2)
-            # close socket connection
-            self.socket_close()
-            # Process the result.
-            self._handler(payload, data, latency)
+                log.info('Ping Error - %r', err)
 
 
 class HTTPClient(TCPClient):
@@ -249,31 +260,11 @@ class HTTPClient(TCPClient):
         return data
 
     def ping(self, payload):
-        latency, data = 0, ''
-        start_time = time.time()
         try:
-            # TODO : If moving to Python 3.9 and beyon, simply
-            # run it through following. urlparse on Python 3.6
-            # doesn't work on IPv6 address based servers.
-            # url = 'http://%s:%s' % (self.server, self.port)
-            # status = urlopen(url).code
-            # data = payload if status == 200 else data
-
-            self._create_socket()
-
-            self.socket.connect((self.server, self.port))
-
-            self.socket.send(self._prepare_payload(payload))
-
-            data = self.fetch()
+            _payload = self._prepare_payload(payload)
+            data, latency = self.send_and_recv(_payload,
+                                               recv_method=self.fetch)
+            self._handler(payload, data, latency)
         except Exception as err:
             if self.verbose:
-                log.error("ping to %s:%s failed. Error - %r",
-                          self.server, self.port, err)
-        finally:
-            # latency in milliseconds
-            latency = round((time.time() - start_time) * LATENCY_RESOLUTION, 2)
-            # close socket connection
-            self.socket_close()
-            # Process the result.
-            self._handler(payload, data, latency)
+                log.info('Ping Error - %r', err)
