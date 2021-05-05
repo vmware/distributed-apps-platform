@@ -126,8 +126,6 @@ def install_egg():
         # Pack Lydian dependency packages.
         z.add_module('rpyc')
         z.add_module('sql30')
-        z.add_module('wavefront-sdk-python')
-        z.add_module('wavefront-api-client')
 
         # Pack Lydian Source
         z.add_dir(dirname=lydian_path, atroot="./lydian/")
@@ -146,3 +144,4 @@ def install_egg():
 
 if __name__ == '__main__':
     install_egg()
+
