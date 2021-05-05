@@ -82,6 +82,13 @@ class Podium(BaseApp):
     def rules(self):
         return self.rules_app.rules
 
+    def cleanup(self):
+        """
+        Deletes local databases.
+        """
+        self.rules_app.cleanup()
+        config.get_configs().cleanup()
+
     def close(self):
         if self.monitor:
             self.monitor.stop()

@@ -13,6 +13,7 @@ be related to that endpoint host.
 '''
 
 import logging
+import os
 
 from sql30 import db
 
@@ -43,7 +44,7 @@ class RulesDB(db.Model):
 
 
 @exposify
-class RulesApp(BaseApp, RulesDB):
+class RulesApp(RulesDB, BaseApp):
     TYPES_MAP = {'int': int, 'float': float, 'text': str}
 
     def __init__(self, db_file=None):
@@ -167,3 +168,10 @@ class RulesApp(BaseApp, RulesDB):
     def close(self):
         all_trules = list(self._rules.values())
         self.save_to_db(all_trules)
+
+    def cleanup(self):
+        """
+        Remove local DB file.
+        """
+        if os.path.exists(self._db):
+            os.remove(self._db)

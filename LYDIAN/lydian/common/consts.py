@@ -63,8 +63,9 @@ class TestbedConstants(Constants):
     TEST_ID = os.environ.get('TEST_ID', '1234')
     TESTBED_NAME = os.environ.get('TESTBED_NAME', socket.gethostname())
 
-    ENDPOINT_USERNAME = 'root'
-    ENDPOINT_PASSWORD = 'FAKE_PASSWORD'
+    ENDPOINT_USERNAME = os.environ.get('ENDPOINT_USERNAME', 'root')
+    ENDPOINT_PASSWORD = os.environ.get('ENDPOINT_PASSWORD', 'FAKE_PASSWORD')
+    LYDIAN_NTP_SERVER = os.environ.get('LYDIAN_NTP_SERVER', None)   # e. g. ntp1.eng.vmware.com
 
 
 class NamespaceConstants(Constants):

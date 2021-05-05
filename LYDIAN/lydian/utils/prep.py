@@ -51,6 +51,13 @@ class NodePrep(object):
     CONFIG_DEST_PATH = '/etc/lydian/lydian.conf'
     SERVICE_DEST_PATH = '/etc/systemd/system/lydian.service'
 
+    DB_FILES = [
+        'params.db',
+        'rules.db',
+        'setup.db',
+        'traffic.db',
+    ]
+
     def __init__(self, hostip, username, password):
         """
         Prepares the endpoint.
@@ -67,6 +74,24 @@ class NodePrep(object):
 
     def cleanup_node(self, remove_db=False):
         raise NotImplementedError("'cleanup_node' not implemented")
+
+    def cleanup_db(self, host):
+        """
+        Cleans up local DB files. Deletes file one by one, so that
+        failure on one doesn't impact removal of other.
+        """
+        for db_file in self.DB_FILES:
+            try:
+                # Delete DB file and any related entries created by
+                # sqlite for it.
+                host.req_call('rm %s*' % db_file)
+            except Exception:
+                pass    # file may or may not be there.
+
+    def sync_ntp_server(self, host):
+        ntp_server = get_param('LYDIAN_NTP_SERVER')
+        if ntp_server:
+            host.req_call('ntpdate %s' % ntp_server)
 
     def copy_egg(self, host, egg_file_src):
         """
@@ -152,6 +177,8 @@ class UbuntuNodePrep(NodePrep):
             except ValueError:
                 pass    # preparing for first time.
 
+            self.sync_ntp_server(host)
+
             # Copy Egg file
             self.copy_egg(host, egg_file_src)
 
@@ -193,7 +220,7 @@ class UbuntuNodePrep(NodePrep):
             result &= _func('rm /etc/systemd/system/lydian.service')
             result &= _func('rm /var/log/lydian/lydian.log')
             if remove_db:
-                result &= _func('rm traffic.db* params.db* rules.db*')
+                self.cleanup_db(host)
             return result
 
 
@@ -312,16 +339,25 @@ class ESXNodePrep(NodePrep):
         return True
 
     def cleanup_node(self, remove_db=True):
+        """
+        Cleans up Lydian service from the endpoints.
+        """
+        result = True
         with Host(host=self.hostip, user=self.username,
                   passwd=self.password) as host:
-            # Start Lydian Service.
-            try:
-                host.req_call(self.UNINSTALL_SERVICE)
-            except Exception as err:
-                log.error("Error in stopping service at %s : %r", self.hostip, err)
-                return False
-
-        return True
+            def _func(cmnd):
+                try:
+                    host.req_call(cmnd)
+                    return True
+                except ValueError as err:
+                    log.warn("cmnd: %s, error: %s", cmnd, err)
+                    return False
+            result &= _func(self.UNINSTALL_SERVICE)
+            result &= _func('rm /etc/lydian/lydian.conf')
+            result &= _func('rm /var/log/lydian/lydian.log')
+            if remove_db:
+                self.cleanup_db(host)
+        return result
 
     def get_running_processes(self, grep_args=None):
         """

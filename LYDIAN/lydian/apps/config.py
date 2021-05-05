@@ -342,6 +342,13 @@ class Config(ConfigDB, base.BaseApp):
 
             fp.write("\n\n### LYDIAN Service Config (END) ###\n")
 
+    def cleanup(self):
+        """
+        Remove local DB file.
+        """
+        if os.path.exists(self._db):
+            os.remove(self._db)
+
 
 def get_configs():
     global configs

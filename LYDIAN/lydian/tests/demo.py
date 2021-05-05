@@ -79,9 +79,15 @@ def run_demo(testbed):
     result = run_iperf3(vm1.ip, vm0.ip)
     log.info("IPERF Results : %s", result)
 
-    time.sleep(200)
+    log.info("Traffic percentage : %s",
+             podium.get_traffic_pass_percent(rules[0]['reqid']))
+
+    time.sleep(100)
+
     cleanup_node(vms[0].ip, username=USERNAME, password=PASSWD)
     cleanup_node(vms[1].ip, username=USERNAME, password=PASSWD)
+
+    podium.cleanup()
 
 
 def process_nodes(vms):
