@@ -40,6 +40,7 @@ class ElasticSearchRecorder(core.Subscribe):
 
         if not self._client:
             # If client not instantiated properly, disable the recorder.
+            log.info("Recording to Elastic Search disabled due to invalid params.")
             self.set_config(self.ENABLE_PARAM, False)
 
     @property

@@ -56,7 +56,7 @@ def _get_wf_sender():
     server = conf.get_param('WAVEFRONT_SERVER_ADDRESS')
     token = conf.get_param('WAVEFRONT_SERVER_API_TOKEN')
     return WavefrontDirectClient(
-        server=server, token=token)
+        server=server, token=token) if server and token else None
 
 
 class WavefrontRecorder(core.Subscribe):
@@ -68,6 +68,11 @@ class WavefrontRecorder(core.Subscribe):
         self._testbed = conf.get_param('TESTBED_NAME')
         self._testid = str(conf.get_param('TEST_ID'))
         self.node = socket.gethostname()
+
+        if not self._client:
+            # If client not instantiated properly, disable the recorder.
+            log.info("Recording to Wavefront disabled due to invalid params.")
+            self.set_config(self.ENABLE_PARAM, False)
 
     @property
     def enabled(self):

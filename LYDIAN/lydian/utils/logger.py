@@ -26,6 +26,7 @@ def setup_logging(log_dir=None, log_file=None):
     """
     log_dir = log_dir or LOG_DIR
     log_file = log_file or LOG_FILE
+
     create_log_dir(log_dir)
 
     log_file_name = os.path.join(log_dir, log_file)
