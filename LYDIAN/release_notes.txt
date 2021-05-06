@@ -1,6 +1,27 @@
 LYDIAN (Release Notes)
 ----------------------
 
+0.1.7 (Minor)
+---------------------
+Release 0.1.7 is bug fix and maintenance release over 0.1.6 release and also a pre-cursor
+release for upcoming release (0.1.8). Summary of changes is below.
+
+Pre-cursor Features (coming in 0.1.8)
+-----------
+- Backward compatibility for Python 3.5 and prior.
+- Unregister Traffic API to remove traces of traffic request from system.
+- Option to Retry on failure on UDP/TCP/HTTP traffics.
+- Search query to support epoch timestamp based ranges.
+- IPv6 support for HTTP Traffic.
+
+Bug Fixes
+-----------
+- Fix for database is locked issue.
+- prep_host to return status on each node to mark if service up or not.
+- Do not enable resource monitoring at primary node by default. It leads to hang if client doesn't call close on podium.
+- Persist socket timeout and interval.
+
+
 0.1.6 (Major)
 ---------------------
 Release 0.1.6 is first major, full feature release of Lydian.
