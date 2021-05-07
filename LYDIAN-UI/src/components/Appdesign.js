@@ -8,8 +8,8 @@ import {
   Switch,
   Link,
 } from "react-router-dom";
-import { Layout, Menu, Breadcrumb } from 'antd';
-import { UserOutlined, LaptopOutlined, NotificationOutlined, AlertOutlined, CodeOutlined } from '@ant-design/icons';
+import { Layout, Menu} from 'antd';
+import { LaptopOutlined, NotificationOutlined, AlertOutlined, CodeOutlined } from '@ant-design/icons';
 
 import Threats from './Threats/Threats';
 import Setup from './Setup/Setup';
@@ -17,7 +17,6 @@ import Vulnerabilites from './Vulnerabilities/Vulnerabilities'
 import Endpoint from './Endpoints/Endpoint'
 
 
-const { SubMenu } = Menu;
 const { Header, Content, Sider } = Layout;
 
 
@@ -34,7 +33,7 @@ class Appdesign extends Component {
             <Header className="header">
               <div className="logo" />
               <Menu theme="dark" mode="horizontal">
-                <Menu.Item key="1" icon={<LaptopOutlined style={{ fontSize: 25 }} />} style={{ fontSize: 25 }}>BORATHON</Menu.Item>
+                <Menu.Item key="1" icon={<LaptopOutlined style={{ fontSize: 25 }} />} style={{ fontSize: 25 }}>LYDIAN</Menu.Item>
               </Menu>
             </Header>
             <Layout>

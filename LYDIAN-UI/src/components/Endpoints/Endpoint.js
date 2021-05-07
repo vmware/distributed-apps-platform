@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { baseUrl } from '../../config';
 import "react-tabulator/lib/styles.css"; // default theme
 import "react-tabulator/css/bootstrap/tabulator_bootstrap.min.css"; // use Theme(s)
-import { ReactTabulator, reactFormatter } from 'react-tabulator'
+import { ReactTabulator } from 'react-tabulator'
 import { Container, Row, Col } from 'react-bootstrap'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -73,6 +73,13 @@ export class Endpoint extends Component {
             { title: "Severity", field: "severity" },
             { title: "Message", field: "message" },
         ];
+        const riskcolumns = [
+            { title: "Host", field: "host"},
+            { title: "Tool", field: "tool"},
+            { title: "Req ID", field: "reqid"},
+            { title: "Severity", field: "severity"},
+            { title: "Message", field: "message"},
+        ]
         const interfacecolumns = [
             { title: "Host", field: "host" },
             { title: "If Name", field: "ifname" },
@@ -81,14 +88,16 @@ export class Endpoint extends Component {
         ];
         const servicecolumns = [
             { title: "Host", field: "host" },
-            { title: "Svc Name", field: "svcname" },
+            { title: "Svc Name", field: "service" },
             { title: "Status", field: "status" },
-            { title: "Description", field: "desc" },
+            { title: "Description", field: "description" },
         ];
         const options = {
             movableRows: true,
             movableColumns: true,
             layout: "fitColumns",
+            pagination: "local",
+            paginationSize:10
         };
         
         return (
@@ -144,7 +153,7 @@ export class Endpoint extends Component {
                                 <h1 style={{ marginLeft: '350px', fontSize: 26, fontWeight: 'bold', marginBottom: '20px' }}>Vulnerabilites Data</h1>
                                 <ReactTabulator
                                     data={this.state.vulnerabilitiesData}
-                                    columns={threatcolumns}
+                                    columns={riskcolumns}
                                     tooltips={true}
                                     options={options}
                                     style={{border: "2px solid rgb(0, 0, 0)"}}

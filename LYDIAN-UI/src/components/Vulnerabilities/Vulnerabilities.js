@@ -4,7 +4,7 @@ import { baseUrl } from '../../config';
 import axios from 'axios';
 import "react-tabulator/lib/styles.css"; // default theme
 import "react-tabulator/css/bootstrap/tabulator_bootstrap4.min.css"; // use Theme(s)
-import { ReactTabulator, reactFormatter } from 'react-tabulator'
+import { ReactTabulator } from 'react-tabulator'
 import {Container, Row, Col} from 'react-bootstrap'
 
 
@@ -33,12 +33,16 @@ export class Vulnerabilities extends Component {
     render() {
         const columns = [
             { title: "Host", field: "host"},
+            {title: "Tool", field: "tool"},
+            {title: "Req ID", field: "reqid"},
             { title: "Severity", field: "severity"},
             { title: "Message", field: "message"},
           ];
           const options = {
             movableRows: true,
-            movableColumns: true
+            movableColumns: true,
+            pagination:"local",
+            paginationSize:10,
           };
 
         return (
