@@ -6,10 +6,14 @@ import { baseUrl } from '../../config';
 import "react-tabulator/lib/styles.css"; // default theme
 import "react-tabulator/css/bootstrap/tabulator_bootstrap.min.css"; // use Theme(s)
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { ReactTabulator } from 'react-tabulator'
 =======
 import { ReactTabulator, reactFormatter } from 'react-tabulator'
 >>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
+=======
+import { ReactTabulator } from 'react-tabulator'
+>>>>>>> 803fc3e... lydian-ui: adding edit option for primary node
 import { Container, Row, Col } from 'react-bootstrap'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -78,6 +82,9 @@ export class Endpoint extends Component {
             { title: "Message", field: "message" },
         ];
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 803fc3e... lydian-ui: adding edit option for primary node
         const riskcolumns = [
             { title: "Host", field: "host"},
             { title: "Tool", field: "tool"},
@@ -85,8 +92,11 @@ export class Endpoint extends Component {
             { title: "Severity", field: "severity"},
             { title: "Message", field: "message"},
         ]
+<<<<<<< HEAD
 =======
 >>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
+=======
+>>>>>>> 803fc3e... lydian-ui: adding edit option for primary node
         const interfacecolumns = [
             { title: "Host", field: "host" },
             { title: "If Name", field: "ifname" },
@@ -96,6 +106,7 @@ export class Endpoint extends Component {
         const servicecolumns = [
             { title: "Host", field: "host" },
 <<<<<<< HEAD
+<<<<<<< HEAD
             { title: "Svc Name", field: "service" },
             { title: "Status", field: "status" },
             { title: "Description", field: "description" },
@@ -104,16 +115,26 @@ export class Endpoint extends Component {
             { title: "Status", field: "status" },
             { title: "Description", field: "desc" },
 >>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
+=======
+            { title: "Svc Name", field: "service" },
+            { title: "Status", field: "status" },
+            { title: "Description", field: "description" },
+>>>>>>> 803fc3e... lydian-ui: adding edit option for primary node
         ];
         const options = {
             movableRows: true,
             movableColumns: true,
             layout: "fitColumns",
 <<<<<<< HEAD
+<<<<<<< HEAD
             pagination: "local",
             paginationSize:10
 =======
 >>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
+=======
+            pagination: "local",
+            paginationSize:10
+>>>>>>> 803fc3e... lydian-ui: adding edit option for primary node
         };
         
         return (
@@ -170,10 +191,14 @@ export class Endpoint extends Component {
                                 <ReactTabulator
                                     data={this.state.vulnerabilitiesData}
 <<<<<<< HEAD
+<<<<<<< HEAD
                                     columns={riskcolumns}
 =======
                                     columns={threatcolumns}
 >>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
+=======
+                                    columns={riskcolumns}
+>>>>>>> 803fc3e... lydian-ui: adding edit option for primary node
                                     tooltips={true}
                                     options={options}
                                     style={{border: "2px solid rgb(0, 0, 0)"}}

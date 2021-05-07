@@ -9,12 +9,17 @@ import {
   Link,
 } from "react-router-dom";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { Layout, Menu} from 'antd';
 import { LaptopOutlined, NotificationOutlined, AlertOutlined, CodeOutlined } from '@ant-design/icons';
 =======
 import { Layout, Menu, Breadcrumb } from 'antd';
 import { UserOutlined, LaptopOutlined, NotificationOutlined, AlertOutlined, CodeOutlined } from '@ant-design/icons';
 >>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
+=======
+import { Layout, Menu} from 'antd';
+import { LaptopOutlined, NotificationOutlined, AlertOutlined, CodeOutlined } from '@ant-design/icons';
+>>>>>>> 803fc3e... lydian-ui: adding edit option for primary node
 
 import Threats from './Threats/Threats';
 import Setup from './Setup/Setup';
@@ -23,9 +28,12 @@ import Endpoint from './Endpoints/Endpoint'
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 const { SubMenu } = Menu;
 >>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
+=======
+>>>>>>> 803fc3e... lydian-ui: adding edit option for primary node
 const { Header, Content, Sider } = Layout;
 
 
@@ -43,10 +51,14 @@ class Appdesign extends Component {
               <div className="logo" />
               <Menu theme="dark" mode="horizontal">
 <<<<<<< HEAD
+<<<<<<< HEAD
                 <Menu.Item key="1" icon={<LaptopOutlined style={{ fontSize: 25 }} />} style={{ fontSize: 25 }}>LYDIAN</Menu.Item>
 =======
                 <Menu.Item key="1" icon={<LaptopOutlined style={{ fontSize: 25 }} />} style={{ fontSize: 25 }}>BORATHON</Menu.Item>
 >>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
+=======
+                <Menu.Item key="1" icon={<LaptopOutlined style={{ fontSize: 25 }} />} style={{ fontSize: 25 }}>LYDIAN</Menu.Item>
+>>>>>>> 803fc3e... lydian-ui: adding edit option for primary node
               </Menu>
             </Header>
             <Layout>
@@ -101,7 +113,11 @@ class Appdesign extends Component {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 export default Appdesign;
 =======
 export default Appdesign;
 >>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
+=======
+export default Appdesign;
+>>>>>>> 803fc3e... lydian-ui: adding edit option for primary node

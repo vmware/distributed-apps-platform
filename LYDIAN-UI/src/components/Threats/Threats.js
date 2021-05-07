@@ -5,10 +5,14 @@ import axios from 'axios';
 import "react-tabulator/lib/styles.css"; // default theme
 import "react-tabulator/css/bootstrap/tabulator_bootstrap4.min.css"; // use Theme(s)
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { ReactTabulator } from 'react-tabulator'
 =======
 import { ReactTabulator, reactFormatter } from 'react-tabulator'
 >>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
+=======
+import { ReactTabulator } from 'react-tabulator'
+>>>>>>> 803fc3e... lydian-ui: adding edit option for primary node
 import {Container, Row, Col} from 'react-bootstrap'
 
 
@@ -42,12 +46,18 @@ export class Threats extends Component {
           const options = {
             movableRows: true,
 <<<<<<< HEAD
+<<<<<<< HEAD
             movableColumns: true,
             paginationSize:10,
             pagination:"local"
 =======
             movableColumns: true
 >>>>>>> ead4bbf... lydian-ui: Initial Lydian UI #Borathon2021
+=======
+            movableColumns: true,
+            paginationSize:10,
+            pagination:"local"
+>>>>>>> 803fc3e... lydian-ui: adding edit option for primary node
           };
 
         return (
