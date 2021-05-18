@@ -170,7 +170,7 @@ class Host(object):
         finally:
             sftp_client.close()
 
-    def req_call(self, cmd, msg=None, expected_ret=None):
+    def req_call(self, cmd, msg=None, expected_ret=None, timeout=None):
         """
         This mimics the dynamics of req_call
 
@@ -200,6 +200,8 @@ class Host(object):
 
         if chan is not None:
             try:
+                if timeout:
+                    chan.settimeout(timeout)
                 chan.exec_command(cmd)
                 if chan.recv_exit_status() != 0:
                     raise ValueError(
