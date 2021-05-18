@@ -5,8 +5,11 @@
 # in the root directory of this project.
 
 from collections import defaultdict
+import logging
 import multiprocessing
 import platform
+import re
+import subprocess
 
 if "Linux" in platform.uname():  # noqa
     from lydian.utils import nsenter
@@ -17,13 +20,12 @@ try:
     import psutil
 except errors.ModuleNotFoundError:
     import lydian.utils.lpsutil as psutil
+from lydian.apps import config
 
-import logging
-import re
-import subprocess
 
 INTERFACE_FAMILY = (2, 10)
-NAMESPACE_INTERFACE_NAME_PREFIXES = ["veth", "eth"]
+
+NAMESPACE_INTERFACE_NAME_PREFIXES = config.get_param('NAMESPACE_INTERFACE_NAME_PREFIXES')
 
 log = logging.getLogger(__name__)
 

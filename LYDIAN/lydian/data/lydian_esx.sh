@@ -6,6 +6,4 @@
 PYTHONPATH=/lydian/lydian.egg
 export PYTHONPATH
 
-echo $$ > /var/run/lydian.pid
-
-python -mlydian.controller.rpyc_controller
+python -mlydian.controller.rpyc_controller &

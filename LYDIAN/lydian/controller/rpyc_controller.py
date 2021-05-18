@@ -6,6 +6,7 @@
 
 
 import logging
+import os
 from queue import Queue
 
 import rpyc
@@ -25,7 +26,7 @@ from lydian.apps.rules import RulesApp
 from lydian.apps.tcpdump import TCPDump
 from lydian.apps.traffic_controller import TrafficControllerApp
 from lydian.apps.watch.threat import ThreatMonitor
-from lydian.utils import logger
+from lydian.utils import logger, common
 
 
 rpyc.core.protocol.DEFAULT_CONFIG['allow_pickle'] = True
@@ -133,6 +134,9 @@ class LydianController(object):
             reuse_addr=True,
             protocol_config=self.protocol_config,
             logger=self.logger, nbThreads=50)
+
+        if not common.is_port_already_in_use(self.lydian_port):
+            common.write_pid_file('/var/run/lydian.pid')
 
     def start(self):
         self.service.start()

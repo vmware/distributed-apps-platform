@@ -15,7 +15,7 @@ export PATH
 
 PIDNAME="lydian.pid"
 PIDFILE="/var/run/lydian.pid"
-SCRIPT="/lydian/lydian.sh"
+SCRIPT="/lydian/lydian.sh &"
 LOGFILE="/var/log/lydian.log"
 RUNAS="root"
 
@@ -25,7 +25,7 @@ start() {
     return 1
   fi
   echo 'Starting Lydian service ...' >&2
-  $SCRIPT &
+  $SCRIPT
   echo 'Lydian Service started' >&2
 }
 
@@ -43,7 +43,7 @@ uninstall() {
   echo -n "Uninstalling Lydian "
   stop
   rm -f "$PIDFILE"
-  rm -f /lydian
+  rm -rf /lydian
 }
 
 case "$1" in

@@ -6,9 +6,9 @@
 
 import ipaddress
 import logging
+import os
 import platform
 import socket
-import struct
 
 log = logging.getLogger(__name__)
 
@@ -52,3 +52,15 @@ def get_mgmt_ifname():
 
 def get_host_name():
     return socket.gethostname()
+
+
+def is_port_already_in_use(portnum):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    result = sock.connect_ex(('127.0.0.1', portnum))
+
+
+def write_pid_file(fname):
+    if not is_esx():
+        return
+    with open(fname, 'w+') as fp:
+        fp.write('%s\n' % os.getpid())

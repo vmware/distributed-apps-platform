@@ -331,7 +331,7 @@ class ESXNodePrep(NodePrep):
 
             # Start Lydian Service.
             try:
-                host.req_call(self.START_SERVICE)
+                host.req_call(self.START_SERVICE, timeout=4)
             except Exception as err:
                 log.error("Error in starting service at %s : %r", self.hostip, err)
                 return False
@@ -364,10 +364,10 @@ class ESXNodePrep(NodePrep):
         USAGE:
         ESXNodePrep(ip, uname, passwd).get_running_processes()
         """
+        cmnd = "ps -Tcjstv"
         try:
             with Host(host=self.hostip, user=self.username,
                       passwd=self.password) as host:
-                cmnd = "ps -Tcjstv"
                 if grep_args:
                     cmnd += ' | grep %s' % grep_args
                 return host.req_call(cmnd)

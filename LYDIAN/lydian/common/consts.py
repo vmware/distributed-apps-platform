@@ -72,7 +72,7 @@ class NamespaceConstants(Constants):
     _NAME = "Namespace"
     # Namespace Configs
     NAMESPACE_DIR = '/var/run/netns'
-    NAMESPACE_INTERFACE_NAME_PREFIXES = ["veth", "eth"]
+    NAMESPACE_INTERFACE_NAME_PREFIXES = ["veth", "eth", "vmk"]
 
 
 class TrafficConstants(Constants):
