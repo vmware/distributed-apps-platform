@@ -24,7 +24,7 @@ setuptools.setup(
     description="Tool for Traffic Generation, Management and Monitoring",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/gitvipin/validation-app-engine",
+    url="https://github.com/vmware/distributed-apps-platform",
     install_requires=deps,
     packages=setuptools.find_packages(),
     classifiers=[
