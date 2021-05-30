@@ -1,22 +1,3 @@
-<<<<<<< HEAD
-Distributed Apps Platform
---------------------------
-
-Distributed  Apps Platform is a repository for the LYDIAN project. 
-
-LYDIAN is a general purpose Distributed (Python) Apps Platform. As the name suggests, it is based on Distributed Systems design principles and inherently supports  scalability and resiliency. LYDIAN is written in native python and has a very minimal dependency on 3rd party modules. It's lightweight architecture helps it support multiple platforms including the ones which are hard to support such as ESX. It's incredibly simple to use and is hgihly configurable.
-
-A variety of applications have been written on it by its users. This list includes, but not limited to, apps such as for Traffic Generation, Vulnerability Scan, Threat Monitoring and Resource Monitoring.
-
-LYDIAN has been used for Traffic Generation at a cluster of 5600+ nodes, with a ping frequency of ~8 million pings per minute leading to 1.2 Billion pings in less than 2 hours.
-
-The project is organized as following. 
-
-1. LYDIAN - Core engine of LYDIAN supporting distributed apps platform.
-2. LYDIAN-UI - A front end for accessing information on any running setup.
-
-
-=======
 
 # LYDIAN
 
@@ -131,14 +112,12 @@ result_dict = json.loads(result)
 
 Repository & License
 ------------
-LYDIAN is a fork from VMWARE's project https://github.com/vmware/validation-app-engine . It has its own independent workflow and internal architecture so nothing should be assumed from the flow and calls perspective. However, corresponding licenses apply to the usage of this tool. Please check them in LICENSE FILE.
+LYDIAN is an Open Source Software (OSS) hosted at https://github.com/vmware/distributed-apps-platform. Check LICENSE.txt for applicable licenses.
 
-https://github.com/gitvipin/validation-app-engine
-
+https://github.com/vmware/distributed-apps-platform
 
 Requirements
 ------------
 Python 3.6.8+
 
 Share and enjoy!
->>>>>>> 30e27d7... lydian: Initial README file.

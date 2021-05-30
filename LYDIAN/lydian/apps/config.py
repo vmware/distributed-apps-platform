@@ -14,131 +14,13 @@ from collections import defaultdict
 
 from sql30 import db
 
-<<<<<<< HEAD
-<<<<<<< HEAD:jasper/apps/config.py
-<<<<<<< HEAD
-from axon.apps.base import BaseApp
-from axon.common import consts, utils
-=======
-from jasper.apps.base import BaseApp
-<<<<<<< HEAD
-import jasper.utils.logger as logger
->>>>>>> f88c338... lydian: RPyC srvice
-=======
-=======
-from lydian.apps.base import BaseApp
->>>>>>> d9f9229... lydian : Initial changes to prepare for release - lydian 0.1.0:lydian/apps/config.py
-=======
 import lydian.apps.base as base
 import lydian.common.consts as consts 
->>>>>>> e11d80d... lydian: Integrate node preparation with constants, configs updates.
 
->>>>>>> 17eec04... Lydian: Remove cyclic dependency
 
 log = logging.getLogger(__name__)
 configs = None
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-#### CONSTANTS ####
-=======
-# CONSTANTS
->>>>>>> ef09167... lydian: Fix ValueError in config
-SYSTEM = platform.system()
-LINUX_OS = True if SYSTEM == 'Linux' else False
-MAC_OS = True if SYSTEM == 'Darwin' else False
-WIN_OS = True if SYSTEM == 'Windows' else False
-
-# Logging Constants
-LINUX_LOG_DIR = os.environ.get('LINUX_LOG_DIR', "/var/log/lydian")
-WIN_LOG_DIR = os.environ.get('WIN_LOG_DIR', "C:\\lydian\\log")
-if LINUX_OS or MAC_OS:
-    LOG_DIR = LINUX_LOG_DIR
-elif WIN_OS:
-    LOG_DIR = WIN_LOG_DIR
-LOG_FILE = "lydian.log"
-
-# Lydian Service Constants
-LYDIAN_PORT = 5649
-
-# Recorder Constants
-WAVEFRONT = 'wavefront'
-SQL = 'sql'
-ELASTIC_SEARCH = 'elasticsearch'
-ELASTIC_SEARCH_PORT = 9200
->>>>>>> f88c338... lydian: RPyC srvice
-
-# # # # # All Configurable Variables set below # # # # #
-
-<<<<<<< HEAD
-LINUX_OS = "Linux" in platform.uname()
-LOG_FILE = os.environ.get('LOG_FILE', consts.LOG_FILE)
-LOG_DIR = os.environ.get('LOG_DIR', consts.LOG_DIR)
-utils.setup_logging(log_dir=LOG_DIR, log_file=LOG_FILE)
-
-=======
->>>>>>> 17eec04... Lydian: Remove cyclic dependency
-
-# Traffic Server Configs
-REQUEST_QUEUE_SIZE = 100
-PACKET_SIZE = 1024
-ALLOW_REUSE_ADDRESS = True
-
-
-# Env Configs
-TEST_ID = os.environ.get('TEST_ID', '1234')
-TESTBED_NAME = os.environ.get('TESTBED_NAME', 'LYDIAN_DFLT_TB')
-LYDIAN_PORT = int(os.environ.get('LYDIAN_PORT', LYDIAN_PORT))
-LYDIAN_CONFIG = os.environ.get('LYDIAN_CONFIG', '/etc/lydian/lydian.conf')
-
-# Wavefront recorder configs
-WAVEFRONT_TRAFFIC_RECORDING = os.environ.get('WAVEFRONT_TRAFFIC_RECORDING',
-                                             True)
-WAVEFRONT_RESOURCE_RECORDING = os.environ.get('WAVEFRONT_RESOURCE_RECORDING',
-                                              True)
-WAVEFRONT_PROXY_ADDRESS = os.environ.get('WAVEFRONT_PROXY_ADDRESS', None)
-WAVEFRONT_PROXY_METRICS_PORT = os.environ.get('WAVEFRONT_PROXY_METRICS_PORT', 2878)
-WAVEFRONT_PROXY_DISTRIBUTION_PORT = os.environ.get('WAVEFRONT_PROXY_DISTRIBUTION_PORT', 2878)
-WAVEFRONT_PROXY_TRACING_PORT = os.environ.get('WAVEFRONT_PROXY_TRACING_PORT', 30000)
-WAVEFRONT_PROXY_EVENT_PORT = os.environ.get('WAVEFRONT_PROXY_EVENT_PORT', 2878)
-
-WAVEFRONT_SERVER_ADDRESS = os.environ.get('WAVEFRONT_SERVER_ADDRESS',
-                                          'https://vmware.wavefront.com')
-WAVEFRONT_SERVER_API_TOKEN = os.environ.get('WAVEFRONT_SERVER_API_TOKEN', '')
-
-WAVEFRONT_SOURCE_TAG = os.environ.get('WAVEFRONT_SOURCE', socket.gethostname())
-WAVEFRONT_REPORT_PERC = float(os.environ.get('WAVEFRONT_REPORT_PERC', 1.0))
-
-
-
-# SQLITE recording configs
-SQLITE_TRAFFIC_RECORDING = os.environ.get('SQLITE_TRAFFIC_RECORDING', True)
-SQLITE_RESOURCE_RECORDING = os.environ.get('SQLITE_RESOURCE_RECORDING', True)
-# Namespace Configs
-NAMESPACE_MODE = os.environ.get("NAMESPACE_MODE", False)
-NAMESPACE_MODE = True if NAMESPACE_MODE in ['True', True] else False
-NAMESPACE_INTERFACE_NAME_PREFIXES = ["veth", "eth"]
-
-
-# Recorder Configs
-RECORDER = os.environ.get('RECORDER', None)
-RECORD_UPDATER_THREAD_POOL_SIZE = int(os.environ.get('RECORD_UPDATER_THREAD_POOL_SIZE', 2))
-RESOURCE_RECORD_REPORT_FREQ = int(os.environ.get('RESOURCE_RECORD_REPORT_FREQ', 4))
-TRAFFIC_RECORD_REPORT_FREQ = int(os.environ.get('TRAFFIC_RECORD_REPORT_FREQ', 4))
-RECORD_COUNT_UPDATER_SLEEP_INTERVAL = int(os.environ.get('RECORD_COUNT_UPDATER_SLEEP_INTERVAL', 30))
-RECORD_UPDATER_THREAD_POOL_SIZE = int(os.environ.get('RECORD_UPDATER_THREAD_POOL_SIZE', 50))
-
-ELASTIC_SEARCH_SERVER_ADDRESS = os.environ.get('ELASTIC_SEARCH_SERVER_ADDRESS',
-                                               None)
-ELASTIC_SEARCH_SERVER_PORT = os.environ.get(
-    'ELASTIC_SEARCH_SERVER_PORT', ELASTIC_SEARCH_PORT)
-
-# # # # # End of Configurable Variables  # # # # #
-
-=======
->>>>>>> e11d80d... lydian: Integrate node preparation with constants, configs updates.
 
 class ConfigDB(db.Model):
     DB_NAME = './params.db'
