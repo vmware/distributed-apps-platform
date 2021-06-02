@@ -594,12 +594,12 @@ def run_iperf(src, dst, duration=10, udp=False, bandwidth=None,
 run_iperf3 = run_iperf
 
 
-def start_pcap(host, pcap_file_name, interface, pcap_args='', func_ip=None):
+def start_pcap(host, pcap_file_name, interface, pcap_args='', func_ip=None, tool_path=None):
     """
     Starts packet capture on a requested host.
     """
     with LydianClient(_get_host_ip(host, func_ip)) as client:
-        client.pcap.start_pcap(pcap_file_name, interface, pcap_args)
+        client.pcap.start_pcap(pcap_file_name, interface, pcap_args, tool_path)
 
 
 def stop_pcap(host, pcap_file_name, func_ip=None):

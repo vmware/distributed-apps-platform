@@ -149,8 +149,8 @@ class ResourceMonitorManager(Manager):
 
 class TCPDumpManager(Manager):
 
-    def start_pcap(self, dst_file, interface='eth0', args=''):
-        self._client.tcpdump.start_pcap(dst_file, interface, args)
+    def start_pcap(self, dst_file, interface='eth0', args='', tool_path=None):
+        self._client.tcpdump.start_pcap(dst_file, interface, args, tool_path)
 
     def stop_pcap(self, dst_file):
         self._client.tcpdump.stop_pcap(dst_file)

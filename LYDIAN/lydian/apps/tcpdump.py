@@ -41,7 +41,7 @@ class TCPDump(console.Console):
         dst_file = self._get_identifier(dst_file)
         return self._pcap_handles.get(dst_file, None)
 
-    def start_pcap(self, dst_file, interface='eth0', args=''):
+    def start_pcap(self, dst_file, interface='eth0', args='', tool_path=None):
         """
         Starts Packet Capture with 'tcpdump' command for given params.
         """
@@ -51,10 +51,12 @@ class TCPDump(console.Console):
             raise TCPDumpRerunError(msg)
 
         _dst_file = self._get_identifier(dst_file)
-        cmnd = 'tcpdump -i %s %s -w %s' % (interface, args, _dst_file)
+        bin_path = tool_path or 'tcpdump'
+        cmnd = '%s -i %s %s -w %s' % (bin_path, interface, args, _dst_file)
         p = self._start_subprocess(cmnd)
         self._pcap_handles[_dst_file] = p
-        log.info("Started Packet capture for %s at %s", dst_file, _dst_file)
+        log.info("Started Packet capture for %s at %s ith command: %s",
+                 dst_file, _dst_file, cmnd)
         return True
 
     def stop_pcap(self, dst_file):
