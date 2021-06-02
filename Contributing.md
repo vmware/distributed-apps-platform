@@ -5,9 +5,9 @@ Contributions are welcome in the form of bug reports or pull requests.
 
 Bug Reports
 -----------
-Quality bug reports are welcome at the `Distributed Apps Platform <https://github.com/vmware/distributed-apps-platform/issues>`_.
+Quality bug reports are welcome at the [Distributed Apps Platform](https://github.com/vmware/distributed-apps-platform/issues).
 
-There are plenty of `good resources <http://www.drmaciver.com/2013/09/how-to-submit-a-decent-bug-report/>`_ describing how to create
+There are plenty of [good resources](http://www.drmaciver.com/2013/09/how-to-submit-a-decent-bug-report/) describing how to create
 good bug reports. They will not be repeated in detail here, but in general, the bug report include where appropriate:
 
 * relevant software versions (Python version, endpoints egg version, runner egg version)
@@ -17,8 +17,8 @@ good bug reports. They will not be repeated in detail here, but in general, the 
 
 Pull Requests
 -------------
-If you're able to fix a bug yourself, you can `fork the repository <https://help.github.com/articles/fork-a-repo/>`_ and submit a `Pull Request <https://help.github.com/articles/using-pull-requests/>`_ with the fix.
-Please include tests demonstrating the issue and fix. To ensure the changes are not breaking existing tests, makes sure to run existing tests by running this `script <https://github.com/vmware/distributed-apps-platform/blob/master/LYDIAN/run_tests.sh>`_.
+If you're able to fix a bug yourself, you can [fork the repository](https://help.github.com/articles/fork-a-repo/) and submit a [Pull Request](https://help.github.com/articles/using-pull-requests/) with the fix.
+Please include tests demonstrating the issue and fix. To ensure the changes are not breaking existing tests, makes sure to run existing tests by running this [script](https://github.com/vmware/distributed-apps-platform/blob/master/LYDIAN/run_tests.sh).
 
 Contribution License Agreement
 ------------------------------
