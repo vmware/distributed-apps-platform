@@ -14,4 +14,4 @@ The project is organized as following.
 1. LYDIAN - Core engine of LYDIAN supporting distributed apps platform.
 2. LYDIAN-UI - A front end for accessing information on any running setup.
 
-
+Further details of each project are in README files of respective projects.
