@@ -6,56 +6,68 @@
 
 import logging
 import os
+import subprocess
+import time
 import tempfile
 
 
 import lydian.apps.console as console
+import lydian.utils.common as common_util
 
 log = logging.getLogger(__name__)
 
-def generate_egg(dest_dir, egg_name='lydian.egg'):
+class MyConsole(console.Console):
+
+    def __init__(self, dir):
+        super(MyConsole, self).__init__()
+        self.cwd = dir
+
+    def run(self, *args, **kwargs):
+        kwargs['cwd'] = kwargs.get('cwd', self.cwd)
+        return self.run_command(*args, **kwargs)
+
+    def run_command(self, cmnd, env=None, cwd=None, timeout=-1, **kwargs):
+        """
+        run_command that passes on additional inputs to subprocess.
+        """
+        p = self._start_subprocess(cmnd=cmnd, cwd=cwd, env=env, **kwargs)
+
+        # Start the counter for command to finish if requested.
+        if timeout > 0:
+            time_limit = time.time() + timeout
+
+            while time.time() < time_limit:
+                if self._is_alive(p):
+                    time.sleep(1)
+                else:
+                    break
+            self._kill_subprocess(p)
+
+        stdout_val = p.communicate()[0]
+        stdout_val = stdout_val.strip().decode('utf-8') if stdout_val else stdout_val
+        return p.returncode, stdout_val
+
+def generate_egg(dest_dir=None):
     """
     Packs lydian egg and places it in dest_dir.
     """
+    data_dir = common_util.get_data_dir()
+    egg_gen_file = 'generate_egg.sh'
+    egg_name = 'lydian.egg'
+    dest_dir = dest_dir or data_dir
 
-    reqs = [
-            'rpyc==4.0.2',
-            'sql30>=0.1.4',
-            'psutil==5.6.6',
-            'scapy==2.4.3',
-            'wavefront-sdk-python>=1.1.1',
-            'wavefront-api-client==2.33.15'
-            ]
-    commands = [
-        'virtualenv -p python3 .',
-        'pip install -r requirements.txt',
-        'python -mzipper'
-        ]
+    with tempfile.TemporaryDirectory(prefix='lydian_', dir='/tmp') as tdir:
+        try:
+            # Create requirements file.
+            prompt = MyConsole(dir=tdir)
+            prompt.run('cp %s .' % os.path.join(data_dir, egg_gen_file))
+            prompt.run('sh -x %s' % egg_gen_file, stdout=subprocess.DEVNULL)
+            assert os.path.exists(os.path.join(tdir, egg_name))
+            log.info("Created lydian egg")
+            prompt.run('cp lydian.egg %s' % dest_dir)
+        except Exception:
+            log.error("Error in creating lydian egg")
 
-    with tempfile.mkstemp(prefix='lydian', dir='/tmp') as tdir:
 
-        # Create requirements file.
-        with open(os.path.join(tdir, 'requirements.txt'), 'w+') as fp:
-            for req in req:
-                fp.write(req + '\n')
-
-        # Create Egg packing script.
-        with open(os.path.join(tdir, 'run.sh'), 'w+') as fp:
-            for line in commands:
-                fp.write(line + '\n')
-
-        zipper_path = os.path.join(
-                os.path.basepath(os.path.abspath(__file__)),
-                'zipper.py')
-
-        dest_dir = os.path.join(os.getcwd(), dest_dir, egg_name)
-
-        with console.Console(dir=tdir) as prompt:
-            prompt.run('cp %s .' % zipper_path)
-            prompt.run('sh -x run.sh')
-            try:
-                assert os.path.exists(os.path.join(tdir, egg_name))
-                log.info("Created lydian egg")
-                prompt.run('cp lydian.egg %s' % dest_dir)
-            except AssertionError:
-                log.error("Error in creating lydian egg")
+if __name__ == '__main__':
+    generate_egg()

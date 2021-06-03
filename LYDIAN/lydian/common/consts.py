@@ -72,6 +72,12 @@ class TestbedConstants(Constants):
     ENDPOINT_PASSWORD = os.environ.get('ENDPOINT_PASSWORD', 'FAKE_PASSWORD')
     LYDIAN_NTP_SERVER = os.environ.get('LYDIAN_NTP_SERVER', None)   # e. g. ntp1.eng.vmware.com
 
+    # Controls Egg generation / consumption for endpoints.
+    # Pristine egg is generated from pypi server. Local egg is generated from
+    # locally installed/modified code. Resue setting generates egg only if not
+    # already present.
+    LYDIAN_EGG_TYPE = os.environ.get('LYDIAN_EGG_TYPE', 'PRISTINE')
+
 
 class NamespaceConstants(Constants):
     _NAME = "Namespace"

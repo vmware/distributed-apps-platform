@@ -64,3 +64,19 @@ def write_pid_file(fname):
         return
     with open(fname, 'w+') as fp:
         fp.write('%s\n' % os.getpid())
+
+
+def get_data_dir():
+    """
+    Returns the data dir for lydian.
+    """
+    return os.path.abspath(os.path.join(__file__, '../../data'))
+
+
+def remove_egg(egg_name='lydian.egg'):
+    """
+    Removes egg file.
+    """
+    egg_file = os.path.join(get_data_dir(), egg_name)
+    if os.path.exists(egg_file):
+        os.remove(egg_file)

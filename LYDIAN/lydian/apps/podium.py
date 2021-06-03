@@ -27,6 +27,10 @@ from lydian.traffic.core import TrafficRule
 from lydian.utils.prep import prep_node, cleanup_node
 from lydian.utils.parallel import ThreadPool
 
+import lydian.utils.common as common_util
+import lydian.utils.pack as pack
+import lydian.utils.install as install
+
 log = logging.getLogger(__name__)
 
 _podium = None
@@ -73,6 +77,25 @@ class Podium(BaseApp):
         # Update config file based on default constants, config file
         # and any previously set configs (in .db file). In that order.
         config.update_config()
+
+        # Generate / update local egg.
+        self.update_egg()
+
+    def update_egg(self):
+        """
+        Updates egg file to be used at endpoints.
+        """
+        egg_type = config.get_param('LYDIAN_EGG_TYPE')
+        egg_type = egg_type.upper()
+        assert egg_type in ['PRISTINE', 'LOCAL', 'REUSE']
+
+        if egg_type == 'PRISTINE':
+            pack.generate_egg()
+        elif egg_type == 'LOCAL':
+            common_util.remove_egg()
+            install.install_egg()
+        elif egg_type == 'REUSE':
+            install.install_egg()   # generate egg only if not already present.
 
     @property
     def endpoints(self):

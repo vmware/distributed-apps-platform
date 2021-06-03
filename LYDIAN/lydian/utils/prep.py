@@ -88,10 +88,19 @@ class NodePrep(object):
             except Exception:
                 pass    # file may or may not be there.
 
+    def run_ignore_error(self, host, cmnd):
+        try:
+            host.req_call(cmnd)
+        except ValueError as err:
+            log.warn("cmnd: %s, error: %s", cmnd, err)
+
     def sync_ntp_server(self, host):
         ntp_server = get_param('LYDIAN_NTP_SERVER')
         if ntp_server:
-            host.req_call('ntpdate %s' % ntp_server)
+            try:
+                host.req_call('ntpdate %s' % ntp_server)
+            except ValueError as err:
+                log.info("Ignoring NTP synchronization error : %s", err)
 
     def copy_egg(self, host, egg_file_src):
         """
@@ -204,24 +213,15 @@ class UbuntuNodePrep(NodePrep):
         """
         with Host(host=self.hostip, user=self.username,
                   passwd=self.password) as host:
-            result = True
-
-            def _func(cmnd):
-                try:
-                    host.req_call(cmnd)
-                    return True
-                except ValueError as err:
-                    log.warn("cmnd: %s, error: %s", cmnd, err)
-                    return False
-
-            result &= _func('systemctl stop lydian')
-            result &= _func('sudo systemctl disable lydian.service')
-            result &= _func('rm /etc/lydian/lydian.conf')
-            result &= _func('rm /etc/systemd/system/lydian.service')
-            result &= _func('rm /var/log/lydian/lydian.log')
+            self.run_ignore_error(host, 'systemctl stop lydian')
+            self.run_ignore_error(host, 'sudo systemctl disable lydian.service')
+            self.run_ignore_error(host, 'rm /etc/lydian/lydian.conf')
+            self.run_ignore_error(host, 'rm /etc/systemd/system/lydian.service')
+            self.run_ignore_error(host, 'rm /var/log/lydian/lydian.log')
+            self.run_ignore_error(host, 'rm lydian.egg')
             if remove_db:
                 self.cleanup_db(host)
-            return result
+        return True
 
 
 class ESXNodePrep(NodePrep):
@@ -342,19 +342,12 @@ class ESXNodePrep(NodePrep):
         """
         Cleans up Lydian service from the endpoints.
         """
-        result = True
         with Host(host=self.hostip, user=self.username,
                   passwd=self.password) as host:
-            def _func(cmnd):
-                try:
-                    host.req_call(cmnd)
-                    return True
-                except ValueError as err:
-                    log.warn("cmnd: %s, error: %s", cmnd, err)
-                    return False
-            result &= _func(self.UNINSTALL_SERVICE)
-            result &= _func('rm /etc/lydian/lydian.conf')
-            result &= _func('rm /var/log/lydian/lydian.log')
+            self.run_ignore_error(host, self.UNINSTALL_SERVICE)
+            self.run_ignore_error(host, 'rm /etc/lydian/lydian.conf')
+            self.run_ignore_error(host, 'rm /var/log/lydian/lydian.log')
+            self.run_ignore_error(host, 'rm lydian.egg')
             if remove_db:
                 self.cleanup_db(host)
         return result
@@ -398,14 +391,16 @@ def get_prep_node(hostip, username, password):
 
 def prep_node(hostip, username='root', password='FAKE_PASSWORD',
               egg_file_src=None, cfg_path=None):
+    log.info("Preparing lydian at node with management IP %s", hostip)
     prep_obj = get_prep_node(hostip, username, password)
-    prep_obj.prep_node(egg_file_src, cfg_path)
+    return prep_obj.prep_node(egg_file_src, cfg_path)
 
 
 def cleanup_node(hostip, username='root', password='FAKE_PASSWORD',
                  remove_db=True):
+    log.info("Cleaning lydian at node with management IP %s", hostip)
     prep_obj = get_prep_node(hostip, username, password)
-    prep_obj.cleanup_node(remove_db)
+    return prep_obj.cleanup_node(remove_db)
 
 
 def main():
