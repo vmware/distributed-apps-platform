@@ -34,7 +34,6 @@ def run_test(host_info):
 
     pod = podium.get_podium()
 
-    # pod.cleanup_hosts(hosts, 'root', 'ca$hc0w')
     pod.cleanup_hosts(khosts, khost_user, khost_passwd)
     pod.cleanup_hosts(uhosts, uhost_user, uhost_passwd)
     pod.cleanup_hosts(dhosts, dhost_user, dhost_passwd)
