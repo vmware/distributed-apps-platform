@@ -47,8 +47,8 @@ def run_demo(testbed):
     vms = tb.vms
     vm0, vm1 = vms[0], vms[1]
     podium = get_podium()
-    podium.add_hosts(vms[0].ip, password=PASSWD)
-    podium.add_hosts(vms[1].ip, password=PASSWD)
+    podium.add_host(vms[0].ip, password=PASSWD)
+    podium.add_host(vms[1].ip, password=PASSWD)
 
     rules = []
     # Create Rule 1

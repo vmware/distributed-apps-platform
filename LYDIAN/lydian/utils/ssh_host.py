@@ -83,11 +83,11 @@ class Host(object):
             except Exception as exc:
                 ssh_exc = exc
                 self.log.error('Re-connecting to %s due to %s' % (
-                    self.__host, ssh_exc.message))
+                    self.__host, str(ssh_exc)))
                 time.sleep(self.CONNECT_RETRY_SLEEP)
                 attempts += 1
         self.log.error('Connecting to %s failed like %s' % (
-            self.__host, ssh_exc.message))
+            self.__host, str(ssh_exc)))
 
     def get_sftp_connection(self):
         attempts = 0

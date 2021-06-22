@@ -139,6 +139,18 @@ class Podium(BaseApp):
         for ep in eps:
             self._ep_hosts.pop(ep)
 
+    def _add_endpoints(self, client, hostip):
+        for iface, ips in client.interface.get_interface_ips_map().items():
+            if not any([iface.startswith(x) for x in
+                        self.NAMESPACE_INTERFACE_NAME_PREFIXES]):
+                continue
+            for ip in ips:
+                self._ep_hosts[ip] = hostip
+
+        # Fetch Namespace Interfaces
+        for ip in client.namespace.list_namespaces_ips():
+            self._ep_hosts[ip] = hostip
+
     def add_endpoints(self, hostip, username=None, password=None):
         """
         Add endpoints from the host, reachable by hostip.
@@ -153,16 +165,7 @@ class Podium(BaseApp):
         try:
             with LydianClient(hostip) as client:
                 # fetch regular interfaces
-                for iface, ips in client.interface.get_interface_ips_map().items():
-                    if not any([iface.startswith(x) for x in
-                                self.NAMESPACE_INTERFACE_NAME_PREFIXES]):
-                        continue
-                    for ip in ips:
-                        self._ep_hosts[ip] = hostip
-
-                # Fetch Namespace Interfaces
-                for ip in client.namespace.list_namespaces_ips():
-                    self._ep_hosts[ip] = hostip
+                self._add_endpoints(client, hostip)
 
             self._ep_hosts[hostip] = hostip
 
@@ -517,6 +520,28 @@ class Podium(BaseApp):
         self.setup.add_primary_node()
         for hostip in self.nodes:
             self.setup.save_endpoint(hostip)
+
+    def _discover_interfaces(self, hostip):
+        """ Helper function to discover interfaces """
+        with LydianClient(hostip) as client:
+            try:
+                client.controller.discover_interfaces()
+                self._add_endpoints(client, hostip)
+                return True
+            except Exception as err:
+                return False
+
+    def discover_interfaces(self, hostips):
+        """
+        Discovers interfaces at runtime on the endpoints.
+
+        Parameters
+        ------------
+        hostips: list
+            List of hostips.
+        """
+        args = [(h, (h,), {}) for h in hostips]
+        return ThreadPool(self._discover_interfaces, args)
 
 
 def get_podium():

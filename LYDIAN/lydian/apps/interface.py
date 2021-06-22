@@ -7,13 +7,13 @@
 import pickle
 
 from lydian.apps.base import BaseApp, exposify
-from lydian.utils.network_utils import InterfaceManager
+from lydian.utils.network_utils import get_interface_manager
 
 
 @exposify
 class InterfaceApp(BaseApp):
     def __init__(self):
-        self._if_mngr = InterfaceManager()
+        self._if_mngr = get_interface_manager()
 
     def list_interfaces(self):
         return self._if_mngr.get_all_interfaces()

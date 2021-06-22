@@ -16,7 +16,7 @@ from lydian.apps.base import BaseApp, exposify
 import lydian.traffic.core as core
 import lydian.traffic.task as task
 
-from lydian.utils.network_utils import NamespaceManager, InterfaceManager, \
+from lydian.utils.network_utils import get_ns_manager, get_interface_manager, \
         NAMESPACE_INTERFACE_NAME_PREFIXES
 
 from lydian.traffic.manager import ClientManager, ServerManager
@@ -38,9 +38,9 @@ class TrafficControllerApp(BaseApp):
 
         # TODO : Following should be consumed through Global Apps actually.
         # Namespace Manager handles all namespace information fetching.
-        self._ns_mgr = NamespaceManager()
+        self._ns_mgr = get_ns_manager()
         # Interface Manager
-        self._if_mgr = InterfaceManager()
+        self._if_mgr = get_interface_manager()
         # Endpoint - Target Map. A target can be host, Namespace or
         # a container.
 
@@ -93,7 +93,7 @@ class TrafficControllerApp(BaseApp):
 
     def discover_interfaces(self):
         """ Re/Discovers insterfaces """
-        self._if_mgr._discover_interfaces()
+        self._if_mgr.discover_interfaces()
         self._ns_mgr.discover_namespaces()
         self._update_endpoints_map()
 

@@ -43,7 +43,7 @@ class Namespace(object):
         self._name = name
         self._id = id
         self._interface_list = []
-        self._discover_interfaces()
+        self.discover_interfaces()
 
     @property
     def name(self):
@@ -62,7 +62,7 @@ class Namespace(object):
                         [self.name, self.id, [interface.as_dict() for
                                               interface in self.interfaces]])))
 
-    def _discover_interfaces(self):
+    def discover_interfaces(self):
         ns_path = '/var/run/netns/%s' % self.name
         manager = multiprocessing.Manager()
         return_dict = manager.dict()
@@ -89,9 +89,9 @@ class NamespaceManager(object):
         self._namespace_map = {}
         self._namespace_interface_map = {}
         self._linux_distro = "Linux" in platform.uname()
-        self._discover_namespaces()
+        self.discover_namespaces()
 
-    def _discover_namespaces(self):
+    def discover_namespaces(self):
         if self._linux_distro:
             ns_list = subprocess.check_output(["ip", "netns", "list"])
             if not ns_list:
@@ -110,9 +110,6 @@ class NamespaceManager(object):
                 self._namespace_map[ns_name] = _ns
                 interfaces = _ns.interfaces
                 self._namespace_interface_map[ns_name] = interfaces or None
-
-    def discover_namespaces(self):
-        self._discover_namespaces()
 
     def get_namespace_interface_map(self):
         return self._namespace_interface_map
@@ -194,9 +191,9 @@ class InterfaceManager(object):
     Class that controls all Interface information on host
     """
     def __init__(self):
-        self._discover_interfaces()
+        self.discover_interfaces()
 
-    def _discover_interfaces(self):
+    def discover_interfaces(self):
         self._interface_map = defaultdict(list)
         addrs = psutil.net_if_addrs()
         for name, snics in list(addrs.items()):
@@ -255,3 +252,18 @@ class InterfaceManager(object):
         for interface in all_interfaces:
             all_ips.extend(self.get_ips_by_interface(interface))
         return all_ips
+
+iface_mgr = None
+ns_mgr = None
+
+def get_interface_manager():
+    global iface_mgr
+    if not iface_mgr:
+        iface_mgr = InterfaceManager()
+    return iface_mgr
+
+def get_ns_manager():
+    global ns_mgr
+    if not ns_mgr:
+        ns_mgr = NamespaceManager()
+    return ns_mgr

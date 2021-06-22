@@ -5,13 +5,13 @@
 # in the root directory of this project.
 
 from lydian.apps.base import BaseApp, exposify
-from lydian.utils.network_utils import NamespaceManager
+from lydian.utils.network_utils import get_ns_manager
 
 
 @exposify
 class NamespaceApp(object):
     def __init__(self):
-        self._ns_manager = NamespaceManager()
+        self._ns_manager = get_ns_manager()
 
     def list_namespaces(self):
         return self._ns_manager.get_all_namespaces()

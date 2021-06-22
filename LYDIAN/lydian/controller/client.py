@@ -63,9 +63,6 @@ class TrafficManger(Manager):
     def stop_clients(self, namespace=None):
         self._client.traffic.stop_clients(namespace)
 
-    def rediscover_namespaces(self):
-        self._client.traffic.rediscover_namespaces()
-
 
 class StatsManager(Manager):
 
@@ -102,7 +99,7 @@ class StatsManager(Manager):
             destination=destination, port=port, source=source)
 
 
-class NamespaceManager(Manager):
+class NSManager(Manager):
 
     def list_namespaces(self):
         return self._client.namespace.list_namespaces()
@@ -117,7 +114,7 @@ class NamespaceManager(Manager):
         self._client.namespace.discover_namespaces()
 
 
-class InterfaceManager(Manager):
+class IfaceManager(Manager):
 
     def list_interfaces(self):
         return self._client.interface.list_interfaces()
@@ -255,6 +252,9 @@ class TrafficControllerManager(Manager):
     def unregister_traffic(self, rules):
         self._client.controller.unregister_traffic(rules)
 
+    def discover_interfaces(self):
+        self._client.controller.discover_interfaces()
+
 
 class MockTrafficManager(Manager):
 
@@ -389,8 +389,8 @@ class LydianClient(object):
         self.hostinfo = HostInfoManager(self.rpc_client.root)
 
         # Interface / Namespaces
-        self.namespace = NamespaceManager(self.rpc_client.root)
-        self.interface = InterfaceManager(self.rpc_client.root)
+        self.namespace = NSManager(self.rpc_client.root)
+        self.interface = IfaceManager(self.rpc_client.root)
 
         # Traffic Apps
         self.traffic = TrafficManger(self.rpc_client.root)
