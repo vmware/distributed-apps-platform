@@ -2,8 +2,13 @@
 
 # Distributed Apps Platform (LYDIAN)
 
+Overview
+------------
 
-**LYDIAN** is a general purpose *Distributed (Python) Apps Platform*. As the name suggests, it is based on Distributed Systems design principles and inherently supports  scalability and resiliency for the applications developed on the top of it. LYDIAN is written in native python and has a very minimal dependency on 3rd party modules. It's lightweight architecture helps it support hard to support platforms such as ESX. It's incredibly simple to use and is hgihly configurable.
+**LYDIAN** is a general purpose *Distributed (Python) Apps Platform*. As the name suggests, it is based on Distributed Systems design principles and inherently supports  scalability and resiliency for the applications developed on the top of it. 
+
+LYDIAN is written in native python and has a very minimal dependency on 3rd party modules. It's lightweight architecture helps it support hard to support platforms such as ESX. It's incredibly simple to use and is hgihly configurable.
+
 
 Applications
 ------------
@@ -38,3 +43,18 @@ Usage
 ------------
 
 Usage details for LYDIAN command line can be found in [here](./LYDIAN/README.md) .
+
+Installation
+------------
+
+Fetching / Installing `LYDIAN` is simple. Easiest way to consume LYDIAN is by installing it from pypi server (https://pypi.org/project/lydian/) by running following command. 
+
+```
+pip install lydian
+```
+
+Contributions and Code of Conduct 
+------------
+
+LYDIAN is an OSS(Open Source Software). It is governed by [LICENSE](LICENSE.txt) and [Code of Conduct](./CODE-OF-CONDUCT.md). Contributions to the project are welcome. Please check [contibution guidelines](./Contributing.md) for the same.
+
