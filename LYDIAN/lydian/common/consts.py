@@ -58,6 +58,11 @@ class LydianServiceConstants(Constants):
     LYDIAN_HOSTPREP_CONFIG = os.environ.get('LYDIAN_HOSTPREP_CONFIG', '')
 
 
+class Sqlite3Constants(Constants):
+    _NAME = "SQLITE3 Constants"
+    SQLITE3_CONNECTION_TIMEOUT = int(os.environ.get('SQLITE3_CONNECTION_TIMEOUT', 20))
+
+
 class TestbedConstants(Constants):
     _NAME = "Testbed"
     TEST_ID = os.environ.get('TEST_ID', '1234')
@@ -137,6 +142,7 @@ def get_categories():
     """
     return [
         SystemConstants,
+        Sqlite3Constants,
         LoggingConstants,
         LydianServiceConstants,
         TestbedConstants,

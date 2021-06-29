@@ -61,6 +61,9 @@ class TrafficRecordDB(db.Model):
         }
     VALIDATE_BEFORE_WRITE = True
 
+    # SQLITE3 connection timeout.
+    TIMEOUT = config.get_param('SQLITE3_CONNECTION_TIMEOUT', 20)
+
 
 class TrafficRecorder(TrafficRecordDB, Subscribe):
     NAME = "TRAFFIC_RECORDER"

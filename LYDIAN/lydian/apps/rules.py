@@ -18,6 +18,7 @@ import os
 from sql30 import db
 
 from lydian.apps.base import BaseApp, exposify
+from lydian.apps import config
 from lydian.traffic.core import TrafficRule
 
 log = logging.getLogger(__name__)
@@ -37,6 +38,9 @@ class RulesDB(db.Model):
             }]
         }
     VALIDATE_BEFORE_WRITE = True
+
+    # SQLITE3 connection timeout.
+    TIMEOUT = config.get_param('SQLITE3_CONNECTION_TIMEOUT', 20)
 
     # Valid states
     INACTIVE = 'INACTIVE'
