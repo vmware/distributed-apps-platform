@@ -19,9 +19,9 @@ deps = [x for x in deps if x and not x.startswith('#')]
 setuptools.setup(
     name="lydian",
     version=version['__version__'],
-    author="Vipin Sharma, Pradeep Singh, Spiro Kourtessis, Gavin Chang",
+    author="Vipin Sharma, Pradeep Singh, Spiro Kourtessis, Gavin Chang, Mahima Kothari, Kaustabh Duorah",
     author_email="sharmavipin@vmware.com",
-    description="Tool for Traffic Generation, Management and Monitoring",
+    description="A generic Distributed (Python) Applications Platform",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/vmware/distributed-apps-platform",
