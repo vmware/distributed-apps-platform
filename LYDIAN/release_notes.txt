@@ -1,6 +1,13 @@
 LYDIAN (Release Notes)
 ----------------------
 
+0.1.8 (Minor)
+---------------------
+Release 0.1.7 is bug fix and maintenance release over 0.1.6 release and also a pre-cursor
+release for upcoming release (0.1.9). It has pre-release support for
+- Vulnerability Scan
+- ESX platform.
+
 0.1.7 (Minor)
 ---------------------
 Release 0.1.7 is bug fix and maintenance release over 0.1.6 release and also a pre-cursor
