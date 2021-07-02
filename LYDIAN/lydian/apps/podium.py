@@ -256,7 +256,8 @@ class Podium(BaseApp):
         for host_ip, result in results.items():
             if result:
                 self.remove_endpoints(host_ip)
-                self.nodes.remove(host_ip)
+                if host_ip in self.nodes:
+                    self.nodes.remove(host_ip)
         return results
 
     def get_ep_host(self, epip):
@@ -384,9 +385,6 @@ class Podium(BaseApp):
                 client.controller.unregister_traffic(rules)
                 client.results.delete_record(reqid)
 
-            # Delete rules from local runner rules db
-            self.rules_app.delete_rules(rules)
-
         trules = self.get_rules_by_reqid(reqid)
 
         host_rules = collections.defaultdict(list)
@@ -413,6 +411,7 @@ class Podium(BaseApp):
     def unregister_traffic(self, reqid):
         """ Stop traffic, delete rules and result records"""
         self._traffic_op(reqid, op_type='unregister')
+        self.rules_app.delete(reqid=reqid)
 
     def get_rules_by_reqid(self, reqid):
         trules = [trule for rule_id, trule in self.rules.items() if getattr(trule, 'reqid') == reqid]
