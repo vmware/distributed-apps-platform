@@ -129,7 +129,6 @@ class TrafficControllerApp(BaseApp):
     def _get_traffic_rule(self, rule):
         """ Rule config. """
         log.info("Processing rule : %s", rule)
-        log.info("%s", type(rule).__name__)
         trule = core.TrafficRule()
 
         for key, val in rule.items():

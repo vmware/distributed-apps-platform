@@ -87,6 +87,8 @@ def run_demo(testbed):
     log.info("Traffic percentage : %s",
              podium.get_traffic_pass_percent(rules[0]['reqid']))
 
+    podium.stop_traffic(rules[0]['reqid'])
+
     cleanup_node(vms[0].ip, username=USERNAME, password=PASSWD)
     cleanup_node(vms[1].ip, username=USERNAME, password=PASSWD)
 
