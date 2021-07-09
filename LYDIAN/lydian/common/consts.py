@@ -49,6 +49,9 @@ class LoggingConstants(Constants):
     LYDIAN_LOG_DIR = LYDIAN_LOG_DIR or (WIN_LOG_DIR if WIN_OS else "./")
     LYDIAN_LOG_FILE = "lydian.log"
 
+    PARAMIKO_LOG_LEVEL = os.environ.get('PARAMIKO_LOG_LEVEL', 'ERROR')
+    RPYC_LOG_LEVEL = os.environ.get('RPYC_LOG_LEVEL', 'INFO')
+
 
 class LydianServiceConstants(Constants):
     _NAME = "Lydian Service"

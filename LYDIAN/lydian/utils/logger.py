@@ -26,6 +26,27 @@ def create_log_dir(log_dir):
             "Failed to create log directory %s due to %s" % (log_dir, e))
 
 
+def set_external_log_level():
+    """
+    Sets logging level of external modules.
+    """
+    levels = {
+        'INFO': logging.INFO,
+        'DEBUG': logging.DEBUG,
+        'ERROR': logging.ERROR,
+    }
+    paramiko_logger = logging.getLogger('paramiko')
+    # NOTE : paramiko 'INFO' level is too verbose.
+    log_level = config.get_param('PARAMIKO_LOG_LEVEL', 'ERROR')
+    log_level = log_level.upper()
+    paramiko_logger.setLevel(levels[log_level])
+
+    rpyc_logger = logging.getLogger('rpyc')
+    log_level = config.get_param('RPYC_LOG_LEVEL', 'INFO')
+    log_level = log_level.upper()
+    rpyc_logger.setLevel(levels[log_level])
+
+
 def setup_logging(log_dir=None, log_file=None):
     """
     Sets up Logging handlers and other environment.
@@ -43,6 +64,7 @@ def setup_logging(log_dir=None, log_file=None):
     # if root_logger.handlers:
     #    return
     root_logger.setLevel(logging.INFO)
+    set_external_log_level()
     file_handler = logging.FileHandler(log_file_name, mode='w')
     file_handler.setFormatter(log_formatter)
     root_logger.addHandler(file_handler)
