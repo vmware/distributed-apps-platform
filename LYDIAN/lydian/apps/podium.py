@@ -85,17 +85,24 @@ class Podium(BaseApp):
         """
         Updates egg file to be used at endpoints.
         """
+        valid_egg_types = ['PRISTINE', 'LOCAL', 'REUSE']
         egg_type = config.get_param('LYDIAN_EGG_TYPE')
         egg_type = egg_type.upper()
-        assert egg_type in ['PRISTINE', 'LOCAL', 'REUSE']
+        err_msg = "Invalid Egg Type. Valid values are : {%s}" % ','.join(valid_egg_types)
+        assert egg_type in valid_egg_types, err_msg
 
         if egg_type == 'PRISTINE':
-            pack.generate_egg()
-        elif egg_type == 'LOCAL':
-            common_util.remove_egg()
+            if pack.generate_egg():
+                return  # Success
+
+        if egg_type == 'REUSE':
+            # Generate egg from local installtion if egg not already present.
             install.install_egg()
-        elif egg_type == 'REUSE':
-            install.install_egg()   # generate egg only if not already present.
+
+        # if egg type is set to 'LOCAL' or we failed to create
+        # 'PRISTINE' egg, create egg from local installation.
+        common_util.remove_egg()
+        install.install_egg()
 
     @property
     def endpoints(self):

@@ -10,7 +10,7 @@ import subprocess
 import time
 import tempfile
 
-
+import lydian
 import lydian.apps.console as console
 import lydian.utils.common as common_util
 
@@ -50,6 +50,7 @@ class MyConsole(console.Console):
 def generate_egg(dest_dir=None):
     """
     Packs lydian egg and places it in dest_dir.
+    Returns True on success else False on failure.
     """
     data_dir = common_util.get_data_dir()
     egg_gen_file = 'generate_egg.sh'
@@ -60,13 +61,29 @@ def generate_egg(dest_dir=None):
         try:
             # Create requirements file.
             prompt = MyConsole(dir=tdir)
-            prompt.run('cp %s .' % os.path.join(data_dir, egg_gen_file))
-            prompt.run('sh -x %s' % egg_gen_file, stdout=subprocess.DEVNULL)
+
+            script = []
+            with open(os.path.join(data_dir, egg_gen_file), 'r') as fp:
+                script = fp.readlines()
+
+            mscript = []    # modified script
+            for line in script:
+                if line.strip().endswith('lydian'):
+                    line = line.strip() + "==" + lydian.__version__ + '\n'
+                mscript.append(line)
+
+            with open(os.path.join(tdir, egg_gen_file), 'w+') as fp:
+                fp.writelines(mscript)
+
+            prompt.run('sh -x %s | tee run.log' % egg_gen_file, stdout=subprocess.DEVNULL)
+
             assert os.path.exists(os.path.join(tdir, egg_name))
-            log.info("Created lydian egg")
+            log.info("Created pristine lydian egg")
             prompt.run('cp lydian.egg %s' % dest_dir)
+            return True
         except Exception:
             log.error("Error in creating lydian egg")
+            return False
 
 
 if __name__ == '__main__':
