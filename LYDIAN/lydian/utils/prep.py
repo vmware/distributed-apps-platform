@@ -92,7 +92,8 @@ class NodePrep(object):
         try:
             host.req_call(cmnd)
         except ValueError as err:
-            log.warn("cmnd: %s, error: %s", cmnd, err)
+            # log.warn("cmnd: %s, error: %s", cmnd, err)    # Ignore error.
+            pass
 
     def sync_ntp_server(self, host):
         ntp_server = get_param('LYDIAN_NTP_SERVER')
@@ -350,7 +351,7 @@ class ESXNodePrep(NodePrep):
             self.run_ignore_error(host, 'rm lydian.egg')
             if remove_db:
                 self.cleanup_db(host)
-        return result
+        return True
 
     def get_running_processes(self, grep_args=None):
         """
