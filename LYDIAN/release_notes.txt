@@ -1,6 +1,12 @@
 LYDIAN (Release Notes)
 ----------------------
 
+0.2.0 (Minor)
+---------------------
+- Adds resiliency in egg generation.
+- Allow configuration of log levels for 3rd party modules - paramiko and rpyc
+- Improvements in unregister_traffic to reduce stress on DB.
+
 0.1.9 (Minor)
 ---------------------
 Patch release to handle stop_traffic() bug.

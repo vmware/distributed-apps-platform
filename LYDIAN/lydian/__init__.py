@@ -3,4 +3,4 @@
 # The full license information can be found in LICENSE.txt
 # in the root directory of this project.
 
-__version__='0.1.9'
+__version__='0.2.0'
