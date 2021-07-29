@@ -37,25 +37,17 @@ VM1_IP = 'w.x.y.z'
 podium = get_podium()
 podium.add_hosts(VM0_IP, password=PASSWD)
 podium.add_hosts(VM1_IP, password=PASSWD)
-# podium.add_endpoints(vms[0].ip, password=PASSWD)
-# podium.add_endpoints(vms[1].ip, password=PASSWD)
 
 
 DUMMY_RULE = {
-    'reqid': '%s' % uuid.uuid4(),
-    'ruleid': '%s' % uuid.uuid4(),
-    'src': VM0_IP,
-    'dst': VM1_IP,
-    'protocol': 'TCP',
-    'port': 9465,
+    'reqid': '%s' % uuid.uuid4(), 'ruleid': '%s' % uuid.uuid4(),
+    'src': VM0_IP, 'dst': VM1_IP,
+    'protocol': 'TCP', 'port': 9465,
     'connected': True
     }
-rules = []
-# Create Rule 1
-rules.append(DUMMY_RULE)
 
 # Ask the tool to register your intent.
-podium.register_traffic(rules)
+podium.register_traffic([DUMMY_RULE])
 
 ```
 
@@ -109,6 +101,19 @@ podium.add_hosts([VM1_IP, VM2_IP], password=PASSWD)
 result = podium.run_iperf3(src_ip, dst_ip)
 result_dict = json.loads(result)
 ```
+
+####  Try it yourself.
+
+With Lydian, there comes a demo file, which can be used to perform a quick 1 minute test to see things in action. Below are the steps, you can follow to try it yourself. Please note that it creates / overwrites log file `/var/log/lydian/lydian.log`.
+
+```python
+mkdir -p /tmp/LYDIAN
+cd LYDIAN
+virtualenv -p python3 .
+pip install lydian
+python -mlydian.tests.demo -u 'root' -p 'ep_password' -e 20.20.11.1 20.20.11.2
+```
+
 
 Repository & License
 ------------
