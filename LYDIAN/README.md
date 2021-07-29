@@ -80,7 +80,7 @@ except FileNotFoundError:
 podium = get_podium()
 
 # Prepare the node (if not done already)
-podium.add_hosts(VM_IP, password=PASSWD)
+podium.add_host(VM_IP, password=PASSWD)
 
 # Start Packet Capture
 podium.start_pcap(VM_IP, pcap_file_name='test_pcap.pcap', interface='eth0')
@@ -89,7 +89,8 @@ podium.stop_pcap(vm1, pcap_file_name='test_pcap.pcap')
 
 # Download file locally.
 with Host(VM_IP, user='root', passwd='PASSWD') as host:
-    host.get_file('rm -rf /tmp/test_pcap.pcap')
+    host.get_file('/tmp/test_pcap.pcap')  # Copy PCAP file locally
+    host.req_call('rm -rf /tmp/test_pcap.pcap')  # remove remote file.
 
 # Run any tool on this file like tcpreplay/ wireshark on this file or simply check
 # that file exists.
@@ -103,8 +104,7 @@ from lydian.apps.podium import get_podium
 
 podium = get_podium()
 # Prepare the nodes (if not done already)
-podium.add_hosts(VM1_IP, password=PASSWD)
-podium.add_hosts(VM2_IP, password=PASSWD)
+podium.add_hosts([VM1_IP, VM2_IP], password=PASSWD)
 
 result = podium.run_iperf3(src_ip, dst_ip)
 result_dict = json.loads(result)
