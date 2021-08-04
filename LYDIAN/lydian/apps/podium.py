@@ -9,10 +9,7 @@ import itertools
 import logging
 import pickle
 import queue
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from queue import Queue
-import threading
 import time
 import uuid
 
@@ -28,7 +25,6 @@ from lydian.utils.prep import prep_node, cleanup_node
 from lydian.utils.parallel import ThreadPool
 
 import lydian.utils.common as common_util
-import lydian.utils.pack as pack
 import lydian.utils.install as install
 
 log = logging.getLogger(__name__)
@@ -85,23 +81,16 @@ class Podium(BaseApp):
         """
         Updates egg file to be used at endpoints.
         """
-        valid_egg_types = ['PRISTINE', 'LOCAL', 'REUSE']
+        valid_egg_types = ['LOCAL', 'REUSE']
         egg_type = config.get_param('LYDIAN_EGG_TYPE')
         egg_type = egg_type.upper()
         err_msg = "Invalid Egg Type. Valid values are : {%s}" % ','.join(valid_egg_types)
         assert egg_type in valid_egg_types, err_msg
 
-        if egg_type == 'PRISTINE':
-            if pack.generate_egg():
-                return  # Success
+        if egg_type == 'LOCAL':
+            common_util.remove_egg()    # Generate fresh egg.
 
-        if egg_type == 'REUSE':
-            # Generate egg from local installtion if egg not already present.
-            install.install_egg()
-
-        # if egg type is set to 'LOCAL' or we failed to create
-        # 'PRISTINE' egg, create egg from local installation.
-        common_util.remove_egg()
+        # Generate egg from local installtion if egg not already present.
         install.install_egg()
 
     @property
@@ -271,7 +260,7 @@ class Podium(BaseApp):
         return self._ep_hosts.get(epip, None)
 
     def create_traffic_intent(self, src_ip, dst_ip, dst_port, protocol, reqid=None,
-                            connected=True, **kwargs):
+                              connected=True, **kwargs):
 
         intent = {
             'reqid': reqid or '%s' % uuid.uuid4(),
@@ -371,11 +360,10 @@ class Podium(BaseApp):
         # Start Server before the client.
         for host_rules in host_rules_map:
             collection = [(host, (host, rules), {})
-                            for host, rules in host_rules.items()]
+                          for host, rules in host_rules.items()]
             ThreadPool(_register_traffic_rules, collection)
 
-        # Persist rules to local db
-        self.rules_app.add_rules(_trules)
+        self.rules_app.add_rules(_trules)  # Persist rules to local db
 
     def _traffic_op(self, reqid, op_type):
 
@@ -521,7 +509,7 @@ class Podium(BaseApp):
         latencies = self._get_latencies(trules, reqid, method, duration=duration, **kwargs)
         result = 0
         latencies = [latency for latency in latencies if latency is not None]
-        if not len(latencies):
+        if latencies:
             return result
 
         if method == 'avg':
@@ -557,7 +545,7 @@ class Podium(BaseApp):
                 client.controller.discover_interfaces()
                 self._add_endpoints(client, hostip)
                 return True
-            except Exception as err:
+            except Exception as _:
                 return False
 
     def discover_interfaces(self, hostips):
