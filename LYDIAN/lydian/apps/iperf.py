@@ -71,7 +71,7 @@ class Iperf(console.Console):
         for _ in range(3):
             if self.is_running(port):
                 self._server_handles[port] = p
-                log.info("Server is running on port:%d " % port)
+                log.info("Running Iperf Server on port:%d with '%s'", port, cmd)
                 break
             time.sleep(1)
         else:
@@ -165,7 +165,8 @@ class Iperf(console.Console):
                                               'state': 'running',
                                               'result': None,
                                               'cmd': cmd}
-        log.info("cmd: %s running with job_id: %s" % (cmd, self._job_id))
+        log.info("Running Iperf client job(%s) with command (%s).",
+                 self._job_id, cmd)
         return self._job_id
 
     def get_client_jobs(self):
