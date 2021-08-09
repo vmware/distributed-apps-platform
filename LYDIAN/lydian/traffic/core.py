@@ -183,3 +183,6 @@ class TrafficRecord(Record):
         self.expected = None        # ping expectation (Pass/Fail : True/False)
         self.result = None          # Actual result
         self.latency = None         # ping latency
+        self.error = None           # Error Type, if any
+        self.reqid = None           # Request ID
+        self.ruleid = None          # Rule ID

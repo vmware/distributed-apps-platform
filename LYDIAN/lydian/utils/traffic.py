@@ -85,7 +85,7 @@ def main():
         _print("Invalid host/port")
         raise
 
-    def ping_handler(payload, data, latency):
+    def ping_handler(payload, data, latency, error=None):
         if is_py3:
             try:
                 payload = payload.decode()
@@ -97,7 +97,7 @@ def main():
         if payload == data:
             _print("Success : Sent: %s , received: %s, taken %s ms" % (payload, data, latency))
         else:
-            _print("Failure : Sent: %s , received: %s, taken %s ms" % (payload, data, latency))
+            _print("Failure : Sent: %s , received: %s, taken %s ms , error - %s" % (payload, data, latency, error))
 
     ipv6 = args.ipv6
 

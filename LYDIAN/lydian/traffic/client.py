@@ -87,15 +87,15 @@ class Client(Connection):
 
     ping_count = tries
 
-    def echo_validator(self, payload, data, latency):
+    def echo_validator(self, payload, data, latency, error=None):
         """
         Ping Validator
         """
         try:
             assert(data == self.PAYLOAD)
             log.info("Sent : %s Received : %s, taken %s ms", self.PAYLOAD, data, latency)
-        except AssertionError as err:
-            _ = err
+        except AssertionError as _:
+            _ = error
             raise PingValidationError()
 
     def recv_all(self):
@@ -153,7 +153,7 @@ class TCPClient(Client):
 
     def send_and_recv(self, payload, recv_method):
         attempts = self.attempts
-        data, latency = None, 0
+        data, latency, error = None, 0, None
         while attempts:
             try:
                 attempts -= 1
@@ -169,6 +169,7 @@ class TCPClient(Client):
                     log.info(msg)
                 break   # finally is still executed.
             except Exception as err:
+                error = '%s' % err
                 if self.verbose:
                     msg = ("Ping to %s:%s FAIL. Payload / data - %s/%s ."
                            " ERROR - %r") % (
@@ -181,13 +182,13 @@ class TCPClient(Client):
                 # close socket connection
                 self.socket_close()
 
-        return data, latency
+        return data, latency, error
 
     def ping(self, payload):
         try:
             payload = self._prepare_payload(payload)
-            data, latency = self.send_and_recv(payload, recv_method=self.recv_all)
-            self._handler(payload, data, latency)
+            data, latency, error = self.send_and_recv(payload, recv_method=self.recv_all)
+            self._handler(payload, data, latency, error)
         except Exception as err:
             if self.verbose:
                 log.info('Ping Error - %r', err)
@@ -205,7 +206,7 @@ class UDPClient(Client):
 
     def send_and_recv(self, payload):
         attempts = self.attempts
-        data, latency = None, 0
+        data, latency, error = None, 0, None
         while attempts:
             try:
                 attempts -= 1
@@ -220,6 +221,7 @@ class UDPClient(Client):
                     log.info(msg)
                 break   # finally is still executed.
             except Exception as err:
+                error = '%s' % error
                 if self.verbose:
                     msg = ("Ping to %s:%s FAIL. Payload / data - %s/%s ."
                            " ERROR - %r") % (
@@ -231,14 +233,14 @@ class UDPClient(Client):
             finally:
                 self.socket_close()
 
-        return data, latency
+        return data, latency, err
 
     def ping(self, payload):
         latency = 0
         try:
             payload = self._prepare_payload(payload)
-            data, latency = self.send_and_recv(payload)
-            self._handler(payload, data, latency)
+            data, latency, error = self.send_and_recv(payload)
+            self._handler(payload, data, latency, error)
         except Exception as err:
             if self.verbose:
                 log.info('Ping Error - %r', err)
@@ -262,9 +264,9 @@ class HTTPClient(TCPClient):
     def ping(self, payload):
         try:
             _payload = self._prepare_payload(payload)
-            data, latency = self.send_and_recv(_payload,
+            data, latency, error = self.send_and_recv(_payload,
                                                recv_method=self.fetch)
-            self._handler(payload, data, latency)
+            self._handler(payload, data, latency, error)
         except Exception as err:
             if self.verbose:
                 log.info('Ping Error - %r', err)

@@ -155,7 +155,7 @@ class TrafficClientTask(TrafficTask):
                                                   self._get_client)
         self._task = next(self._ns_task_iter)
 
-    def ping_handler(self, payload, data, latency):
+    def ping_handler(self, payload, data, latency, error=None):
         try:
             rec = TrafficRecord()
             rec.source = self._trule.src
@@ -167,6 +167,8 @@ class TrafficClientTask(TrafficTask):
             rec.reqid = self._trule.reqid
             rec.ruleid = self._trule.ruleid
             rec.latency = latency
+            if not rec.result:
+                rec.error = '%s' % error
             # log.info("Traffic: %r", rec)
             self.record_queue.put(rec, block=False, timeout=2)
         except queue.Full as err:
