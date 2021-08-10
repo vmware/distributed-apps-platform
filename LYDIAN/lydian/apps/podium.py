@@ -98,6 +98,10 @@ class Podium(BaseApp):
         return self._ep_hosts.keys()
 
     @property
+    def ep_hosts(self):
+        return self._ep_hosts
+
+    @property
     def rules(self):
         return self.rules_app.rules
 
@@ -148,6 +152,17 @@ class Podium(BaseApp):
                 return True
 
         return False
+
+    def update_endpoints(self, iface_hosts):
+        """
+        Updates internal Interface Host map with the one provided.
+
+        Parameters
+        ----------
+        iface_hosts: dict
+            Interface- Host that will be added to ep_hosts map.
+        """
+        self._ep_hosts.update(iface_hosts)
 
     def remove_endpoints(self, hostip):
         """
