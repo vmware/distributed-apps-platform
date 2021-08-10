@@ -246,8 +246,8 @@ class TrafficControllerManager(Manager):
     def start(self, rules):
         self._client.controller.start(rules)
 
-    def stop(self, rules):
-        self._client.controller.stop(rules)
+    def stop(self, rules, blocking=True):
+        self._client.controller.stop(rules, blocking)
 
     def unregister_traffic(self, rules):
         self._client.controller.unregister_traffic(rules)

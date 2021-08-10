@@ -210,11 +210,17 @@ class TrafficControllerApp(BaseApp):
         args = [(ruleid, (ruleid,), {}) for ruleid in rules]
         parallel.ThreadPool(self._start, args)
 
-    def stop(self, rules):
+    def stop(self, rules, blocking=True):
         if not isinstance(rules, list):
             rules = [rules]
         args = [(ruleid, (ruleid,), {}) for ruleid in rules]
-        parallel.ThreadPool(self._stop, args)
+        if blocking:
+            parallel.ThreadPool(self._stop, args)
+        else:
+            # NOTE : Pre-mature exit can lead to zombie threads and can cause
+            # eventual degradation of resources at endpoints. For this reason
+            # stop and other operations are blocking.
+            parallel.ThreadPool(self._stop, args)
 
     def unregister_traffic(self, rules):
         """ Stop traffic and delete rules from db"""
