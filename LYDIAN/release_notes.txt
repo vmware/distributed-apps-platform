@@ -1,6 +1,14 @@
 LYDIAN (Release Notes)
 ----------------------
 
+1.0 (Major)
+---------------------
+- Improved node preparation for Ubuntu based hosts.
+- Support for recording ping failure reason in results.
+- Podium API to update endpoints info.
+- Make interface fecth optional while preparing hosts.
+- Minor bug fixes and pep8 fixes in podium.
+
 0.2.0 (Minor)
 ---------------------
 - Adds resiliency in egg generation.
