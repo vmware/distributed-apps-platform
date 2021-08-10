@@ -206,7 +206,7 @@ class Podium(BaseApp):
         except Exception as err:
             log.error("Error in adding endpoint %s - %r", hostip, err)
 
-    def add_host(self, hostip, username=None, password=None):
+    def add_host(self, hostip, username=None, password=None, fetch_iface=True):
         """
         Prepare node and return True on success else False.
         """
@@ -216,14 +216,15 @@ class Podium(BaseApp):
             prep_node(hostip, username, password)
             if not self.wait_on_host(hostip):
                 log.error("Could not start service on %s", hostip)
-            self.add_endpoints(hostip, username, password)
+            if fetch_iface:
+                self.add_endpoints(hostip, username, password)
             self.nodes.add(hostip)
             return True
         except Exception as err:
             log.error("Error in preparing host %s - %r", hostip, err)
             return False
 
-    def add_hosts(self, hostips, username=None, password=None):
+    def add_hosts(self, hostips, username=None, password=None, fetch_iface=True):
         """
         Prepare Hosts with Lydian service and fetches interface information.
         Returns a dictionary of <key:val> as <hostip:True/False>. True/False
@@ -236,10 +237,12 @@ class Podium(BaseApp):
             Username for preparation.
         password: str
             Password for preparation.
+        fetch_iface: bool
+            Fetch Interface information if set to True.
         """
         if isinstance(hostips, str):
             hostips = hostips.split(',')
-        args = [(host, (host, username, password), {}) for host in hostips]
+        args = [(host, (host, username, password, fetch_iface), {}) for host in hostips]
         return ThreadPool(self.add_host, args)
 
     def cleanup_hosts(self, hostips, username=None, password=None,
