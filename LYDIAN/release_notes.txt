@@ -1,6 +1,10 @@
 LYDIAN (Release Notes)
 ----------------------
 
+1.0.1 (Minor)
+---------------------
+- Update OWNERS list
+
 1.0 (Major)
 ---------------------
 - Improved node preparation for Ubuntu based hosts.
